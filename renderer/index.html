@@ -1,0 +1,88 @@
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Mapbox Test App</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .tab {
+            position: absolute;
+            left: 47%;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+        }
+
+        .tabContent {
+            display: none;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+
+        #labels {
+            position: absolute;
+            top: 6.5%;
+            right: 0;
+            bottom: 0;
+            width: 25%;
+            overflow: auto;
+            background: rgb(230, 230, 230);
+        }
+
+        #features {
+            position: absolute;
+            top: 6.5%;
+            left: 48%;
+            bottom: 0;
+            width: 26.5%;
+            overflow: auto;
+            background: rgba(230, 230, 230, 0.8);
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 47%;
+            height: 99%;
+        }
+
+        #buttonContainer {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 66%;
+            width: 14%;
+        }
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+
+    <div class="tab">
+        <button class="tabLinks" onclick="openTab(event, 'features_tab')">Labels</button>
+        <button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>
+    </div>
+
+    <div id="features_tab" class="tabContent">
+        <pre id='features'></pre>
+        <pre id="labels"></pre>
+    </div>
+    <aside id='buttonContainer' class="tabContent">
+        <button type="button" id="countButtons" onclick="countFeatures()">Count Features</button>
+        <button type="button" id="countButtons">Extract Features</button>
+    </aside>
+
+    <script src="./../Mapbox_gl.js"></script>
+    <script src="./../Interface.js"></script>
+</body>
+</html>

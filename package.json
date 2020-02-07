@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron ."
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,11 @@
   ],
   "author": "Duarte Vital",
   "license": "ISC",
+  "dependencies": {
+    "@turf/area": "^6.0.1",
+    "electron-log": "^3.0.8",
+    "mapbox-gl": "^1.5.0"
+  },
   "bugs": {
     "url": "https://github.com/duartevital/Tese-Projeto/issues"
   },
