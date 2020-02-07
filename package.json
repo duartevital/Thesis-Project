@@ -1,0 +1,28 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duartevital/Tese-Projeto.git"
+  },
+  "keywords": [
+    "mapbox",
+    "npm",
+    "electron",
+    "interface",
+    "OSM",
+    "AQI",
+    "human-machine"
+  ],
+  "author": "Duarte Vital",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/duartevital/Tese-Projeto/issues"
+  },
+  "homepage": "https://github.com/duartevital/Tese-Projeto#readme"
+}
