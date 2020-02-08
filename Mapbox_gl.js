@@ -130,8 +130,20 @@ map.on('load', function () {
 map.on('click', function (e) {
     //var features = map.queryRenderedFeatures(e.point, { layers: ['buildings_layer'] });
     var features = map.queryRenderedFeatures(e.point)[0];
-    document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
+    //document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
+    var props = features.properties;
+    var geo = features.geometry;
 
+    type = props.type;
+    height = props.height;
+    underground = props.underground;
+    shape = geo.type;
+    coords = geo.coordinates;
+
+    document.getElementById('features').innerHTML = "Type: " + type + "\nHeight: " + height + "\nUnderground: " + underground + "\nShape: " + shape + "\nCoordinates: " + coords;
+
+
+    //Definir cor para objetos selecionados.
     selection_coords = features.geometry.coordinates;
     feature_selection_count++;
 
@@ -150,9 +162,6 @@ map.on('click', function (e) {
             feature_color = 'rgba(25, 22, 234, 0.9)';
             break;
     }
-
-    log.info("layer selecionada: " + features.sourceLayer);
-    log.info("cor selecionada: " + feature_color);
 
     map.addLayer({
         'id': ('selected_feature' + feature_selection_count),
