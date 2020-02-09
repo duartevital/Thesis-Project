@@ -1,4 +1,4 @@
-<html>
+﻿<html>
 <head>
     <meta charset='utf-8' />
     <title>Mapbox Test App</title>
@@ -63,6 +63,20 @@
             left: 66%;
             width: 14%;
         }
+
+        table {
+            font-family: Arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
     </style>
 </head>
 <body>
@@ -71,10 +85,15 @@
     <div class="tab">
         <button class="tabLinks" onclick="openTab(event, 'features_tab')">Labels</button>
         <button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>
+        <button onclick="setTableCell2Editable()">Test lol</button>
     </div>
 
     <div id="features_tab" class="tabContent">
-        <pre id='features'></pre>
+        <div id='features'>
+            <table id="propsTable" style="width:100%">
+                
+            </table>
+        </div>
         <pre id="labels"></pre>
     </div>
     <aside id='buttonContainer' class="tabContent">
