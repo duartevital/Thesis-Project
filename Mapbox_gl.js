@@ -28,20 +28,6 @@ map.on('load', function () {
             "fill-outline-color": "rgba(66,100,251, 0.5)"
         }
     });
-    /*map.addLayer({
-        "id": "roads_layer",
-        "type": "line",
-        "minzoom": 15,
-        "source": {
-            type: 'vector',
-            url: 'mapbox://mapbox.mapbox-streets-v8',
-        },
-        "source-layer": "road",
-        "paint": {
-            "line-color": "rgba(250,60,60,0.4)",
-            "line-width": 5
-        }
-    });*/
     map.addLayer({
         "id": "water_layer",
         "type": "fill",
@@ -190,4 +176,24 @@ function countFeatures() {
     log.info("Number of buildings == " + buildings_num.length);
     log.info("Number of landuse == " + green_num);
     log.info("Number of roads == " + roads_num);
+}
+
+//Neste momento so funciona para os buildings
+function extractFeatures() {
+    var buildings_layer = map.queryRenderedFeatures({ layers: ['buildings_layer'] });
+    var landuse_layer = map.queryRenderedFeatures({ layers: ['landuse_layer'] });
+    var roads_layer = map.queryRenderedFeatures({ layers: ['roads_layer'] });
+
+    var buildings_list=[], landuse_list, roads_list;
+
+    for (var i in buildings_layer) {
+        type = buildings_layer[i].properties.type;
+        height = buildings_layer[i].properties.height;
+        under = buildings_layer[i].properties.underground;
+        shape = buildings_layer[i].geometry.type;
+        coords = buildings_layer[i].geometry.coordinates;
+        var propsArray = { type: type, height: height, underground: under, shape: shape, coords: coords };
+
+        buildings_list.push(propsArray);
+    }
 }

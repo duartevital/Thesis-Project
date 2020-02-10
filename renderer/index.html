@@ -85,11 +85,11 @@
     <div class="tab">
         <button class="tabLinks" onclick="openTab(event, 'features_tab')">Labels</button>
         <button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>
-        <button onclick="setTableCell2Editable()">Test lol</button>
     </div>
 
     <div id="features_tab" class="tabContent">
         <div id='features'>
+            <button onclick="setTableCell2Editable()">edit</button>
             <table id="propsTable" style="width:100%">
                 
             </table>
@@ -98,7 +98,7 @@
     </div>
     <aside id='buttonContainer' class="tabContent">
         <button type="button" id="countButtons" onclick="countFeatures()">Count Features</button>
-        <button type="button" id="countButtons">Extract Features</button>
+        <button type="button" id="countButtons" onclick="extractFeatures()">Extract Features</button>
     </aside>
 
     <script src="./../Mapbox_gl.js"></script>
