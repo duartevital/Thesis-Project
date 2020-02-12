@@ -1,4 +1,5 @@
 const mapboxgl = require('mapbox-gl');
+const MapboxDraw = require('@mapbox/mapbox-gl-draw');
 const log = require('electron-log');
 const turf = require('@turf/area');
 
@@ -12,6 +13,7 @@ var map = new mapboxgl.Map({
     center: [-9.134152829647064, 38.73655900843423],
     zoom: 12
 });
+var draw = new MapboxDraw();
 
 map.on('load', function () {
     map.addLayer({
@@ -167,6 +169,11 @@ map.on('click', function (e) {
     });
 
 });
+
+map.on('draw.create', handleDraw);
+map.on('draw.delete', handleDraw);
+map.on('draw.update', handleDraw)
+
 map.addControl(new mapboxgl.NavigationControl());
 
 function countFeatures() {
@@ -196,4 +203,13 @@ function extractFeatures() {
 
         buildings_list.push(propsArray);
     }
+}
+
+function addDrawTools() {
+    map.addControl(draw);
+}
+
+function handleDraw() {
+    var emptyProps = { type, height, underground, shape, coords };
+    addPropertiesTable(emptyProps);
 }

@@ -19,6 +19,7 @@ function openTab(evt, tabName) {
 
 function addPropertiesTable(propsArray) {
     var table = document.getElementById("propsTable");
+    table.innerHTML = "";
     var row;
     var cell1, cell2;
     for (var key in propsArray) {

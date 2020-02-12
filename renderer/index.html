@@ -4,6 +4,7 @@
     <title>Mapbox Test App</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
+    <link href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css' rel='stylesheet' />
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.css' rel='stylesheet' />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
 
@@ -69,11 +70,13 @@
             border-collapse: collapse;
             width: 100%;
         }
+
         td, th {
             border: 1px solid #dddddd;
             text-align: left;
             padding: 8px;
         }
+
         tr:nth-child(even) {
             background-color: #dddddd;
         }
@@ -89,6 +92,7 @@
 
     <div id="features_tab" class="tabContent">
         <div id='features'>
+            <button onclick="addDrawTools()">new</button>
             <button onclick="setTableCell2Editable()">edit</button>
             <table id="propsTable" style="width:100%">
                 
