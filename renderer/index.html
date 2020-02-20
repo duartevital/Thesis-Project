@@ -6,84 +6,14 @@
 
     <link href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css' rel='stylesheet' />
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.css' rel='stylesheet' />
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        .tab {
-            position: absolute;
-            left: 47%;
-            overflow: hidden;
-            border: 1px solid #ccc;
-            background-color: #f1f1f1;
-        }
-
-        .tabContent {
-            display: none;
-            padding: 6px 12px;
-            border: 1px solid #ccc;
-            border-top: none;
-        }
-
-        #labels {
-            position: absolute;
-            top: 6.5%;
-            right: 0;
-            bottom: 0;
-            width: 25%;
-            overflow: auto;
-            background: rgb(230, 230, 230);
-        }
-
-        #features {
-            position: absolute;
-            top: 6.5%;
-            left: 48%;
-            bottom: 0;
-            width: 26.5%;
-            overflow: auto;
-            background: rgba(230, 230, 230, 0.8);
-        }
-
-        #map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 47%;
-            height: 99%;
-        }
-
-        #buttonContainer {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 66%;
-            width: 14%;
-        }
-
-        table {
-            font-family: Arial, sans-serif;
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        td, th {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
-
-        tr:nth-child(even) {
-            background-color: #dddddd;
-        }
-    </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    
 </head>
 <body>
     <div id='map'></div>
+
+    <button id="actionButton" onclick="startAll()">Start</button>
 
     <div class="tab">
         <button class="tabLinks" onclick="openTab(event, 'features_tab')">Labels</button>
@@ -93,16 +23,21 @@
     <div id="features_tab" class="tabContent">
         <div id='features'>
             <button onclick="addDrawTools()">new</button>
-            <button onclick="setTableCell2Editable()">edit</button>
+            <button id="editButton" onclick="setPropsTableEditable(this)">edit</button>
+            <button id="saveButton" onclick="savePropsChanges(this)" style="visibility:hidden">save</button>
             <table id="propsTable" style="width:100%">
                 
             </table>
         </div>
-        <pre id="labels"></pre>
+        <div id="objects">
+            <table id="objTable" style="width:100%">
+
+            </table>
+        </div>
     </div>
     <aside id='buttonContainer' class="tabContent">
         <button type="button" id="countButtons" onclick="countFeatures()">Count Features</button>
-        <button type="button" id="countButtons" onclick="extractFeatures()">Extract Features</button>
+        <button type="button" id="countButtons" onclick="getAllObjects()">Extract Features</button>
     </aside>
 
     <script src="./../Mapbox_gl.js"></script>

@@ -5,6 +5,11 @@ const turf = require('@turf/area');
 
 var selection_coords;
 var feature_selection_count = 0;
+var drawing = false;
+var features = [];
+var propsArray = {};
+var objects_layer = [];
+var objects_list = [];
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZHVhcnRlOTYiLCJhIjoiY2sxbmljbHp0MGF3djNtbzYwY3FrOXFldiJ9._f9pPyMDRXb1sJdMQZmKAQ';
 var map = new mapboxgl.Map({
@@ -19,7 +24,7 @@ map.on('load', function () {
     map.addLayer({
         "id": "buildings_layer",
         "type": "fill",
-        "minzoom": 15,
+        "minzoom": 17,
         "source": {
             type: 'vector',
             url: 'mapbox://mapbox.mapbox-streets-v8',
@@ -33,7 +38,7 @@ map.on('load', function () {
     map.addLayer({
         "id": "water_layer",
         "type": "fill",
-        "minzoom": 15,
+        "minzoom": 17,
         "source": {
             type: 'vector',
             url: 'mapbox://mapbox.mapbox-streets-v8',
@@ -47,7 +52,7 @@ map.on('load', function () {
     map.addLayer({
         "id": "landuse_layer",
         "type": "fill",
-        "minzoom": 15,
+        "minzoom": 17,
         "source": {
             type: 'vector',
             url: 'mapbox://mapbox.mapbox-streets-v8',
@@ -63,7 +68,7 @@ map.on('load', function () {
         "id": "traffic_layer",
         "type": "line",
         "line-offset": true,
-        "minzoom": 15,
+        "minzoom": 17,
         "source": {
             type: 'vector',
             url: 'mapbox://mapbox.mapbox-traffic-v1',
@@ -116,65 +121,110 @@ map.on('load', function () {
 });
 
 map.on('click', function (e) {
-    var features = map.queryRenderedFeatures(e.point)[0];
-    var props = features.properties;
-    var geo = features.geometry;
+   if (drawing == false) {
+        features = map.queryRenderedFeatures(e.point)[0];
+        var props = features.properties;
+        var geo = features.geometry;
 
-    type = props.type;
-    height = props.height;
-    under = props.underground;
-    shape = geo.type;
-    coords = geo.coordinates;
+        type = props.type;
+        height = props.height;
+        under = props.underground;
+        shape = geo.type;
+        coords = geo.coordinates;
 
-    var propsArray = { type: type, height: height, underground: under, shape: shape, coords: coords };
-    addPropertiesTable(propsArray);
+        propsArray = { type: type, height: height, underground: under, shape: shape, coords: coords };
+        createPropertiesTable("propsTable", propsArray);
 
-    //Definir cor para objetos selecionados.
-    selection_coords = features.geometry.coordinates;
-    feature_selection_count++;
+        //Definir cor para objetos selecionados.
+        /*selection_coords = features.geometry.coordinates;
+        feature_selection_count++;
 
-    var feature_color;
-    switch (features.sourceLayer) {
-        case 'building':
-            feature_color = 'rgba(66, 100, 251, 0.9)';
-            break;
-        case 'landuse':
-            feature_color = 'rgba(57, 241, 35, 0.9)';
-            break;
-        case 'road':
-            feature_color = 'rgba(250, 60, 60, 0.9)';
-            break;
-        case 'water':
-            feature_color = 'rgba(25, 22, 234, 0.9)';
-            break;
-    }
-
-    map.addLayer({
-        'id': ('selected_feature' + feature_selection_count),
-        'type': 'fill',
-        'source': {
-            'type': 'geojson',
-            'data': {
-                'type': 'Feature',
-                'geometry': {
-                    'type': 'Polygon',
-                    'coordinates': selection_coords
-                }
-            }
-        },
-        'layout': {},
-        'paint': {
-            'fill-color': feature_color
+        var feature_color;
+        switch (features.sourceLayer) {
+            case 'building':
+                feature_color = 'rgba(66, 100, 251, 0.9)';
+                break;
+            case 'landuse':
+                feature_color = 'rgba(57, 241, 35, 0.9)';
+                break;
+            case 'road':
+                feature_color = 'rgba(250, 60, 60, 0.9)';
+                break;
+            case 'water':
+                feature_color = 'rgba(25, 22, 234, 0.9)';
+                break;
         }
-    });
+
+        map.addLayer({
+            'id': ('selected_feature' + feature_selection_count),
+            'type': 'fill',
+            'source': {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Polygon',
+                        'coordinates': selection_coords
+                    }
+                }
+            },
+            'layout': {},
+            'paint': {
+                'fill-color': feature_color
+            }
+        });*/
+    }
 
 });
 
 map.on('draw.create', handleDraw);
 map.on('draw.delete', handleDraw);
-map.on('draw.update', handleDraw)
+map.on('draw.update', handleDraw);
 
 map.addControl(new mapboxgl.NavigationControl());
+
+function startAll() {
+    objects_layer = [];
+    objects_list = [];
+    document.getElementById("objTable").innerHTML = "";
+    getAllObjects();
+}
+
+function getAllObjects() {
+    objects_layer = map.queryRenderedFeatures();
+
+    for (var i in objects_layer) {
+        type = objects_layer[i].properties.type;
+        height = objects_layer[i].properties.height;
+        under = objects_layer[i].properties.underground;
+        shape = objects_layer[i].geometry.type;
+        coords = objects_layer[i].geometry.coordinates;
+        var propsArray = { id: i, type: type, height: height, underground: under, shape: shape, coords: coords };
+
+        addObjectToTable("objTable", propsArray);
+        objects_list.push(propsArray);
+    }
+
+}
+
+function savePropsChanges(button) {
+    button.style.visibility = "hidden";
+    document.getElementById("editButton").style.visibility = "visible";
+
+    var id = 0;
+    var selectedCoords = features.geometry.coordinates[0];
+    for (var i in objects_layer) {
+        var iterCoords = objects_layer[i].geometry.coordinates[0];
+        if (selectedCoords.length == iterCoords.length) {
+            if (selectedCoords[0][0] == iterCoords[0][0]) {
+                id = i;
+            }
+        }
+    }
+    //Guardar as alterações no objeto do array com o mesmo id:
+    extractTableContents("propsTable", propsArray);
+    objects_list[id] = propsArray;
+}
 
 function countFeatures() {
     var buildings_num = map.queryRenderedFeatures({ layers: ['buildings_layer'] });
@@ -185,31 +235,13 @@ function countFeatures() {
     log.info("Number of roads == " + roads_num);
 }
 
-//Neste momento so funciona para os buildings
-function extractFeatures() {
-    var buildings_layer = map.queryRenderedFeatures({ layers: ['buildings_layer'] });
-    var landuse_layer = map.queryRenderedFeatures({ layers: ['landuse_layer'] });
-    var roads_layer = map.queryRenderedFeatures({ layers: ['roads_layer'] });
-
-    var buildings_list=[], landuse_list, roads_list;
-
-    for (var i in buildings_layer) {
-        type = buildings_layer[i].properties.type;
-        height = buildings_layer[i].properties.height;
-        under = buildings_layer[i].properties.underground;
-        shape = buildings_layer[i].geometry.type;
-        coords = buildings_layer[i].geometry.coordinates;
-        var propsArray = { type: type, height: height, underground: under, shape: shape, coords: coords };
-
-        buildings_list.push(propsArray);
-    }
-}
-
 function addDrawTools() {
     map.addControl(draw);
+    drawing = true;
 }
 
 function handleDraw() {
-    var emptyProps = { type, height, underground, shape, coords };
-    addPropertiesTable(emptyProps);
+    var data = draw.getAll();
+    //var emptyProps = { type, height, underground, shape, coords };
+    //addPropertiesTable(emptyProps);
 }

@@ -1,0 +1,77 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#actionButton {
+    position: absolute;
+    top: 0;
+    left: 48.5%;
+}
+
+.tab {
+    position: absolute;
+    right: 3%;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+.tabContent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+#objects {
+    position: absolute;
+    top: 6.5%;
+    right: 0;
+    bottom: 0;
+    width: 25%;
+    overflow: auto;
+    background: rgb(230, 230, 230);
+}
+
+#features {
+    position: absolute;
+    top: 6.5%;
+    left: 48%;
+    bottom: 0;
+    width: 26.5%;
+    overflow: auto;
+    background: rgba(230, 230, 230, 0.8);
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 47%;
+    height: 99%;
+}
+
+#buttonContainer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 66%;
+    width: 14%;
+}
+
+table {
+    font-family: Arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
