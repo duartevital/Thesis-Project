@@ -126,13 +126,14 @@ map.on('click', function (e) {
         var props = features.properties;
         var geo = features.geometry;
 
+       id = findObjId();
         type = props.type;
         height = props.height;
         under = props.underground;
         shape = geo.type;
         coords = geo.coordinates;
 
-        propsArray = { type: type, height: height, underground: under, shape: shape, coords: coords };
+        propsArray = { id: id, type: type, height: height, underground: under, shape: shape, coords: coords };
         createPropertiesTable("propsTable", propsArray);
 
         //Definir cor para objetos selecionados.
@@ -188,6 +189,7 @@ function startAll() {
     objects_list = [];
     document.getElementById("objTable").innerHTML = "";
     getAllObjects();
+    openTab(event, 'features_tab');
 }
 
 function getAllObjects() {
@@ -207,10 +209,7 @@ function getAllObjects() {
 
 }
 
-function savePropsChanges(button) {
-    button.style.visibility = "hidden";
-    document.getElementById("editButton").style.visibility = "visible";
-
+function findObjId() {
     var id = 0;
     var selectedCoords = features.geometry.coordinates[0];
     for (var i in objects_layer) {
@@ -221,9 +220,20 @@ function savePropsChanges(button) {
             }
         }
     }
+    return id;
+}
+
+function savePropsChanges(button) {
+    button.style.visibility = "hidden";
+    document.getElementById("editButton").style.visibility = "visible";
+
     //Guardar as alterações no objeto do array com o mesmo id:
     extractTableContents("propsTable", propsArray);
     objects_list[id] = propsArray;
+    for (var i in objects_list) {
+        log.info("id: " + objects_list[i].id + ", type: " + objects_list[i].type);
+    }
+    drawing = false;
 }
 
 function countFeatures() {
@@ -236,12 +246,17 @@ function countFeatures() {
 }
 
 function addDrawTools() {
+    document.getElementById("propsTable").innerHTML = "";
     map.addControl(draw);
     drawing = true;
 }
 
 function handleDraw() {
     var data = draw.getAll();
-    //var emptyProps = { type, height, underground, shape, coords };
-    //addPropertiesTable(emptyProps);
+    var polygonCoords = data.features[0].geometry.coordinates[0];
+    var id = objects_list.length;
+
+    var array = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords };
+    createPropertiesTable("propsTable", array);
+    setPropsTableEditable(document.getElementById("editButton"));
 }
