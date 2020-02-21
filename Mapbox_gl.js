@@ -18,7 +18,15 @@ var map = new mapboxgl.Map({
     center: [-9.134152829647064, 38.73655900843423],
     zoom: 12
 });
-var draw = new MapboxDraw();
+var draw = new MapboxDraw({
+    drawing: true,
+    displayControlsDefault: false,
+    controls: {
+        polygon: true,
+        line_string: true,
+        trash: true
+    }
+});
 
 map.on('load', function () {
     map.addLayer({
@@ -179,10 +187,12 @@ map.on('click', function (e) {
 });
 
 map.on('draw.create', handleDraw);
-map.on('draw.delete', handleDraw);
+//map.on('draw.delete', handleDraw);
 map.on('draw.update', handleDraw);
 
 map.addControl(new mapboxgl.NavigationControl());
+map.addControl(draw);
+toggleDrawButtons(false);
 
 function startAll() {
     objects_layer = [];
@@ -226,28 +236,23 @@ function findObjId() {
 function savePropsChanges(button) {
     button.style.visibility = "hidden";
     document.getElementById("editButton").style.visibility = "visible";
+    toggleDrawButtons(false);
 
     //Guardar as alterações no objeto do array com o mesmo id:
     extractTableContents("propsTable", propsArray);
-    objects_list[id] = propsArray;
+    objects_list[propsArray.id] = propsArray;
+    if (drawing == true) {
+        addObjectToTable("objTable", propsArray);
+    }
     for (var i in objects_list) {
         log.info("id: " + objects_list[i].id + ", type: " + objects_list[i].type);
     }
     drawing = false;
 }
 
-function countFeatures() {
-    var buildings_num = map.queryRenderedFeatures({ layers: ['buildings_layer'] });
-    var green_num = map.queryRenderedFeatures({ layers: ['landuse_layer'] }).length;
-    var roads_num = map.queryRenderedFeatures({ layers: ['roads_layer'] }).length;
-    log.info("Number of buildings == " + buildings_num.length);
-    log.info("Number of landuse == " + green_num);
-    log.info("Number of roads == " + roads_num);
-}
-
 function addDrawTools() {
     document.getElementById("propsTable").innerHTML = "";
-    map.addControl(draw);
+    toggleDrawButtons(true);
     drawing = true;
 }
 
@@ -259,4 +264,23 @@ function handleDraw() {
     var array = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords };
     createPropertiesTable("propsTable", array);
     setPropsTableEditable(document.getElementById("editButton"));
+}
+
+function toggleDrawButtons(enable) {
+    var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
+    if (enable == false) {
+        draw_buttons[0].disabled = true;
+        draw_buttons[1].disabled = true;
+        draw_buttons[2].disabled = true;
+        draw_buttons[0].classList.add("disabled-control-button");
+        draw_buttons[1].classList.add("disabled-control-button");
+        draw_buttons[2].classList.add("disabled-control-button");
+    } else {
+        draw_buttons[0].disabled = false;
+        draw_buttons[1].disabled = false;
+        draw_buttons[2].disabled = false;
+        draw_buttons[0].classList.remove("disabled-control-button");
+        draw_buttons[1].classList.remove("disabled-control-button");
+        draw_buttons[2].classList.remove("disabled-control-button");
+    }
 }

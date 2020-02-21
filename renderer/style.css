@@ -24,6 +24,10 @@ body {
     border-top: none;
 }
 
+.disabled-control-button {
+    opacity: .5;
+}
+
 #objects {
     position: absolute;
     top: 6.5%;

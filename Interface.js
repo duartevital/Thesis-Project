@@ -47,7 +47,7 @@ function setPropsTableEditable(button) {
     document.getElementById("saveButton").style.visibility = "visible";
     var elems = document.getElementsByClassName("cell2");
     if (elems[0].getAttribute("contenteditable") == "false") {
-        for (var i in elems) {
+        for (var i = 0; i < elems.length; i++) {
             elems[i].setAttribute("contenteditable", "true");
         }
     } else {
