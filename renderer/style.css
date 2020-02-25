@@ -79,3 +79,9 @@ td, th {
 tr:nth-child(even) {
     background-color: #dddddd;
 }
+
+#dumb_button {
+    position: absolute;
+    bottom: 3%;
+    right: 5%;
+}

@@ -7,7 +7,7 @@ var selection_coords;
 var feature_selection_count = 0;
 var drawing = false;
 var features = [];
-var propsArray = {};
+//var propsArray = {};
 var objects_layer = [];
 var objects_list = [];
 
@@ -141,8 +141,9 @@ map.on('click', function (e) {
         shape = geo.type;
         coords = geo.coordinates;
 
-        propsArray = { id: id, type: type, height: height, underground: under, shape: shape, coords: coords };
-        createPropertiesTable("propsTable", propsArray);
+       var propsArray = { id: id, type: type, height: height, underground: under, shape: shape, coords: coords };
+       createPropertiesTable("propsTable", propsArray);
+       log.info(propsArray);
 
         //Definir cor para objetos selecionados.
         /*selection_coords = features.geometry.coordinates;
@@ -236,16 +237,23 @@ function findObjId() {
 function savePropsChanges(button) {
     button.style.visibility = "hidden";
     document.getElementById("editButton").style.visibility = "visible";
+    var elems = document.getElementsByClassName("cell2");
+    for (var i = 0; i < elems.length; i++) {
+        elems[i].setAttribute("contenteditable", "false");
+    }
     toggleDrawButtons(false);
 
     //Guardar as alterações no objeto do array com o mesmo id:
+    var propsArray = {};
     extractTableContents("propsTable", propsArray);
     objects_list[propsArray.id] = propsArray;
+    var objTable = document.getElementById("objTable");
     if (drawing == true) {
         addObjectToTable("objTable", propsArray);
-    }
-    for (var i in objects_list) {
-        log.info("id: " + objects_list[i].id + ", type: " + objects_list[i].type);
+    } else {
+        if (objTable.rows.length >= objects_list.length) {
+            changeObjectInTable("objTable", propsArray);
+        }
     }
     drawing = false;
 }
@@ -258,7 +266,7 @@ function addDrawTools() {
 
 function handleDraw() {
     var data = draw.getAll();
-    var polygonCoords = data.features[0].geometry.coordinates[0];
+    var polygonCoords = data.features[data.features.length-1].geometry.coordinates[0];
     var id = objects_list.length;
 
     var array = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords };
@@ -282,5 +290,17 @@ function toggleDrawButtons(enable) {
         draw_buttons[0].classList.remove("disabled-control-button");
         draw_buttons[1].classList.remove("disabled-control-button");
         draw_buttons[2].classList.remove("disabled-control-button");
+    }
+}
+
+
+function dumbFunction() {
+    log.info("here");
+
+    //var array = { id: 1, type: "insert type", height: "", underground: "", shape: "", coords: "" };
+    //objects_list[1] = array;
+
+    for (var i in objects_list) {
+        log.info(objects_list[i].id);
     }
 }

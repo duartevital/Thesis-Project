@@ -28,16 +28,29 @@ function createPropertiesTable(tableName, propsArray) {
         cell1.classList.add("cell1"); cell2.classList.add("cell2");
         cell2.setAttribute("contenteditable", "false");
     }
+
+    log.info(propsArray);
 }
 
-function addObjectToTable(tableName, propsArray) {
+function addObjectToTable(tableName, array) {
     var table = document.getElementById(tableName);
     var row = table.insertRow(-1);
     var cell = row.insertCell(0);
 
+    cell.innerHTML = array.type;
+    cell.setAttribute("contenteditable", "false");
+    cell.onclick = function () {
+        createPropertiesTable("propsTable", array);
+    };
+}
+
+function changeObjectInTable(tableName, propsArray) {
+    var table = document.getElementById(tableName);
+    var row = table.rows[propsArray.id];
+    var cell = row.cells[0];
     cell.innerHTML = propsArray.type;
     cell.setAttribute("contenteditable", "false");
-    cell.onclick = function() {
+    cell.onclick = function () {
         createPropertiesTable("propsTable", propsArray);
     };
 }
