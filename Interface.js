@@ -28,8 +28,6 @@ function createPropertiesTable(tableName, propsArray) {
         cell1.classList.add("cell1"); cell2.classList.add("cell2");
         cell2.setAttribute("contenteditable", "false");
     }
-
-    log.info(propsArray);
 }
 
 function addObjectToTable(tableName, array) {

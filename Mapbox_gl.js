@@ -7,7 +7,8 @@ var selection_coords;
 var feature_selection_count = 0;
 var drawing = false;
 var features = [];
-//var propsArray = {};
+var draw_id = 0;
+var draw_object_list = [];
 var objects_layer = [];
 var objects_list = [];
 
@@ -130,61 +131,21 @@ map.on('load', function () {
 
 map.on('click', function (e) {
    if (drawing == false) {
-        features = map.queryRenderedFeatures(e.point)[0];
-        var props = features.properties;
-        var geo = features.geometry;
+       features = map.queryRenderedFeatures(e.point)[0];
+       var props = features.properties;
+       var geo = features.geometry;
 
-       id = findObjId();
-        type = props.type;
-        height = props.height;
-        under = props.underground;
-        shape = geo.type;
-        coords = geo.coordinates;
+       id = findObjId(props.id);
+       type = objects_list[id].type;
+       height = objects_list[id].height;
+       under = objects_list[id].underground;
+       shape = objects_list[id].shape;
+       coords = objects_list[id].coords;
 
        var propsArray = { id: id, type: type, height: height, underground: under, shape: shape, coords: coords };
        createPropertiesTable("propsTable", propsArray);
        log.info(propsArray);
-
-        //Definir cor para objetos selecionados.
-        /*selection_coords = features.geometry.coordinates;
-        feature_selection_count++;
-
-        var feature_color;
-        switch (features.sourceLayer) {
-            case 'building':
-                feature_color = 'rgba(66, 100, 251, 0.9)';
-                break;
-            case 'landuse':
-                feature_color = 'rgba(57, 241, 35, 0.9)';
-                break;
-            case 'road':
-                feature_color = 'rgba(250, 60, 60, 0.9)';
-                break;
-            case 'water':
-                feature_color = 'rgba(25, 22, 234, 0.9)';
-                break;
-        }
-
-        map.addLayer({
-            'id': ('selected_feature' + feature_selection_count),
-            'type': 'fill',
-            'source': {
-                'type': 'geojson',
-                'data': {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'Polygon',
-                        'coordinates': selection_coords
-                    }
-                }
-            },
-            'layout': {},
-            'paint': {
-                'fill-color': feature_color
-            }
-        });*/
-    }
-
+   }
 });
 
 map.on('draw.create', handleDraw);
@@ -220,8 +181,8 @@ function getAllObjects() {
 
 }
 
-function findObjId() {
-    var id = 0;
+function findObjId(draw_id) {
+    var id = -1;
     var selectedCoords = features.geometry.coordinates[0];
     for (var i in objects_layer) {
         var iterCoords = objects_layer[i].geometry.coordinates[0];
@@ -230,6 +191,9 @@ function findObjId() {
                 id = i;
             }
         }
+    }
+    if (id == -1) {
+        id = selectedDrawObject(draw_id);
     }
     return id;
 }
@@ -249,7 +213,10 @@ function savePropsChanges(button) {
     objects_list[propsArray.id] = propsArray;
     var objTable = document.getElementById("objTable");
     if (drawing == true) {
+        var draw_obj = { id: propsArray.id, draw_id: draw_id };
+        draw_object_list.push(draw_obj);
         addObjectToTable("objTable", propsArray);
+        draw_id = 0;
     } else {
         if (objTable.rows.length >= objects_list.length) {
             changeObjectInTable("objTable", propsArray);
@@ -266,12 +233,25 @@ function addDrawTools() {
 
 function handleDraw() {
     var data = draw.getAll();
-    var polygonCoords = data.features[data.features.length-1].geometry.coordinates[0];
+    log.info(data);
+    var polygonCoords = data.features[data.features.length - 1].geometry.coordinates[0];
+    draw_id = data.features[data.features.length - 1].id;
     var id = objects_list.length;
 
     var array = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords };
     createPropertiesTable("propsTable", array);
     setPropsTableEditable(document.getElementById("editButton"));
+}
+
+function selectedDrawObject(draw_id) {
+    var id = -1;
+    for (var i = 0; i < draw_object_list.length; i++) {
+        if (draw_object_list[i].draw_id == draw_id) {
+            id = draw_object_list[i].id;
+        }
+    }
+
+    return id;
 }
 
 function toggleDrawButtons(enable) {
@@ -295,12 +275,13 @@ function toggleDrawButtons(enable) {
 
 
 function dumbFunction() {
-    log.info("here");
-
-    //var array = { id: 1, type: "insert type", height: "", underground: "", shape: "", coords: "" };
-    //objects_list[1] = array;
-
+    log.info("objects_list:");
     for (var i in objects_list) {
-        log.info(objects_list[i].id);
+        log.info(objects_list[i]);
+    }
+
+    log.info("draw_objects_list:");
+    for (var i in draw_object_list) {
+        log.info(draw_object_list[i]);
     }
 }
