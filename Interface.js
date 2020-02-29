@@ -58,7 +58,7 @@ function setPropsTableEditable(button) {
     document.getElementById("saveButton").style.visibility = "visible";
     var elems = document.getElementsByClassName("cell2");
     if (elems[0].getAttribute("contenteditable") == "false") {
-        for (var i = 0; i < elems.length; i++) {
+        for (var i = 0; i < elems.length-2; i++) {
             elems[i].setAttribute("contenteditable", "true");
         }
     } else {
@@ -68,9 +68,12 @@ function setPropsTableEditable(button) {
     }
 }
 
-function extractTableContents(tableName, array) {
+//Extrai todas as filas, menos as ultimas 2 (coords, drawn)
+function extractTableContents(tableName) {
+    var array = {};
     var table = document.getElementById("propsTable");
-    for (var i = 0; i < table.rows.length; i++) {
+    for (var i = 0; i < table.rows.length-2; i++) {
         array[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerHTML;
     }
+    return array;
 }

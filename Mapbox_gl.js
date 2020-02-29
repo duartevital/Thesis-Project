@@ -2,22 +2,22 @@ const mapboxgl = require('mapbox-gl');
 const MapboxDraw = require('@mapbox/mapbox-gl-draw');
 const log = require('electron-log');
 const turf = require('@turf/area');
-
-var selection_coords;
-var feature_selection_count = 0;
+var first_start = false;
 var drawing = false;
 var features = [];
 var draw_id = 0;
 var draw_object_list = [];
 var objects_layer = [];
 var objects_list = [];
+var tmp_drawn_list = [];
+var tmp_drawn_obj = {};
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZHVhcnRlOTYiLCJhIjoiY2sxbmljbHp0MGF3djNtbzYwY3FrOXFldiJ9._f9pPyMDRXb1sJdMQZmKAQ';
 var map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/satellite-v9',
     center: [-9.134152829647064, 38.73655900843423],
-    zoom: 12
+    zoom: 12,
 });
 var draw = new MapboxDraw({
     drawing: true,
@@ -28,6 +28,7 @@ var draw = new MapboxDraw({
         trash: true
     }
 });
+var nav = new mapboxgl.NavigationControl();
 
 map.on('load', function () {
     map.addLayer({
@@ -128,7 +129,6 @@ map.on('load', function () {
         }
     });
 });
-
 map.on('click', function (e) {
    if (drawing == false) {
        features = map.queryRenderedFeatures(e.point)[0];
@@ -141,44 +141,60 @@ map.on('click', function (e) {
        under = objects_list[id].underground;
        shape = objects_list[id].shape;
        coords = objects_list[id].coords;
+       drawn = objects_list[id].drawn;
 
-       var propsArray = { id: id, type: type, height: height, underground: under, shape: shape, coords: coords };
+       var propsArray = { id: id, type: type, height: height, underground: under, shape: shape, coords: coords, drawn: drawn };
        createPropertiesTable("propsTable", propsArray);
        log.info(propsArray);
    }
+});
+map.on('dragend', function (e) {
+    if (first_start) {
+        startAll();
+    }
 });
 
 map.on('draw.create', handleDraw);
 //map.on('draw.delete', handleDraw);
 map.on('draw.update', handleDraw);
 
-map.addControl(new mapboxgl.NavigationControl());
+map.addControl(nav);
 map.addControl(draw);
 toggleDrawButtons(false);
 
 function startAll() {
-    objects_layer = [];
-    objects_list = [];
-    document.getElementById("objTable").innerHTML = "";
-    getAllObjects();
-    openTab(event, 'features_tab');
+    var zoom = map.getZoom();
+    if (zoom >= 18) {
+        first_start = true;
+        objects_layer = [];
+        objects_list = [];
+        document.getElementById("objTable").innerHTML = "";
+        getAllObjects();
+        updateDrawObjectsInViewport();
+        //insert all visible manual objects in objects_list and obj_table
+        openTab(event, 'features_tab');
+    } else {
+        alert("Zoom level is to low - " + zoom);
+    }
 }
 
 function getAllObjects() {
     objects_layer = map.queryRenderedFeatures();
-
+    var tmp = 0;
     for (var i in objects_layer) {
-        type = objects_layer[i].properties.type;
-        height = objects_layer[i].properties.height;
-        under = objects_layer[i].properties.underground;
-        shape = objects_layer[i].geometry.type;
-        coords = objects_layer[i].geometry.coordinates;
-        var propsArray = { id: i, type: type, height: height, underground: under, shape: shape, coords: coords };
+        if (objects_layer[i].layer.source != "mapbox-gl-draw-cold") {
+            type = objects_layer[i].properties.type;
+            height = objects_layer[i].properties.height;
+            under = objects_layer[i].properties.underground;
+            shape = objects_layer[i].geometry.type;
+            coords = objects_layer[i].geometry.coordinates;
+            var propsArray = { id: tmp, type: type, height: height, underground: under, shape: shape, coords: coords, drawn: false };
 
-        addObjectToTable("objTable", propsArray);
-        objects_list.push(propsArray);
+            addObjectToTable("objTable", propsArray);
+            objects_list.push(propsArray);
+            tmp++;
+        }
     }
-
 }
 
 function findObjId(draw_id) {
@@ -208,14 +224,15 @@ function savePropsChanges(button) {
     toggleDrawButtons(false);
 
     //Guardar as alterações no objeto do array com o mesmo id:
-    var propsArray = {};
-    extractTableContents("propsTable", propsArray);
-    objects_list[propsArray.id] = propsArray;
+    var extracted_props = extractTableContents("propsTable");
     var objTable = document.getElementById("objTable");
     if (drawing == true) {
-        var draw_obj = { id: propsArray.id, draw_id: draw_id };
+        var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, underground: extracted_props.underground, shape: extracted_props.shape, coords: tmp_drawn_obj.coords, drawn: tmp_drawn_obj.drawn };
+        objects_list[extracted_props.id] = tmp;
+        var draw_obj = { id: extracted_props.id, draw_id: draw_id };
         draw_object_list.push(draw_obj);
-        addObjectToTable("objTable", propsArray);
+        tmp_drawn_list.push(tmp);
+        addObjectToTable("objTable", tmp);
         draw_id = 0;
     } else {
         if (objTable.rows.length >= objects_list.length) {
@@ -233,18 +250,20 @@ function addDrawTools() {
 
 function handleDraw() {
     var data = draw.getAll();
-    log.info(data);
-    var polygonCoords = data.features[data.features.length - 1].geometry.coordinates[0];
+    var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
     draw_id = data.features[data.features.length - 1].id;
     var id = objects_list.length;
 
-    var array = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords };
-    createPropertiesTable("propsTable", array);
+    //log.info(data.features[0].id);
+
+    tmp_drawn_obj = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords, drawn: true };
+    createPropertiesTable("propsTable", tmp_drawn_obj);
     setPropsTableEditable(document.getElementById("editButton"));
 }
 
 function selectedDrawObject(draw_id) {
     var id = -1;
+    var data = draw.getAll();
     for (var i = 0; i < draw_object_list.length; i++) {
         if (draw_object_list[i].draw_id == draw_id) {
             id = draw_object_list[i].id;
@@ -273,15 +292,29 @@ function toggleDrawButtons(enable) {
     }
 }
 
+function updateDrawObjectsInViewport() {
+    var bounds = map.getBounds();
+    var ne_bounds = bounds._ne;
+    var sw_bounds = bounds._sw;
+
+    for (var i = 0; i < tmp_drawn_list.length; i++) {
+        var coords = tmp_drawn_list[i].coords[0];
+        var is_inside = false;
+        for (var j = 0; j < coords.length; j++) {
+            if (coords[j][0] > sw_bounds.lng && coords[j][0] < ne_bounds.lng && coords[j][1] > sw_bounds.lat && coords[j][1] < ne_bounds.lat) {
+                //Pelo menos uma das coordenadas está dentro do polígono.
+                tmp_drawn_list[i].id = objects_list.length;
+                objects_list.push(tmp_drawn_list[i]);
+                addObjectToTable("objTable", tmp_drawn_list[i]);
+                break;
+            }
+        }
+    }
+}
 
 function dumbFunction() {
-    log.info("objects_list:");
     for (var i in objects_list) {
-        log.info(objects_list[i]);
+        log.info(objects_list[i].id);
     }
-
-    log.info("draw_objects_list:");
-    for (var i in draw_object_list) {
-        log.info(draw_object_list[i]);
-    }
+    //updateDrawObjectsInViewport();
 }
