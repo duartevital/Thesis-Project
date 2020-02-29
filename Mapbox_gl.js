@@ -135,6 +135,7 @@ map.on('click', function (e) {
        var props = features.properties;
        var geo = features.geometry;
 
+       log.info("props.id = " + props.id);
        id = findObjId(props.id);
        type = objects_list[id].type;
        height = objects_list[id].height;
@@ -143,6 +144,12 @@ map.on('click', function (e) {
        coords = objects_list[id].coords;
        drawn = objects_list[id].drawn;
 
+       if (objects_list[id].drawn) {
+           var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
+           draw_buttons[2].disabled = false;
+           draw_buttons[2].classList.remove("disabled-control-button");
+       }
+       log.info("here 3");
        var propsArray = { id: id, type: type, height: height, underground: under, shape: shape, coords: coords, drawn: drawn };
        createPropertiesTable("propsTable", propsArray);
        log.info(propsArray);
@@ -155,8 +162,11 @@ map.on('dragend', function (e) {
 });
 
 map.on('draw.create', handleDraw);
-//map.on('draw.delete', handleDraw);
 map.on('draw.update', handleDraw);
+map.on('draw.delete', function (e) {
+    var id = findObjId(features.properties.id);
+    deleteDrawnObject(id);
+});
 
 map.addControl(nav);
 map.addControl(draw);
@@ -234,6 +244,8 @@ function savePropsChanges(button) {
         tmp_drawn_list.push(tmp);
         addObjectToTable("objTable", tmp);
         draw_id = 0;
+        document.getElementById("newButton").style.visibility = "visible";
+        draw.changeMode('simple_select');
     } else {
         if (objTable.rows.length >= objects_list.length) {
             changeObjectInTable("objTable", propsArray);
@@ -242,13 +254,15 @@ function savePropsChanges(button) {
     drawing = false;
 }
 
-function addDrawTools() {
+function addDrawTools(button) {
+    button.style.visibility = "hidden";
     document.getElementById("propsTable").innerHTML = "";
     toggleDrawButtons(true);
     drawing = true;
 }
 
 function handleDraw() {
+    log.info("here handleDraw");
     var data = draw.getAll();
     var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
     draw_id = data.features[data.features.length - 1].id;
@@ -275,6 +289,7 @@ function selectedDrawObject(draw_id) {
 
 function toggleDrawButtons(enable) {
     var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
+    log.info("here 1.1");
     if (enable == false) {
         draw_buttons[0].disabled = true;
         draw_buttons[1].disabled = true;
@@ -283,13 +298,17 @@ function toggleDrawButtons(enable) {
         draw_buttons[1].classList.add("disabled-control-button");
         draw_buttons[2].classList.add("disabled-control-button");
     } else {
+        log.info("here 1.2");
         draw_buttons[0].disabled = false;
         draw_buttons[1].disabled = false;
         draw_buttons[2].disabled = false;
+        log.info("here 1.3");
         draw_buttons[0].classList.remove("disabled-control-button");
         draw_buttons[1].classList.remove("disabled-control-button");
         draw_buttons[2].classList.remove("disabled-control-button");
+        log.info("here 1.4");
     }
+    log.info("here 1.5");
 }
 
 function updateDrawObjectsInViewport() {
@@ -312,9 +331,31 @@ function updateDrawObjectsInViewport() {
     }
 }
 
+function deleteDrawnObject(id) {
+    if (objects_list[id].drawn) {
+        objects_list.splice(id, 1);
+    }
+    for (var i in draw_object_list) {
+        if (draw_object_list.id == id) {
+            draw_object_list.splice(i, 1);
+        }
+        if (tmp_drawn_list.id == id) {
+            tmp_drawn_list.splice(i, 1);
+        }
+    }
+    document.getElementById("objTable").innerHTML = "";
+    for (var i in objects_list) {
+        objects_list[i].id = i;
+        addObjectToTable("objTable", objects_list[i]);
+    }
+    var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
+    draw_button[2].disabled = true;
+    draw_buttons[2].classList.add("disabled-control-button");
+}
+
+
 function dumbFunction() {
     for (var i in objects_list) {
         log.info(objects_list[i].id);
     }
-    //updateDrawObjectsInViewport();
 }
