@@ -58,9 +58,10 @@ function setPropsTableEditable(button) {
     document.getElementById("saveButton").style.visibility = "visible";
     var elems = document.getElementsByClassName("cell2");
     if (elems[0].getAttribute("contenteditable") == "false") {
-        for (var i = 0; i < elems.length-2; i++) {
+        for (var i = 1; i < elems.length - 2; i++) {
             elems[i].setAttribute("contenteditable", "true");
         }
+        autocomplete(elems[1], elems[2], all_results_array);
     } else {
         for (var i in elems) {
             elems[i].setAttribute("contenteditable", "false");
@@ -77,3 +78,75 @@ function extractTableContents(tableName) {
     }
     return array;
 }
+
+function autocomplete(inp, cell_spot, arr) {
+    //O segundo argumento (cell_spot) serve apenas para posicionar a lista de resultados.
+    var currentFocus;
+
+    inp.addEventListener("input", function (e) {
+        var a, b, val = inp.innerHTML;
+        closeAllLists();
+        if (!val) { return false; }
+        currentFocus = -1;
+        a = document.createElement("DIV");
+        a.setAttribute("id", cell_spot.id + "autocomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        cell_spot.parentNode.appendChild(a);
+
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+                b = document.createElement("DIV");
+                b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+                b.innerHTML += arr[i].substr(val.length);
+                b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                b.addEventListener("click", function (e) {
+                    inp.innerHTML = this.getElementsByTagName("input")[0].value;
+                    closeAllLists();
+                });
+                a.appendChild(b);
+            }
+        }
+    });
+
+    inp.addEventListener("keydown", function (e) {
+        var x = document.getElementById(this.id + "autocomplete-list");
+        if (x) x = x.getElementsByTagName("div");
+        if (e.keyCode == 40) {
+            currentFocus++;
+            addActive(x);
+        } else if (e.keyCode == 38) {
+            currentFocus--;
+            addActive(x);
+        } else if (e.keyCode == 13) {
+            if (currentFocus > -1) {
+                if (x) x[currentFocus].click();
+            }
+        }
+    });
+
+    function addActive(x) {
+        if (!x) { log.info("!x no addActive"); return false; }
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+        x[currentFocus].classList.add("autocomplete-active");
+    }
+    function removeActive(x) {
+        for (var i = 0; i < x.length; i++) {
+            x[i].classList.remove("autocomplete-active");
+        }
+    }
+    function closeAllLists(elem) {
+        var x = document.getElementsByClassName("autocomplete-items");
+        for (var i = 0; i < x.length; i++) {
+            if (elem != x[i] && elem != inp) {
+                x[i].parentNode.removeChild(x[i]);
+            }
+        }
+    }
+
+    a.addEventListener("click", function (e) {
+        closeAllLists(e.target);
+    });
+}
+   

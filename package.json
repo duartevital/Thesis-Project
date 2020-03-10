@@ -31,5 +31,8 @@
   "bugs": {
     "url": "https://github.com/duartevital/Tese-Projeto/issues"
   },
-  "homepage": "https://github.com/duartevital/Tese-Projeto#readme"
+  "homepage": "https://github.com/duartevital/Tese-Projeto#readme",
+  "devDependencies": {
+    "node-fetch": "^2.6.0"
+  }
 }
