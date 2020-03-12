@@ -24,7 +24,7 @@ function createPropertiesTable(tableName, propsArray) {
     for (var key in propsArray) {
         row = table.insertRow(-1);
         cell1 = row.insertCell(0); cell2 = row.insertCell(1);
-        cell1.innerHTML = key; cell2.innerHTML = propsArray[key];
+        cell1.innerText = key; cell2.innerText = propsArray[key];
         cell1.classList.add("cell1"); cell2.classList.add("cell2");
         cell2.setAttribute("contenteditable", "false");
     }
@@ -61,6 +61,9 @@ function setPropsTableEditable(button) {
         for (var i = 1; i < elems.length - 2; i++) {
             elems[i].setAttribute("contenteditable", "true");
         }
+        addDropdownMenu(elems[3]);
+        elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
+        elems[2].onkeydown = function () { return numericKeyPressed(event) };
         autocomplete(elems[1], elems[2], all_results_array);
     } else {
         for (var i in elems) {
@@ -70,12 +73,16 @@ function setPropsTableEditable(button) {
 }
 
 //Extrai todas as filas, menos as ultimas 2 (coords, drawn)
-function extractTableContents(tableName) {
+function extractTableContents() {
     var array = {};
     var table = document.getElementById("propsTable");
-    for (var i = 0; i < table.rows.length-2; i++) {
-        array[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerHTML;
-    }
+
+    array[table.rows[0].cells[0].innerHTML] = table.rows[0].cells[1].innerText;
+    array[table.rows[1].cells[0].innerHTML] = table.rows[1].cells[1].innerText;
+    array[table.rows[2].cells[0].innerHTML] = table.rows[2].cells[1].innerText;
+    array[table.rows[3].cells[0].innerHTML] = document.getElementById("idSelect").options[document.getElementById("idSelect").selectedIndex].value;
+    array[table.rows[4].cells[0].innerHTML] = table.rows[4].cells[1].innerText;
+
     return array;
 }
 
@@ -149,4 +156,44 @@ function autocomplete(inp, cell_spot, arr) {
         closeAllLists(e.target);
     });
 }
-   
+
+function numericKeyPressed(e) {
+    var x = e.keyCode;
+    if ((x >= 48 && x <= 57) || x == 8 || (x >= 35 && x <= 40) || x == 46)
+        return true;
+    else {
+        //Adicionar um pequeno "alerta" por baixo do text field
+        return false;
+    }
+}
+
+function alphabetKeyPressed(e) {
+    var x = e.keyCode;
+    log.info("key pressed: " + x);
+    //Os keyCodes das letras no meu teclado são diferentes dos apresentados em keycode.info
+    if ((x >= 65 && x <= 90) || x == 8 || (x >= 35 && x <= 40) || x == 46) 
+        return true;
+    else {
+        //Adicionar um pequeno "alerta" por baixo do text field
+        return false;
+    }
+}
+
+//Versão inicial de uma função para integrar um menu dropdown na cell 'underground'.
+function addDropdownMenu(cell_spot) {
+    var tmp = cell_spot.innerText;
+    var html_dropdown;
+    if (tmp == "true") {
+        html_dropdown = "<select id='idSelect'>"
+            + "<option value='true'>true</option>"
+            + "<option value='false'>false</option>"
+            + "</select>";
+    } else {
+        html_dropdown = "<select id='idSelect'>"
+            + "<option value='false'>false</option>"
+            + "<option value='true'>true</option>"
+            + "</select>";
+    }
+    cell_spot.innerHTML = html_dropdown;
+
+}

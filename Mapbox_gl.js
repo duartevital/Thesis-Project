@@ -245,7 +245,7 @@ function savePropsChanges(button) {
     toggleDrawButtons(false);
 
     //Guardar as alterações no objeto do array com o mesmo id:
-    var extracted_props = extractTableContents("propsTable");
+    var extracted_props = extractTableContents();
     var objTable = document.getElementById("objTable");
     if (drawing == true) {
         var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, underground: extracted_props.underground, shape: extracted_props.shape, coords: tmp_drawn_obj.coords, drawn: tmp_drawn_obj.drawn };
@@ -369,7 +369,7 @@ function deleteDrawnObject(id) {
 
 
 function dumbFunction() {
-    for (var i in all_results_array) {
-        log.info(all_results_array[i]);
+    for (var i in objects_list) {
+        log.info(objects_list[i]);
     }
 }
