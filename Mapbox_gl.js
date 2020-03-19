@@ -145,7 +145,8 @@ map.on('load', function () {
     });
 });
 map.on('click', function (e) {
-   if (drawing == false) {
+    if (drawing == false) {
+        document.getElementById("editButton").style.visibility = "visible";
        features = map.queryRenderedFeatures(e.point)[0];
        var props = features.properties;
        var geo = features.geometry;
@@ -189,7 +190,13 @@ function startAll() {
     //if (zoom >= 18) {
         first_start = true;
         objects_layer = [];
-        objects_list = [];
+    objects_list = [];
+    if (draw_object_list.length > 0) {
+            draw_object_list = [];
+            tmp_drawn_list = [];
+            resetObjectsList();
+            draw.deleteAll();
+    }
         document.getElementById("objTable").innerHTML = "";
         getAllObjects();
         updateDrawObjectsInViewport();
@@ -237,7 +244,7 @@ function findObjId(draw_id) {
 
 function savePropsChanges(button) {
     button.style.visibility = "hidden";
-    document.getElementById("editButton").style.visibility = "visible";
+    //document.getElementById("editButton").style.visibility = "hidden";
     var elems = document.getElementsByClassName("cell2");
     for (var i = 0; i < elems.length; i++) {
         elems[i].setAttribute("contenteditable", "false");
@@ -268,30 +275,19 @@ function savePropsChanges(button) {
 }
 
 function addDrawTools(button) {
-    button.style.visibility = "hidden";
-    document.getElementById("propsTable").innerHTML = "";
-    toggleDrawButtons(true);
-    drawing = true;
-}
-
-function handleDraw() {
-    var data = draw.getAll();
-    var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
-    draw_id = data.features[data.features.length - 1].id;
-    var id = objects_list.length;
-
-    tmp_drawn_obj = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords, drawn: true };
-    createPropertiesTable("propsTable", tmp_drawn_obj);
-    setPropsTableEditable(document.getElementById("editButton"));
-}
-
-function handleUpdate() {
-    var data = draw.getSelected().features[0];
-    var id = selectedDrawObject(data.id);
-    var polygonCoords = data.geometry.coordinates;
-
-    objects_list[id].coords = polygonCoords;
-    createPropertiesTable("propsTable", objects_list[id]);
+    //mudar nome de button para cancel
+    //mudar onclick de button para removeDrawTools
+    if (!drawing) {
+        button.value = "cancel";
+        document.getElementById("propsTable").innerHTML = "";
+        toggleDrawButtons(true);
+        drawing = true;
+    } else {
+        button.value = "new";
+        document.getElementById("propsTable").innerHTML = "";
+        toggleDrawButtons(false);
+        drawing = false;
+    }
 }
 
 function selectedDrawObject(draw_id) {
@@ -345,6 +341,26 @@ function updateDrawObjectsInViewport() {
     }
 }
 
+function handleDraw() {
+    var data = draw.getAll();
+    var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
+    draw_id = data.features[data.features.length - 1].id;
+    var id = objects_list.length;
+
+    tmp_drawn_obj = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords, drawn: true };
+    createPropertiesTable("propsTable", tmp_drawn_obj);
+    setPropsTableEditable(document.getElementById("editButton"));
+}
+
+function handleUpdate() {
+    var data = draw.getSelected().features[0];
+    var id = selectedDrawObject(data.id);
+    var polygonCoords = data.geometry.coordinates;
+
+    objects_list[id].coords = polygonCoords;
+    createPropertiesTable("propsTable", objects_list[id]);
+}
+
 function deleteDrawnObject(id) {
     if (objects_list[id].drawn) {
         objects_list.splice(id, 1);
@@ -358,15 +374,18 @@ function deleteDrawnObject(id) {
         }
     }
     document.getElementById("objTable").innerHTML = "";
-    for (var i in objects_list) {
-        objects_list[i].id = i;
-        addObjectToTable("objTable", objects_list[i]);
-    }
+    resetObjectsList();
     var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
     draw_button[2].disabled = true;
     draw_buttons[2].classList.add("disabled-control-button");
 }
 
+function resetObjectsList() {
+    for (var i in objects_list) {
+        objects_list[i].id = i;
+        addObjectToTable("objTable", objects_list[i]);
+    }
+}
 
 function dumbFunction() {
     for (var i in objects_list) {

@@ -152,9 +152,9 @@ function autocomplete(inp, cell_spot, arr) {
         }
     }
 
-    a.addEventListener("click", function (e) {
+    /*a.addEventListener("click", function (e) {
         closeAllLists(e.target);
-    });
+    });*/
 }
 
 function numericKeyPressed(e) {
@@ -169,7 +169,7 @@ function numericKeyPressed(e) {
 
 function alphabetKeyPressed(e) {
     var x = e.keyCode;
-    log.info("key pressed: " + x);
+    //log.info("key pressed: " + x);
     //Os keyCodes das letras no meu teclado são diferentes dos apresentados em keycode.info
     if ((x >= 65 && x <= 90) || x == 8 || (x >= 35 && x <= 40) || x == 46) 
         return true;
