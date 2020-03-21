@@ -1,7 +1,7 @@
 const mapboxgl = require('mapbox-gl');
 const MapboxDraw = require('@mapbox/mapbox-gl-draw');
 const log = require('electron-log');
-const turf = require('@turf/area');
+const area = require('@turf/area');
 var first_start = false;
 var drawing = false;
 var features = [];
@@ -153,7 +153,8 @@ map.on('click', function (e) {
 
        id = findObjId(props.id);
        type = objects_list[id].type;
-       height = objects_list[id].height;
+        height = objects_list[id].height;
+        tmp_area = Math.round(area.default(objects_layer[id]) * 1000) / 1000;
        under = objects_list[id].underground;
        shape = objects_list[id].shape;
        coords = objects_list[id].coords;
@@ -163,8 +164,8 @@ map.on('click', function (e) {
            var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
            draw_buttons[2].disabled = false;
            draw_buttons[2].classList.remove("disabled-control-button");
-       }
-       var propsArray = { id: id, type: type, height: height, underground: under, shape: shape, coords: coords, drawn: drawn };
+        }
+        var propsArray = { id: id, type: type, height: height, area: tmp_area, underground: under, shape: shape, coords: coords, drawn: drawn };
        createPropertiesTable("propsTable", propsArray);
    }
 });
@@ -213,10 +214,11 @@ function getAllObjects() {
         if (objects_layer[i].layer.source != "mapbox-gl-draw-cold") {
             type = objects_layer[i].properties.type;
             height = objects_layer[i].properties.height;
+            tmp_area = Math.round(area.default(objects_layer[i]) * 1000) / 1000;
             under = objects_layer[i].properties.underground;
             shape = objects_layer[i].geometry.type;
             coords = objects_layer[i].geometry.coordinates;
-            var propsArray = { id: tmp, type: type, height: height, underground: under, shape: shape, coords: coords, drawn: false };
+            var propsArray = { id: tmp, type: type, height: height, area: tmp_area, underground: under, shape: shape, coords: coords, drawn: false };
 
             addObjectToTable("objTable", propsArray);
             objects_list.push(propsArray);
@@ -255,7 +257,7 @@ function savePropsChanges(button) {
     var extracted_props = extractTableContents();
     var objTable = document.getElementById("objTable");
     if (drawing == true) {
-        var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, underground: extracted_props.underground, shape: extracted_props.shape, coords: tmp_drawn_obj.coords, drawn: tmp_drawn_obj.drawn };
+        var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, area: extracted_props.area, underground: extracted_props.underground, shape: extracted_props.shape, coords: tmp_drawn_obj.coords, drawn: tmp_drawn_obj.drawn };
         objects_list[extracted_props.id] = tmp;
         var draw_obj = { id: extracted_props.id, draw_id: draw_id };
         draw_object_list.push(draw_obj);
@@ -265,7 +267,7 @@ function savePropsChanges(button) {
         document.getElementById("newButton").style.visibility = "visible";
         draw.changeMode('simple_select');
     } else {
-        var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, underground: extracted_props.underground, shape: extracted_props.shape, coords: objects_list[id].coords, drawn: objects_list[id].drawn };
+        var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, area: extracted_props.area, underground: extracted_props.underground, shape: extracted_props.shape, coords: objects_list[id].coords, drawn: objects_list[id].drawn };
         objects_list[extracted_props.id] = tmp;
         if (objTable.rows.length >= objects_list.length) {
             changeObjectInTable("objTable", extracted_props);
@@ -347,7 +349,7 @@ function handleDraw() {
     draw_id = data.features[data.features.length - 1].id;
     var id = objects_list.length;
 
-    tmp_drawn_obj = { id: id, type: "insert type", height: "", underground: "", shape: "", coords: polygonCoords, drawn: true };
+    tmp_drawn_obj = { id: id, type: "insert type", height: "", area: "", underground: "", shape: "", coords: polygonCoords, drawn: true };
     createPropertiesTable("propsTable", tmp_drawn_obj);
     setPropsTableEditable(document.getElementById("editButton"));
 }

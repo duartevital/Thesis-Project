@@ -61,7 +61,7 @@ function setPropsTableEditable(button) {
         for (var i = 1; i < elems.length - 2; i++) {
             elems[i].setAttribute("contenteditable", "true");
         }
-        addDropdownMenu(elems[3]);
+        addDropdownMenu(elems[4]);
         elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
         elems[2].onkeydown = function () { return numericKeyPressed(event) };
         autocomplete(elems[1], elems[2], all_results_array);
@@ -80,8 +80,9 @@ function extractTableContents() {
     array[table.rows[0].cells[0].innerHTML] = table.rows[0].cells[1].innerText;
     array[table.rows[1].cells[0].innerHTML] = table.rows[1].cells[1].innerText;
     array[table.rows[2].cells[0].innerHTML] = table.rows[2].cells[1].innerText;
-    array[table.rows[3].cells[0].innerHTML] = document.getElementById("idSelect").options[document.getElementById("idSelect").selectedIndex].value;
-    array[table.rows[4].cells[0].innerHTML] = table.rows[4].cells[1].innerText;
+    array[table.rows[3].cells[0].innerHTML] = table.rows[3].cells[1].innerText;
+    array[table.rows[4].cells[0].innerHTML] = document.getElementById("idSelect").options[document.getElementById("idSelect").selectedIndex].value;
+    array[table.rows[5].cells[0].innerHTML] = table.rows[5].cells[1].innerText;
 
     return array;
 }
