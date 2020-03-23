@@ -1,4 +1,6 @@
 
+var barChart = "";
+
 function openTab(evt, tabName) {
     var i, tabContent, tabLinks;
 
@@ -35,7 +37,7 @@ function addObjectToTable(tableName, array) {
     var row = table.insertRow(-1);
     var cell = row.insertCell(0);
 
-    cell.innerHTML = array.type;
+    cell.innerText = array.type;
     cell.setAttribute("contenteditable", "false");
     cell.onclick = function () {
         createPropertiesTable("propsTable", array);
@@ -197,4 +199,36 @@ function addDropdownMenu(cell_spot) {
     }
     cell_spot.innerHTML = html_dropdown;
 
+}
+
+function setBarGraph(labels, values) {
+    if (barChart != "") {
+        barChart.destroy();
+    }
+    var ctx = document.getElementById('myChart').getContext('2d');
+    barChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Area %',
+                data: values,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+
+    log.info("ctx.innerHTML: " + ctx.innerHTML);
 }

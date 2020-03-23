@@ -2,6 +2,7 @@ const mapboxgl = require('mapbox-gl');
 const MapboxDraw = require('@mapbox/mapbox-gl-draw');
 const log = require('electron-log');
 const area = require('@turf/area');
+const Chart = require('chart.js');
 var first_start = false;
 var drawing = false;
 var features = [];
@@ -200,8 +201,9 @@ function startAll() {
     }
         document.getElementById("objTable").innerHTML = "";
         getAllObjects();
-        updateDrawObjectsInViewport();
-        openTab(event, 'features_tab');
+    updateDrawObjectsInViewport();
+    getTypeAreas();
+        openTab(event, 'tab_1');
     /*} else {
         alert("Zoom level is to low - " + zoom);
     }*/
@@ -389,8 +391,27 @@ function resetObjectsList() {
     }
 }
 
-function dumbFunction() {
+function getTypeAreas() {
+    let unique = [...new Set(objects_list.map(object => object.type))];
+    var total_area = 0;
+    var type_area = [];
+
+    for (var i in unique)
+        type_area.push({ type: unique[i], area: 0, percentage: 0 });
+
     for (var i in objects_list) {
-        log.info(objects_list[i]);
+        for (var j in type_area) {
+            if (objects_list[i].type == type_area[j].type) {
+                //var tmp_area = area.default(objects_layer[i]);
+                type_area[j].area += objects_list[i].area;
+                total_area += objects_list[i].area;
+                break;
+            }
+        }
     }
+
+    for (var i in type_area) 
+        type_area[i].percentage = (type_area[i].area * 100) / total_area;
+
+    setBarGraph(type_area.map(obj => obj.type), type_area.map(obj => obj.percentage));
 }

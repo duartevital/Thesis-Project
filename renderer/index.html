@@ -20,23 +20,24 @@
         <button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>
     </div>
 
-    <div id="features_tab" class="tabContent">
-        <div id='features'>
-            <button id="newButton" onclick="addDrawTools(this)">new</button>
-            <button id="editButton" onclick="setPropsTableEditable(this)" style="visibility:hidden">edit</button>
-            <button id="saveButton" onclick="savePropsChanges(this)" style="visibility:hidden">save</button>
-            <table id="propsTable" style="width:100%">
-            </table>
-        </div>
-        <div id="objects">
-            <table id="objTable" style="width:100%"></table>
-        </div>
+    <div id="tab_1" class="tabContent">
+        <section id="features_section"> 
+            <div id='features'>
+                <button id="newButton" onclick="addDrawTools(this)">new</button>
+                <button id="editButton" onclick="setPropsTableEditable(this)" style="visibility:hidden">edit</button>
+                <button id="saveButton" onclick="savePropsChanges(this)" style="visibility:hidden">save</button>
+                <table id="propsTable" style="width:100%"></table>
+            </div>
+            <div id='objects'>
+                <table id="objTable" style="width:100%"></table>
+            </div>
+        </section>
+        <section id="graphs_section">
+            <canvas id="myChart" width="400" height="400"></canvas>
+        </section>
     </div>
 
     <button onclick="dumbFunction()" id="dumb_button">dumb button</button>
-    <!--<div class="autocomplete" style="width:300px;">
-        <input id="myInput" type="text" name="myCountry" placeholder="Country">
-    </div>-->
 
     <aside id='buttonContainer' class="tabContent">
         <button type="button" id="countButtons" onclick="countFeatures()">Count Features</button>

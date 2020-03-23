@@ -1,4 +1,5 @@
 body {
+    overflow: hidden;
     margin: 0;
     padding: 0;
 }
@@ -18,6 +19,11 @@ body {
 }
 
 .tabContent {
+    position: absolute;
+    top: 5%;
+    left: 47.5%;
+    width: 53%;
+    height: 100%;
     display: none;
     padding: 6px 12px;
     border: 1px solid #ccc;
@@ -28,24 +34,31 @@ body {
     opacity: .5;
 }
 
-#objects {
+#features_section{
     position: absolute;
-    top: 6.5%;
-    right: 0;
-    bottom: 0;
-    width: 25%;
-    overflow: auto;
-    background: rgb(230, 230, 230);
+    height: 100%;
+    width: 35%;
+}
+
+#graphs_section{
+    position: absolute;
+    height: 100%;
+    width: 50%;
+    left: 37%;
 }
 
 #features {
-    position: absolute;
-    top: 6.5%;
-    left: 48%;
-    bottom: 0;
-    width: 26.5%;
+    width: 100%;
+    height: 49%;
     overflow: auto;
     background: rgba(230, 230, 230, 0.8);
+}
+
+#objects {
+    width: 100%;
+    height: 45%;
+    overflow:auto;
+    background: rgb(230, 230, 230);
 }
 
 #map {
