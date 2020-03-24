@@ -35,13 +35,40 @@ function createPropertiesTable(tableName, propsArray) {
 function addObjectToTable(tableName, array) {
     var table = document.getElementById(tableName);
     var row = table.insertRow(-1);
-    var cell = row.insertCell(0);
+    var cell1 = row.insertCell(0), cell2 = row.insertCell(1);
 
-    cell.innerText = array.type;
-    cell.setAttribute("contenteditable", "false");
-    cell.onclick = function () {
+    cell1.innerText = array.type;
+    cell2.innerText = array.number;
+    /*cell1.setAttribute("contenteditable", "false");
+    cell1.onclick = function () {
         createPropertiesTable("propsTable", array);
-    };
+    };*/
+}
+
+function addDrawndObjectToTable(tableName, array) {
+    var table = document.getElementById(tableName);
+    var exists = false;
+    for (var i = 0; i < table.rows.length; i++) {
+        log.info("table.rows[i].cells[0] = " + table.rows[i].cells[0].innerText + ", array.type = " + array.type);
+        if (table.rows[i].cells[0].innerText == array.type) {
+            exists = true;
+            incObjectNumber(array.type);
+            break;
+        }
+    }
+    if (!exists) {
+        addObjectToTable(tableName, { type: array.type, number: 1 });
+    }
+}
+
+function incObjectNumber(type) {
+    var table = document.getElementById("objTable");
+    for (var i = 0; i < table.rows.length; i++) {
+        if (type == table.rows[i].cells[0].innerText) {
+            var num = parseInt(table.rows[i].cells[1].innerText);
+            table.rows[i].cells[1].innerText = num + 1;
+        }
+    }
 }
 
 function changeObjectInTable(tableName, propsArray) {

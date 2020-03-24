@@ -206,9 +206,12 @@ function startAll() {
     openTab(event, 'tab_1');
 
     //Calculate statistics and create graphs
-    type_areas = [];
+    type_stats = [];
     getTypeStats(type_stats);
     setBarGraph(type_stats.map(obj => obj.type), type_stats.map(obj => obj.percentage));
+    for (var i in type_stats) {
+        addObjectToTable("objTable", type_stats[i]);
+    }
 
     /*} else {
         alert("Zoom level is to low - " + zoom);
@@ -228,7 +231,7 @@ function getAllObjects() {
             coords = objects_layer[i].geometry.coordinates;
             var propsArray = { id: tmp, type: type, height: height, area: tmp_area, underground: under, shape: shape, coords: coords, drawn: false };
 
-            addObjectToTable("objTable", propsArray);
+            //addObjectToTable("objTable", type_stats);
             objects_list.push(propsArray);
             tmp++;
         }
@@ -270,7 +273,7 @@ function savePropsChanges(button) {
         var draw_obj = { id: extracted_props.id, draw_id: draw_id };
         draw_object_list.push(draw_obj);
         tmp_drawn_list.push(tmp);
-        addObjectToTable("objTable", tmp);
+        addDrawndObjectToTable("objTable", tmp);
         draw_id = 0;
         document.getElementById("newButton").style.visibility = "visible";
         draw.changeMode('simple_select');
@@ -394,5 +397,11 @@ function resetObjectsList() {
     for (var i in objects_list) {
         objects_list[i].id = i;
         addObjectToTable("objTable", objects_list[i]);
+    }
+}
+
+function dumbFunction() {
+    for (var i in type_stats) {
+        incObjectNumber(type_stats[i].type);
     }
 }

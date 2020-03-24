@@ -20,7 +20,6 @@ function getTypeStats(type_stats) {
 
     for (var i in type_stats) {
         type_stats[i].percentage = (type_stats[i].area * 100) / total_area;
-        log.info(type_stats);
     }
 }
 
