@@ -12,6 +12,7 @@ var objects_layer = [];
 var objects_list = [];
 var tmp_drawn_list = [];
 var tmp_drawn_obj = {};
+var type_stats = [];
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZHVhcnRlOTYiLCJhIjoiY2sxbmljbHp0MGF3djNtbzYwY3FrOXFldiJ9._f9pPyMDRXb1sJdMQZmKAQ';
 var map = new mapboxgl.Map({
@@ -190,8 +191,8 @@ toggleDrawButtons(false);
 function startAll() {
     var zoom = map.getZoom();
     //if (zoom >= 18) {
-        first_start = true;
-        objects_layer = [];
+    first_start = true;
+    objects_layer = [];
     objects_list = [];
     if (draw_object_list.length > 0) {
             draw_object_list = [];
@@ -199,11 +200,16 @@ function startAll() {
             resetObjectsList();
             draw.deleteAll();
     }
-        document.getElementById("objTable").innerHTML = "";
-        getAllObjects();
+    document.getElementById("objTable").innerHTML = "";
+    getAllObjects();
     updateDrawObjectsInViewport();
-    getTypeAreas();
-        openTab(event, 'tab_1');
+    openTab(event, 'tab_1');
+
+    //Calculate statistics and create graphs
+    type_areas = [];
+    getTypeStats(type_stats);
+    setBarGraph(type_stats.map(obj => obj.type), type_stats.map(obj => obj.percentage));
+
     /*} else {
         alert("Zoom level is to low - " + zoom);
     }*/
@@ -389,29 +395,4 @@ function resetObjectsList() {
         objects_list[i].id = i;
         addObjectToTable("objTable", objects_list[i]);
     }
-}
-
-function getTypeAreas() {
-    let unique = [...new Set(objects_list.map(object => object.type))];
-    var total_area = 0;
-    var type_area = [];
-
-    for (var i in unique)
-        type_area.push({ type: unique[i], area: 0, percentage: 0 });
-
-    for (var i in objects_list) {
-        for (var j in type_area) {
-            if (objects_list[i].type == type_area[j].type) {
-                //var tmp_area = area.default(objects_layer[i]);
-                type_area[j].area += objects_list[i].area;
-                total_area += objects_list[i].area;
-                break;
-            }
-        }
-    }
-
-    for (var i in type_area) 
-        type_area[i].percentage = (type_area[i].area * 100) / total_area;
-
-    setBarGraph(type_area.map(obj => obj.type), type_area.map(obj => obj.percentage));
 }

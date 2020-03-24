@@ -15,7 +15,7 @@ const defaultProps = {
 class Window extends BrowserWindow {
     constructor({ file, ...windowSettings }) {
         super({ ...defaultProps, ...windowSettings })
-        //this.maximize();
+        this.maximize();
         this.loadFile(file);
 
         this.once('ready-to-show', () => {

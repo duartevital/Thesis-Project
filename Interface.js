@@ -220,6 +220,9 @@ function setBarGraph(labels, values) {
             }]
         },
         options: {
+            legend: {
+                display: false
+            },
             scales: {
                 yAxes: [{
                     ticks: {
@@ -230,5 +233,6 @@ function setBarGraph(labels, values) {
         }
     });
 
-    log.info("ctx.innerHTML: " + ctx.innerHTML);
+
+
 }
