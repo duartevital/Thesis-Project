@@ -49,8 +49,7 @@ function addDrawndObjectToTable(tableName, array) {
     var table = document.getElementById(tableName);
     var exists = false;
     for (var i = 0; i < table.rows.length; i++) {
-        log.info("table.rows[i].cells[0] = " + table.rows[i].cells[0].innerText + ", array.type = " + array.type);
-        if (table.rows[i].cells[0].innerText == array.type) {
+        if (table.rows[i].cells[0].innerText == npmarray.type) {
             exists = true;
             incObjectNumber(array.type);
             break;

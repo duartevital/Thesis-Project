@@ -401,7 +401,13 @@ function resetObjectsList() {
 }
 
 function dumbFunction() {
-    for (var i in type_stats) {
-        incObjectNumber(type_stats[i].type);
-    }
+
+    var tmp = getVisiblePolygonPortion_v3(objects_list[0].coords[0]);
+    var areaa = Math.round(area.default(tmp) * 1000) / 1000;
+    log.info("poly portion area = " + areaa);
+
+    var full_area = Math.round(area.default(objects_layer[0]) * 1000) / 1000;
+    log.info("full polu area = " + full_area);
+    log.info("_______________________________________________");
+    log.info(" ");
 }

@@ -24,6 +24,10 @@
   "dependencies": {
     "@mapbox/mapbox-gl-draw": "^1.1.2",
     "@turf/area": "^6.0.1",
+    "@turf/boolean-point-in-polygon": "^6.0.1",
+    "@turf/helpers": "^6.1.4",
+    "@turf/line-intersect": "^6.0.2",
+    "@turf/point-to-line-distance": "^6.0.0",
     "chart.js": "^2.9.3",
     "electron-log": "^3.0.8",
     "mapbox": "^1.0.0-beta10",
