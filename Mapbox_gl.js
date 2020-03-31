@@ -402,7 +402,7 @@ function resetObjectsList() {
 
 function dumbFunction() {
 
-    var tmp = getVisiblePolygonPortion_v3(objects_list[0].coords[0]);
+    var tmp = getVisiblePolygonPortion(objects_list[0].coords[0]);
     var areaa = Math.round(area.default(tmp) * 1000) / 1000;
     log.info("poly portion area = " + areaa);
 

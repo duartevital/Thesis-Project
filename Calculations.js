@@ -27,46 +27,7 @@ function getTypeStats(type_stats) {
     }
 }
 
-function polygonAllInsideViewport(map) {
-    var bounds = map.getBounds();
-    var ne_bounds = bounds._ne;
-    var sw_bounds = bounds._sw;
-
-    for (var i in objects_list) {
-        var coords = objects_list[i].coords[0];
-        var is_inside = false;
-
-        for (var j = 0; j < coords.length; j++) {
-            if (coords[j][0] < sw_bounds.lng || coords[j][0] > ne_bounds.lng || coords[j][1] < sw_bounds.lat || coords[j][1] > ne_bounds.lat) {
-                //calcular area da porção visivel
-            }
-        }
-    }
-}
-
-function isPolyClockwise(coords) {
-    var edge = 0;
-    for (var i = 0; i < coords.length-1; i++) {
-        var p1 = coords[i];
-        var p2 = coords[i + 1];
-
-        log.info("count 1 = " + Math.abs(p1[0] - p2[0]));
-        log.info("count 2 = " + (p1[1] + p2[1]));
-
-        var res = (p2[0] - p1[0]) * (p2[1] + p1[1]);
-        log.info("res = " + res);
-        edge += res;
-        log.info("edge at " + i + " = " + edge);
-    }
-    log.info("edge = " + edge);
-
-    if (edge < 0)
-        return false;
-    else
-        return true;
-}
-
-function getVisiblePolygonPortion_v3(coords) {
+function getVisiblePolygonPortion(coords) {
     var new_coords = [];
     var bounds = map.getBounds();
     var ne_lng = bounds._ne.lng;
