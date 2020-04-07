@@ -9,10 +9,14 @@ var features = [];
 var draw_id = 0;
 var draw_object_list = [];
 var objects_layer = [];
+var all_list = [];
 var objects_list = [];
+var roads_list = [];
 var tmp_drawn_list = [];
 var tmp_drawn_obj = {};
 var type_stats = [];
+var selected_obj = {};
+var draw_buttons = [];
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZHVhcnRlOTYiLCJhIjoiY2sxbmljbHp0MGF3djNtbzYwY3FrOXFldiJ9._f9pPyMDRXb1sJdMQZmKAQ';
 var map = new mapboxgl.Map({
@@ -92,84 +96,35 @@ map.on('load', function () {
         }
     });
     map.addLayer({
-        "id": "traffic_layer",
+        "id": "roads_layer",
         "type": "line",
-        "line-offset": true,
         "minzoom": 17,
         "source": {
             type: 'vector',
-            url: 'mapbox://mapbox.mapbox-traffic-v1',
+            url: 'mapbox://mapbox.mapbox-streets-v8',
         },
-        "source-layer": "traffic",
+        "source-layer": "road",
         "paint": {
-            "line-width": 3,
-            "line-color": [
-                "case",
-                [
-                    "==",
-                    "low",
-                    [
-                        "get",
-                        "congestion"
-                    ]
-                ],
-                "#aab7ef",
-                [
-                    "==",
-                    "moderate",
-                    [
-                        "get",
-                        "congestion"
-                    ]
-                ],
-                "#4264fb",
-                [
-                    "==",
-                    "heavy",
-                    [
-                        "get",
-                        "congestion"
-                    ]
-                ],
-                "#ee4e8b",
-                [
-                    "==",
-                    "severe",
-                    [
-                        "get",
-                        "congestion"
-                    ]
-                ],
-                "#b43b71",
-                "#000000"
-            ]
+            "line-width": 8,
+            "line-color": "rgba(255,100,251, 0.6)"
         }
     });
 });
 map.on('click', function (e) {
     if (drawing == false) {
         document.getElementById("editButton").style.visibility = "visible";
-       features = map.queryRenderedFeatures(e.point)[0];
-       var props = features.properties;
-       var geo = features.geometry;
-
-       id = findObjId(props.id);
-       type = objects_list[id].type;
-        height = objects_list[id].height;
-        tmp_area = Math.round(area.default(objects_layer[id]) * 1000) / 1000;
-       under = objects_list[id].underground;
-       shape = objects_list[id].shape;
-       coords = objects_list[id].coords;
-       drawn = objects_list[id].drawn;
-
-       if (objects_list[id].drawn) {
-           var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
-           draw_buttons[2].disabled = false;
-           draw_buttons[2].classList.remove("disabled-control-button");
+        features = map.queryRenderedFeatures(e.point)[0];
+        var tmp_props = features;
+        id = findObjId(tmp_props);
+        selected_obj = all_list[id];
+        if (selected_obj.drawn) {
+            //tratar aqui do botão delete
+            draw_buttons[2].disabled = false;
+            draw_buttons[2].classList.remove("disabled-control-button");
         }
-        var propsArray = { id: id, type: type, height: height, area: tmp_area, underground: under, shape: shape, coords: coords, drawn: drawn };
-       createPropertiesTable("propsTable", propsArray);
-   }
+        
+        createPropertiesTable("propsTable", selected_obj);
+    }
 });
 map.on('dragend', function (e) {
     if (first_start) {
@@ -180,7 +135,7 @@ map.on('dragend', function (e) {
 map.on('draw.create', handleDraw);
 map.on('draw.update', handleUpdate);
 map.on('draw.delete', function (e) {
-    var id = findObjId(features.properties.id);
+    var id = findObjId(features);
     deleteDrawnObject(id);
 });
 
@@ -189,29 +144,28 @@ map.addControl(draw);
 toggleDrawButtons(false);
 
 function startAll() {
+    fetchTags();
     var zoom = map.getZoom();
     //if (zoom >= 18) {
     first_start = true;
     objects_layer = [];
+    all_list = [];
     objects_list = [];
+    roads_list = [];
     if (draw_object_list.length > 0) {
-            draw_object_list = [];
-            tmp_drawn_list = [];
-            resetObjectsList();
-            draw.deleteAll();
+        draw_object_list = [];
+        tmp_drawn_list = [];
+        resetEveryList();
+        draw.deleteAll();
     }
+    draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
     document.getElementById("objTable").innerHTML = "";
     getAllObjects();
     updateDrawObjectsInViewport();
     openTab(event, 'tab_1');
 
     //Calculate statistics and create graphs
-    type_stats = [];
-    getTypeStats(type_stats);
-    setBarGraph(type_stats.map(obj => obj.type), type_stats.map(obj => obj.percentage));
-    for (var i in type_stats) {
-        addObjectToTable("objTable", type_stats[i]);
-    }
+    resetStats();
 
     /*} else {
         alert("Zoom level is to low - " + zoom);
@@ -220,37 +174,94 @@ function startAll() {
 
 function getAllObjects() {
     objects_layer = map.queryRenderedFeatures();
-    var tmp = 0;
+    var id = 0;
+    var props = {};
     for (var i in objects_layer) {
         if (objects_layer[i].layer.source != "mapbox-gl-draw-cold") {
+            source = objects_layer[i].layer["source-layer"];
             type = objects_layer[i].properties.type;
-            height = objects_layer[i].properties.height;
-            tmp_area = Math.round(area.default(objects_layer[i]) * 1000) / 1000;
-            under = objects_layer[i].properties.underground;
             shape = objects_layer[i].geometry.type;
             coords = objects_layer[i].geometry.coordinates;
-            var propsArray = { id: tmp, type: type, height: height, area: tmp_area, underground: under, shape: shape, coords: coords, drawn: false };
 
-            //addObjectToTable("objTable", type_stats);
-            objects_list.push(propsArray);
-            tmp++;
+            //Different attributes for different sources of features
+            if (source == "road") {
+                name = objects_layer[i].properties.name;
+                surface = objects_layer[i].properties.surface;
+                one_way = objects_layer[i].properties.oneway;
+                length = objects_layer[i].properties.len;
+                original_id = objects_layer[i].id;
+                index = roads_list.length;
+                props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, shape: shape, coords: coords, original_id: original_id, index: index };
+                roads_list.push(props);
+            } else {
+                var tmp_area = 0;
+                //Area calculation for Polygon or Multipolygon
+                if (shape == "Polygon") {
+                    tmp_area = Math.round(area.default(getVisiblePolygonPortion(coords[0])) * 1000) / 1000;
+                } else if (shape == "MultiPolygon")
+                    tmp_area = Math.round(area.default(getVisiblePolygonPortion(coords[0][0])) * 1000) / 1000;
+
+                if (source == "building") {
+                    height = objects_layer[i].properties.height;
+                    under = objects_layer[i].properties.underground;
+                    index = objects_list.length;
+                    props = { id: id, source: source, type: type, height: height, area: tmp_area, underground: under, shape: shape, coords: coords, drawn: false, index: index };
+                    objects_list.push(props);
+                }
+                if (source == "landuse") {
+                    index = objects_list.length;
+                    props = { id: id, source: source, type: type, area: tmp_area, shape: shape, coords: coords, drawn: false, index: index };
+                    objects_list.push(props);
+                }
+            }
+                id++;
         }
+        all_list.push(props);
     }
+    //Filter off duplicate objects in roads_list (with same orignal id)
+    roads_list = Array.from(new Set(roads_list.map(a => a.original_id)))
+        .map(id => {
+            return roads_list.find(a => a.original_id === id);
+        });
 }
 
-function findObjId(draw_id) {
+function findObjId(selected_props) {
     var id = -1;
-    var selectedCoords = features.geometry.coordinates[0];
-    for (var i in objects_layer) {
-        var iterCoords = objects_layer[i].geometry.coordinates[0];
-        if (selectedCoords.length == iterCoords.length) {
-            if (selectedCoords[0][0] == iterCoords[0][0]) {
-                id = i;
+    if (selected_props.layer.source != "mapbox-gl-draw-cold") {
+        if (selected_props.geometry.type == "MultiPolygon") {
+            var selectedCoords = selected_props.geometry.coordinates[0][0];
+            for (var i in all_list) {
+                var iterCoords = all_list[i].coords[0][0];
+                //var iterCoords = objects_layer[i].geometry.coordinates[0][0];
+                if (selectedCoords.length == iterCoords.length) {
+                    if (selectedCoords[0][0] == iterCoords[0][0]) {
+                        id = i;
+                    }
+                }
+            }
+        } else if (selected_props.geometry.type == "Polygon" || selected_props.geometry.type == "MultiLineString") {
+            var selectedCoords = selected_props.geometry.coordinates[0];
+            for (var i in all_list) {
+                var iterCoords = all_list[i].coords[0];
+                if (selectedCoords.length == iterCoords.length) {
+                    if (selectedCoords[0][0] == iterCoords[0][0]) {
+                        id = i;
+                    }
+                }
+            }
+        } else if (selected_props.geometry.type == "LineString") {
+            var selectedCoords = selected_props.geometry.coordinates;
+            for (var i in all_list) {
+                var iterCoords = all_list[i].coords;
+                if (selectedCoords.length == iterCoords.length) {
+                    if (selectedCoords[0][0] == iterCoords[0][0]) {
+                        id = i;
+                    }
+                }
             }
         }
-    }
-    if (id == -1) {
-        id = selectedDrawObject(draw_id);
+    } else if (id == -1) {
+        id = selectedDrawObject(selected_props.properties.id);
     }
     return id;
 }
@@ -263,26 +274,58 @@ function savePropsChanges(button) {
         elems[i].setAttribute("contenteditable", "false");
     }
     toggleDrawButtons(false);
-
     //Guardar as alterações no objeto do array com o mesmo id:
     var extracted_props = extractTableContents();
     var objTable = document.getElementById("objTable");
-    if (drawing == true) {
-        var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, area: extracted_props.area, underground: extracted_props.underground, shape: extracted_props.shape, coords: tmp_drawn_obj.coords, drawn: tmp_drawn_obj.drawn };
-        objects_list[extracted_props.id] = tmp;
+    if (drawing) {
+        //var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, area: extracted_props.area, underground: extracted_props.underground, shape: extracted_props.shape, coords: tmp_drawn_obj.coords, drawn: tmp_drawn_obj.drawn };
+        var tmp = extracted_props;
+        tmp.coords = tmp_drawn_obj.coords; tmp.drawn = true; tmp.index = objects_list.length;
+        all_list[extracted_props.id] = tmp;
+        objects_list[tmp.index] = tmp;
+        resetStats();
         var draw_obj = { id: extracted_props.id, draw_id: draw_id };
         draw_object_list.push(draw_obj);
         tmp_drawn_list.push(tmp);
-        addDrawndObjectToTable("objTable", tmp);
         draw_id = 0;
         document.getElementById("newButton").style.visibility = "visible";
         draw.changeMode('simple_select');
     } else {
-        var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, area: extracted_props.area, underground: extracted_props.underground, shape: extracted_props.shape, coords: objects_list[id].coords, drawn: objects_list[id].drawn };
-        objects_list[extracted_props.id] = tmp;
-        if (objTable.rows.length >= objects_list.length) {
-            changeObjectInTable("objTable", extracted_props);
-        }
+        //var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, area: extracted_props.area, underground: extracted_props.underground, shape: extracted_props.shape, coords: objects_list[id].coords, drawn: objects_list[id].drawn };
+        var old_type = selected_obj.type;
+        if (selected_obj.source == "road") {
+            selected_obj.id = extracted_props.id;
+            selected_obj.type = extracted_props.type;
+            selected_obj.name = extracted_props.name;
+            selected_obj.length = extracted_props.length;
+            selected_obj.surface = extracted_props.surface;
+            selected_obj.one_way = extracted_props.one_way;
+
+            all_list[selected_obj.id] = selected_obj;
+            roads_list[selected_obj.index] = selected_obj;
+
+            //incluir uma função igual á seguinte mas para a table das roads
+            /*if (old_type != selected_obj.type)
+                changeObjectInTable(selected_obj, old_type);*/
+        } else if (selected_obj.source == "building") {
+            selected_obj.id = extracted_props.id;
+            selected_obj.type = extracted_props.type;
+            selected_obj.height = extracted_props.height;
+            selected_obj.area = extracted_props.area;
+            selected_obj.underground = extracted_props.underground;
+
+            all_list[selected_obj.id] = selected_obj;
+            objects_list[selected_obj.index] = selected_obj;
+            resetStats();
+        } else if (selected_obj.source == "landuse") {
+            selected_obj.id = extracted_props.id;
+            selected_obj.type = extracted_props.type;
+            selected_obj.area = extracted_props.area;
+
+            all_list[selected_obj.id] = selected_obj;
+            objects_list[selected_obj.index] = selected_obj;
+            resetStats();
+        }    
     }
     drawing = false;
 }
@@ -305,7 +348,6 @@ function addDrawTools(button) {
 
 function selectedDrawObject(draw_id) {
     var id = -1;
-    var data = draw.getAll();
     for (var i = 0; i < draw_object_list.length; i++) {
         if (draw_object_list[i].draw_id == draw_id) {
             id = draw_object_list[i].id;
@@ -341,13 +383,14 @@ function updateDrawObjectsInViewport() {
 
     for (var i = 0; i < tmp_drawn_list.length; i++) {
         var coords = tmp_drawn_list[i].coords[0];
-        var is_inside = false;
         for (var j = 0; j < coords.length; j++) {
             if (coords[j][0] > sw_bounds.lng && coords[j][0] < ne_bounds.lng && coords[j][1] > sw_bounds.lat && coords[j][1] < ne_bounds.lat) {
                 //Pelo menos uma das coordenadas está dentro do polígono.
-                tmp_drawn_list[i].id = objects_list.length;
+                tmp_drawn_list[i].id = all_list.length;
+                tmp_drawn_list[i].index = objects_list.length;
+                all_list.push(tmp_drawn_list[i]);
                 objects_list.push(tmp_drawn_list[i]);
-                addObjectToTable("objTable", tmp_drawn_list[i]);
+                resetStats();
                 break;
             }
         }
@@ -358,11 +401,11 @@ function handleDraw() {
     var data = draw.getAll();
     var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
     draw_id = data.features[data.features.length - 1].id;
-    var id = objects_list.length;
+    var id = all_list.length;
+    var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords[0])) * 1000) / 1000;
 
-    tmp_drawn_obj = { id: id, type: "insert type", height: "", area: "", underground: "", shape: "", coords: polygonCoords, drawn: true };
-    createPropertiesTable("propsTable", tmp_drawn_obj);
-    setPropsTableEditable(document.getElementById("editButton"));
+    tmp_drawn_obj = { id: id, source: "insert source", area: tmp_area, shape: "Polygon", coords: polygonCoords, drawn: true, index: objects_list.length };
+    createPropertiesTable("propsTable", tmp_drawn_obj, true);
 }
 
 function handleUpdate() {
@@ -370,14 +413,18 @@ function handleUpdate() {
     var id = selectedDrawObject(data.id);
     var polygonCoords = data.geometry.coordinates;
 
-    objects_list[id].coords = polygonCoords;
-    createPropertiesTable("propsTable", objects_list[id]);
+    all_list[id].coords = polygonCoords;
+    createPropertiesTable("propsTable", all_list[id]);
 }
 
 function deleteDrawnObject(id) {
-    if (objects_list[id].drawn) {
-        objects_list.splice(id, 1);
+    if (all_list[id].drawn) {
+        var tmp_index = all_list[id].index;
+        all_list.splice(id, 1);
+        objects_list.splice(tmp_index, 1);
     }
+    log.info("id = " + id);
+
     for (var i in draw_object_list) {
         if (draw_object_list.id == id) {
             draw_object_list.splice(i, 1);
@@ -387,27 +434,33 @@ function deleteDrawnObject(id) {
         }
     }
     document.getElementById("objTable").innerHTML = "";
-    resetObjectsList();
+    resetEveryList();
     var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
     draw_button[2].disabled = true;
     draw_buttons[2].classList.add("disabled-control-button");
 }
 
-function resetObjectsList() {
-    for (var i in objects_list) {
-        objects_list[i].id = i;
-        addObjectToTable("objTable", objects_list[i]);
-    }
+function resetEveryList() {
+    for (var i in all_list) 
+        all_list[i].id = i;
+    for (var i in roads_list)
+        roads_list[i].index = i;
+    for (var i in objects_list)
+        objects_list[i].index = i;
+
+    resetStats();
+}
+
+function resetStats() {
+    type_stats = [];
+    getTypeStats(type_stats);
+    createObjectsTable(type_stats);
+    setBarGraph(type_stats.map(obj => obj.type), type_stats.map(obj => obj.percentage));
 }
 
 function dumbFunction() {
 
-    var tmp = getVisiblePolygonPortion(objects_list[0].coords[0]);
-    var areaa = Math.round(area.default(tmp) * 1000) / 1000;
-    log.info("poly portion area = " + areaa);
-
-    var full_area = Math.round(area.default(objects_layer[0]) * 1000) / 1000;
-    log.info("full polu area = " + full_area);
-    log.info("_______________________________________________");
-    log.info(" ");
+    for (var i in objects_list) {
+        log.info(JSON.stringify(objects_list[i]));
+    }
 }

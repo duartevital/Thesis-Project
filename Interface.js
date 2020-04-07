@@ -18,17 +18,58 @@ function openTab(evt, tabName) {
     evt.currentTarget.className += " active";
 }
 
-function createPropertiesTable(tableName, propsArray) {
+function createPropertiesTable(tableName, props, drawn) {
     var table = document.getElementById(tableName);
     table.innerHTML = "";
     var row;
     var cell1, cell2;
-    for (var key in propsArray) {
+    if (!drawn) {
+        for (var key in props) {
+            row = table.insertRow(-1);
+            cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+            cell1.innerText = key; cell2.innerText = props[key];
+            cell1.classList.add("cell1"); cell2.classList.add("cell2");
+            cell2.setAttribute("contenteditable", "false");
+        }
+    } else {
+        //only show id and source fields
         row = table.insertRow(-1);
         cell1 = row.insertCell(0); cell2 = row.insertCell(1);
-        cell1.innerText = key; cell2.innerText = propsArray[key];
+        cell1.innerText = "id"; cell2.innerText = props.id;
+        row = table.insertRow(-1);
+        cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+        cell1.innerText = "source"; cell2.innerText = props.source;
         cell1.classList.add("cell1"); cell2.classList.add("cell2");
-        cell2.setAttribute("contenteditable", "false");
+        addSourcesDropdownMenu(cell2);
+        cell2.addEventListener("input", function (e) {
+            //var inp = cell2.innerText;
+            var inp = document.getElementById("id_source_select").options[document.getElementById("id_source_select").selectedIndex].value;
+            switch (inp) {
+                case "building":
+                    props = { id: props.id, source: inp, type: "", height: "", area: props.area, underground: "", shape: props.shape, coords: props.coords, drawn: true, index: -1 };
+                    createPropertiesTable("propsTable", props, false);
+                    setPropsTableEditable(document.getElementById("editButton"));
+                    break;
+                case "landuse":
+                    props = { id: props.id, source: inp, type: "", area: props.area, shape: props.shape, coords: props.coords, drawn: true, index: -1 };
+                    createPropertiesTable("propsTable", props, false);
+                    setPropsTableEditable(document.getElementById("editButton"));
+                    break;
+                //case roads...
+            }
+        });
+    }
+}
+
+function createObjectsTable(type_stats) {
+    var table = document.getElementById("objTable");
+    table.innerHTML = "";
+    for (var i = 0; i < type_stats.length; i++) {
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0), cell2 = row.insertCell(1);
+
+        cell1.innerText = type_stats[i].type;
+        cell2.innerText = type_stats[i].number;
     }
 }
 
@@ -45,11 +86,11 @@ function addObjectToTable(tableName, array) {
     };*/
 }
 
-function addDrawndObjectToTable(tableName, array) {
+function addDrawnObjectToTable(tableName, array) {
     var table = document.getElementById(tableName);
     var exists = false;
     for (var i = 0; i < table.rows.length; i++) {
-        if (table.rows[i].cells[0].innerText == npmarray.type) {
+        if (table.rows[i].cells[0].innerText == array.type) {
             exists = true;
             incObjectNumber(array.type);
             break;
@@ -70,29 +111,80 @@ function incObjectNumber(type) {
     }
 }
 
-function changeObjectInTable(tableName, propsArray) {
-    var table = document.getElementById(tableName);
-    var row = table.rows[propsArray.id];
+function changeObjectInTable(props, old_type) {
+    var table = document.getElementById("objTable");
+    var found_type = false;
+    var found_old_type = false;
+    if (table.rows.length > 0) {
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var tmp_type = table.rows[i].cells[0].innerText;
+            var tmp_number = parseInt(table.rows[i].cells[1].innerText);
+            if (tmp_type == props.type) {
+                tmp_number++;
+                table.rows[i].cells[1].innerText = tmp_number;
+                found_type = true;
+                break;
+            }
+            if (tmp_type == old_type) {
+                found_old_type = true;
+            }
+        }
+    }
+    if (!found_type) {
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0), cell2 = row.insertCell(1);
+        cell1.innerText = props.type;
+        cell2.innerText = 1;
+    }
+    if (found_old_type) {
+        for (var i = 0; i < table.rows.length - 1; i++) {
+            var tmp_type = table.rows[i].cells[0].innerText;
+            var tmp_number = parseInt(table.rows[i].cells[1].innerText);
+            if (tmp_type == old_type) {
+                if (tmp_number == 1) {
+                    table.deleteRow(i);
+                } else {
+                    tmp_number--;
+                    table.rows[i].cells[1].innerText = tmp_number;
+                    break;
+                }
+            }
+        }
+    }
+    
+
+    /*var row = table.rows[props.id];
     var cell = row.cells[0];
-    cell.innerHTML = propsArray.type;
+    cell.innerHTML = props.type;
     cell.setAttribute("contenteditable", "false");
     cell.onclick = function () {
-        createPropertiesTable("propsTable", propsArray);
-    };
+        createPropertiesTable("propsTable", props);
+    };*/
 }
 
 function setPropsTableEditable(button) {
     button.style.visibility = "hidden";
     document.getElementById("saveButton").style.visibility = "visible";
     var elems = document.getElementsByClassName("cell2");
-    if (elems[0].getAttribute("contenteditable") == "false") {
-        for (var i = 1; i < elems.length - 2; i++) {
+    var source = document.getElementById("propsTable").rows[1].cells[1].innerText;
+    if (elems[2].getAttribute("contenteditable") == "false") {
+        for (var i = 2; i < elems.length - 4; i++) {
             elems[i].setAttribute("contenteditable", "true");
         }
-        addDropdownMenu(elems[4]);
-        elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
-        elems[2].onkeydown = function () { return numericKeyPressed(event) };
-        autocomplete(elems[1], elems[2], all_results_array);
+        addUndergroundDropdownMenu(elems[5]);
+        elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
+        elems[3].onkeydown = function () { return numericKeyPressed(event) };
+        switch (source) {
+            case "building":
+                autocomplete(elems[2], elems[3], building_array);
+                break;
+            case "road":
+                autocomplete(elems[2], elems[3], highway_array);
+                break;
+            case "landuse":
+                autocomplete(elems[2], elems[3], landuse_array);
+                break;
+        }
     } else {
         for (var i in elems) {
             elems[i].setAttribute("contenteditable", "false");
@@ -102,17 +194,30 @@ function setPropsTableEditable(button) {
 
 //Extrai todas as filas, menos as ultimas 2 (coords, drawn)
 function extractTableContents() {
-    var array = {};
+    var props = {};
     var table = document.getElementById("propsTable");
+    for (var i = 0; i < table.rows.length - 3; i++) {
+        switch (table.rows[i].cells[0].innerText) {
+            case "id": case "length": case "area": case "height":
+                props[table.rows[i].cells[0].innerHTML] = parseInt(table.rows[i].cells[1].innerText);
+                break;
+            case "one_way": case "underground":
+                var val = (table.rows[i].cells[0].innerText === "true");
+                props[table.rows[i].cells[0].innerHTML] = val;
+                break;
+            default:
+                props[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerText;
+        }
 
-    array[table.rows[0].cells[0].innerHTML] = table.rows[0].cells[1].innerText;
-    array[table.rows[1].cells[0].innerHTML] = table.rows[1].cells[1].innerText;
-    array[table.rows[2].cells[0].innerHTML] = table.rows[2].cells[1].innerText;
-    array[table.rows[3].cells[0].innerHTML] = table.rows[3].cells[1].innerText;
-    array[table.rows[4].cells[0].innerHTML] = document.getElementById("idSelect").options[document.getElementById("idSelect").selectedIndex].value;
-    array[table.rows[5].cells[0].innerHTML] = table.rows[5].cells[1].innerText;
 
-    return array;
+        /*if (table.rows[i].cells[0].innerText == "underground")
+            props[table.rows[i].cells[0].innerHTML] = document.getElementById("idSelect").options[document.getElementById("idSelect").selectedIndex].value;
+        else {
+            props[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerText;
+        }*/
+    }
+
+    return props;
 }
 
 function autocomplete(inp, cell_spot, arr) {
@@ -208,8 +313,7 @@ function alphabetKeyPressed(e) {
     }
 }
 
-//Versão inicial de uma função para integrar um menu dropdown na cell 'underground'.
-function addDropdownMenu(cell_spot) {
+function addUndergroundDropdownMenu(cell_spot) {
     var tmp = cell_spot.innerText;
     var html_dropdown;
     if (tmp == "true") {
@@ -225,6 +329,18 @@ function addDropdownMenu(cell_spot) {
     }
     cell_spot.innerHTML = html_dropdown;
 
+}
+
+function addSourcesDropdownMenu(cell_spot) {
+    var html_dropdown = "<select id='id_source_select'>"
+        + "<option disabled selected value> -- select a source -- </option>"
+        + "<option value='building'>building</option>"
+        + "<option value='landuse'>landuse</option>"
+        + "</select>";
+        //+ "<option value='road'>road</option>"
+        //+ "<option value='water'>water</option>"
+
+    cell_spot.innerHTML = html_dropdown;
 }
 
 function setBarGraph(labels, values) {

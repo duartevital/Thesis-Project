@@ -7,7 +7,6 @@ const ptld = require('@turf/point-to-line-distance');
 function getTypeStats(type_stats) {
     let unique = [...new Set(objects_list.map(object => object.type))];
     var total_area = 0;
-
     for (var i in unique)
         type_stats.push({ type: unique[i], number: 0, area: 0, percentage: 0 });
 
@@ -28,12 +27,14 @@ function getTypeStats(type_stats) {
 }
 
 function getVisiblePolygonPortion(coords) {
+    //log.info("hree 1, coords = " + coords);
     var new_coords = [];
     var bounds = map.getBounds();
     var ne_lng = bounds._ne.lng;
     var ne_lat = bounds._ne.lat;
     var sw_lng = bounds._sw.lng;
     var sw_lat = bounds._sw.lat;
+    //log.info("hree 2, vertexes = " + bounds);
     var viewport_poly = turf.polygon([[[sw_lng, ne_lat], [sw_lng, sw_lat], [ne_lng, sw_lat], [ne_lng, ne_lat], [sw_lng, ne_lat]]]);
     var nw_ne = { id: "nw_ne", line: turf.lineString([[sw_lng, ne_lat], [ne_lng, ne_lat]]) };
     var ne_se = { id: "ne_sw", line: turf.lineString([[ne_lng, ne_lat], [ne_lng, sw_lat]]) };
@@ -41,7 +42,7 @@ function getVisiblePolygonPortion(coords) {
     var sw_nw = { id: "sw_nw", line: turf.lineString([[sw_lng, sw_lat], [sw_lng, ne_lat]]) };
     var axis_lines = [nw_ne, ne_se, se_sw, sw_nw];
     var coords_poly = turf.polygon([coords]);
-
+    //log.info("here 1");
     var axis = {};
     for (var i = 0; i < coords.length - 1; i++) {
         var point = turf.point([coords[i][0], coords[i][1]]);
@@ -68,10 +69,23 @@ function getVisiblePolygonPortion(coords) {
             }
         }
     }
-
     new_coords.push(new_coords[0]);
+    //log.info("here 3, new_coords = " + new_coords);
     var new_poly = turf.polygon([new_coords]);
     return new_poly;
+}
+
+function getVisibleRoadPortion(coords) {
+    var line = turf.lineString(coords);
+    var bounds = map.getBounds();
+    var ne_lng = bounds._ne.lng;
+    var ne_lat = bounds._ne.lat;
+    var sw_lng = bounds._sw.lng;
+    var sw_lat = bounds._sw.lat;
+    var viewport_poly = turf.polygon([[[sw_lng, ne_lat], [sw_lng, sw_lat], [ne_lng, sw_lat], [ne_lng, ne_lat], [sw_lng, ne_lat]]]);
+
+    var intersect = line_intersect.default(line, viewport_poly);
+    return intersect;
 }
 
 function lookInAxis(axis, poly, inverted) {
@@ -126,4 +140,3 @@ function getClosestAxis(point, axes) {
 
     return closest_axis;
 }
-
