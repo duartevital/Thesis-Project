@@ -3,6 +3,7 @@ const MapboxDraw = require('@mapbox/mapbox-gl-draw');
 const log = require('electron-log');
 const area = require('@turf/area');
 const Chart = require('chart.js');
+//const line_length = require('@turf/length');
 var first_start = false;
 var drawing = false;
 var features = [];
@@ -159,6 +160,7 @@ function startAll() {
         draw.deleteAll();
     }
     draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
+    document.getElementById("propsTable").innerHTML = "";
     document.getElementById("objTable").innerHTML = "";
     getAllObjects();
     updateDrawObjectsInViewport();
@@ -188,7 +190,8 @@ function getAllObjects() {
                 name = objects_layer[i].properties.name;
                 surface = objects_layer[i].properties.surface;
                 one_way = objects_layer[i].properties.oneway;
-                length = objects_layer[i].properties.len;
+                //length = objects_layer[i].properties.len;
+                length = Math.round(getVisibleRoadPortion(coords) * 1000000) / 1000;
                 original_id = objects_layer[i].id;
                 index = roads_list.length;
                 props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, shape: shape, coords: coords, original_id: original_id, index: index };
@@ -301,9 +304,10 @@ function savePropsChanges(button) {
             selected_obj.surface = extracted_props.surface;
             selected_obj.one_way = extracted_props.one_way;
 
+            log.info("selectes obj = " + selected_obj);
             all_list[selected_obj.id] = selected_obj;
             roads_list[selected_obj.index] = selected_obj;
-
+            resetStats();
             //incluir uma função igual á seguinte mas para a table das roads
             /*if (old_type != selected_obj.type)
                 changeObjectInTable(selected_obj, old_type);*/
@@ -423,7 +427,6 @@ function deleteDrawnObject(id) {
         all_list.splice(id, 1);
         objects_list.splice(tmp_index, 1);
     }
-    log.info("id = " + id);
 
     for (var i in draw_object_list) {
         if (draw_object_list.id == id) {
@@ -455,12 +458,17 @@ function resetStats() {
     type_stats = [];
     getTypeStats(type_stats);
     createObjectsTable(type_stats);
-    setBarGraph(type_stats.map(obj => obj.type), type_stats.map(obj => obj.percentage));
+    createRoadsTable(roads_list);
+    setPieGraph(type_stats);
 }
 
 function dumbFunction() {
 
-    for (var i in objects_list) {
-        log.info(JSON.stringify(objects_list[i]));
-    }
+    log.info("roads_list[0].length = " + roads_list[0].length);
+    var len = getVisibleRoadPortion(roads_list[0].coords);
+    log.info("length = " + len);
+    log.info("length * 1000 = " + len * 1000);
+    log.info("Math-round(len * 1000) = " + Math.round(len * 1000));
+    log.info("Math.round(len * 1000) / 1000 = " + Math.round(len * 1000) / 1000);
+    log.info("Math.round(len * 1000000) / 1000 = " + Math.round(len * 1000000) / 1000);
 }

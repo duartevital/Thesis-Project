@@ -1,5 +1,5 @@
 
-var barChart = "";
+var pieChart = "";
 
 function openTab(evt, tabName) {
     var i, tabContent, tabLinks;
@@ -71,6 +71,31 @@ function createObjectsTable(type_stats) {
         cell1.innerText = type_stats[i].type;
         cell2.innerText = type_stats[i].number;
     }
+}
+
+function createRoadsTable(list) {
+    var table = document.getElementById("roadsTable");
+    table.innerHTML = "";
+    for (var i in list) {
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0); var cell2 = row.insertCell(1); var cell3 = row.insertCell(2);
+        cell1.innerText = list[i].name; cell2.innerText = list[i].type; cell3.innerText = list[i].length;
+        cell1.id = list[i].id;
+        cell1.style.maxWidth = "50px"; cell2.style.maxWidth = "30px"; cell3.style.maxWidth = "15px";    
+        cell1.style.textOverflow = "elipsis";
+    }
+
+    table.addEventListener("click", function (e) {
+        var row = e.target.parentNode;
+        for (var i in list) {
+            if (list[i].length == parseFloat(row.cells[2].innerText)) {
+                selected_obj = list[i];
+                createPropertiesTable("propsTable", list[i], false);
+                document.getElementById("editButton").style.visibility = "visible";
+                break;
+            }
+        }
+    });
 }
 
 function addObjectToTable(tableName, array) {
@@ -167,11 +192,41 @@ function setPropsTableEditable(button) {
     document.getElementById("saveButton").style.visibility = "visible";
     var elems = document.getElementsByClassName("cell2");
     var source = document.getElementById("propsTable").rows[1].cells[1].innerText;
-    if (elems[2].getAttribute("contenteditable") == "false") {
+
+    if (source == "building") {
         for (var i = 2; i < elems.length - 4; i++) {
             elems[i].setAttribute("contenteditable", "true");
         }
-        addUndergroundDropdownMenu(elems[5]);
+        elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
+        elems[3].onkeydown = function () { return numericKeyPressed(event) };
+        elems[4].onkeydown = function () { return numericKeyPressed(event) };
+        addBooleanDropdownMenu(elems[5]);
+        autocomplete(elems[2], elems[3], building_array);
+
+    } else if (source == "landuse") {
+        for (var i = 2; i < elems.length - 4; i++) {
+            elems[i].setAttribute("contenteditable", "true");
+        }
+        elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
+        elems[3].onkeydown = function () { return numericKeyPressed(event) };
+        autocomplete(elems[2], elems[3], landuse_array);
+
+    } else if (source == "road") {
+        for (var i = 2; i < elems.length - 4; i++) {
+            elems[i].setAttribute("contenteditable", "true");
+        }
+        elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
+        autocomplete(elems[2], elems[3], highway_array);
+        elems[4].onkeydown = function () { return numericKeyPressed(event) };
+        addBooleanDropdownMenu(elems[6]);
+    }
+
+
+    /*if (elems[2].getAttribute("contenteditable") == "false") {
+        for (var i = 2; i < elems.length - 4; i++) {
+            elems[i].setAttribute("contenteditable", "true");
+        }
+        addBooleanDropdownMenu(elems[5]);
         elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
         elems[3].onkeydown = function () { return numericKeyPressed(event) };
         switch (source) {
@@ -189,7 +244,7 @@ function setPropsTableEditable(button) {
         for (var i in elems) {
             elems[i].setAttribute("contenteditable", "false");
         }
-    }
+    }*/
 }
 
 //Extrai todas as filas, menos as ultimas 2 (coords, drawn)
@@ -198,8 +253,11 @@ function extractTableContents() {
     var table = document.getElementById("propsTable");
     for (var i = 0; i < table.rows.length - 3; i++) {
         switch (table.rows[i].cells[0].innerText) {
-            case "id": case "length": case "area": case "height":
+            case "id": case "area": case "height":
                 props[table.rows[i].cells[0].innerHTML] = parseInt(table.rows[i].cells[1].innerText);
+                break;
+            case "length":
+                props[table.rows[i].cells[0].innerHTML] = parseFloat(table.rows[i].cells[1].innerText);
                 break;
             case "one_way": case "underground":
                 var val = (table.rows[i].cells[0].innerText === "true");
@@ -313,7 +371,7 @@ function alphabetKeyPressed(e) {
     }
 }
 
-function addUndergroundDropdownMenu(cell_spot) {
+function addBooleanDropdownMenu(cell_spot) {
     var tmp = cell_spot.innerText;
     var html_dropdown;
     if (tmp == "true") {
@@ -343,23 +401,43 @@ function addSourcesDropdownMenu(cell_spot) {
     cell_spot.innerHTML = html_dropdown;
 }
 
-function setBarGraph(labels, values) {
-    if (barChart != "") {
-        barChart.destroy();
+function setPieGraph(type_stats) {
+    if (pieChart != "") {
+        pieChart.destroy();
     }
+    var labels = type_stats.map(obj => obj.type);
+    var values = type_stats.map(obj => obj.percentage);
     var ctx = document.getElementById('myChart').getContext('2d');
-    barChart = new Chart(ctx, {
+    pieChart = new Chart(ctx, {
         type: 'pie',
         data: {
             labels: labels,
             datasets: [{
                 label: 'Area %',
                 data: values,
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: function (context) {
+                    var index = context.dataIndex;
+                    var value = context.dataset.data[index];
+                    var source = "";
+                    for (var i in type_stats) {
+                        if (type_stats[i].percentage == value) {
+                            source = type_stats[i].source;
+                            break;
+                        }
+                    }
+                    switch (source) {
+                        case "building":
+                            return 'rgba(66,100,251, 0.4)';
+                        case "landuse":
+                            return 'rgba(57, 241, 35, 0.4)';
+                        case "water":
+                            return 'rgba(25, 22, 234, 0.4)';
+                    }
+                },
+                //borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1,
                 fill: false
-            }]
+            }],
         },
         options: {
             legend: {
@@ -369,12 +447,11 @@ function setBarGraph(labels, values) {
                 yAxes: [{
                     ticks: {
                         beginAtZero: true
-                    }
+                    },
+                    display: false
                 }]
             }
         }
     });
-
-
 
 }

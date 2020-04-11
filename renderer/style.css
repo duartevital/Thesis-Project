@@ -34,17 +34,26 @@ body {
     opacity: .5;
 }
 
-#features_section{
+#left_side_section{
     position: absolute;
     height: 100%;
     width: 35%;
 }
 
-#graphs_section{
+#top_right_section{
     position: absolute;
-    height: 100%;
+    height: 50%;
     width: 50%;
     left: 37%;
+    top: 0;
+}
+
+#bottom_right_section {
+    position: absolute;
+    height: 50%;
+    width: 61.5%;
+    left: 37%;
+    bottom: 0%;
 }
 
 #features {
@@ -54,10 +63,17 @@ body {
     background: rgba(230, 230, 230, 0.8);
 }
 
-#objects {
+#objDiv {
     width: 100%;
     height: 45%;
-    overflow:auto;
+    overflow: auto;
+    background: rgb(230, 230, 230);
+}
+
+#roadsDiv {
+    width: 100%;
+    height: 50%;
+    overflow: auto;
     background: rgb(230, 230, 230);
 }
 
@@ -100,7 +116,7 @@ tr:nth-child(even) {
     right: 5%;
 }
 
-/*Everythin related to Autocomplete*/
+/*Everything related to Autocomplete*/
 
 .autocomplete {
     /*the container must be positioned relative:*/

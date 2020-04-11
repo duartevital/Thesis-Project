@@ -21,19 +21,27 @@
     </div>
 
     <div id="tab_1" class="tabContent">
-        <section id="features_section">
+        <section id="left_side_section">
             <div id='features'>
                 <button id="newButton" onclick="addDrawTools(this)">new</button>
                 <button id="editButton" onclick="setPropsTableEditable(this)" style="visibility:hidden">edit</button>
                 <button id="saveButton" onclick="savePropsChanges(this)" style="visibility:hidden">save</button>
                 <table id="propsTable" style="width:100%"></table>
             </div>
-            <div id='objects'>
+            <div id='objDiv'>
                 <table id="objTable" style="width:100%"></table>
             </div>
         </section>
-        <section id="graphs_section">
-            <canvas id="myChart" width="100" height="85"></canvas>
+
+        <section id="top_right_section">
+            <canvas id="myChart" width="100" height="80"></canvas>
+        </section>
+
+        <section id="bottom_right_section">
+            <div id="roadsDiv">
+                <table id="roadsTable" style="width:100%"></table>
+            </div>
+            <!-- Inserir coisas relacionads com o AQI nesta secção -->
         </section>
     </div>
 

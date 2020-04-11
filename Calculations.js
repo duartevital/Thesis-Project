@@ -1,14 +1,21 @@
 const pip = require('@turf/boolean-point-in-polygon');
+const pol = require('@turf/boolean-point-on-line');
 const turf = require('@turf/helpers');
 const line_intersect = require('@turf/line-intersect');
 const ptld = require('@turf/point-to-line-distance');
+const line_length = require('@turf/length');
 
 
 function getTypeStats(type_stats) {
-    let unique = [...new Set(objects_list.map(object => object.type))];
+    //let unique = [...new Set(objects_list.map(object => object.type))];
+    let unique = Array.from(new Set(objects_list.map(a => a.type)))
+        .map(type => {
+            return objects_list.find(a => a.type === type);
+        });
+
     var total_area = 0;
     for (var i in unique)
-        type_stats.push({ type: unique[i], number: 0, area: 0, percentage: 0 });
+        type_stats.push({ source: unique[i].source, type: unique[i].type, number: 0, area: 0, percentage: 0 });
 
     for (var i in objects_list) {
         for (var j in type_stats) {
@@ -27,14 +34,12 @@ function getTypeStats(type_stats) {
 }
 
 function getVisiblePolygonPortion(coords) {
-    //log.info("hree 1, coords = " + coords);
     var new_coords = [];
     var bounds = map.getBounds();
     var ne_lng = bounds._ne.lng;
     var ne_lat = bounds._ne.lat;
     var sw_lng = bounds._sw.lng;
     var sw_lat = bounds._sw.lat;
-    //log.info("hree 2, vertexes = " + bounds);
     var viewport_poly = turf.polygon([[[sw_lng, ne_lat], [sw_lng, sw_lat], [ne_lng, sw_lat], [ne_lng, ne_lat], [sw_lng, ne_lat]]]);
     var nw_ne = { id: "nw_ne", line: turf.lineString([[sw_lng, ne_lat], [ne_lng, ne_lat]]) };
     var ne_se = { id: "ne_sw", line: turf.lineString([[ne_lng, ne_lat], [ne_lng, sw_lat]]) };
@@ -42,7 +47,6 @@ function getVisiblePolygonPortion(coords) {
     var sw_nw = { id: "sw_nw", line: turf.lineString([[sw_lng, sw_lat], [sw_lng, ne_lat]]) };
     var axis_lines = [nw_ne, ne_se, se_sw, sw_nw];
     var coords_poly = turf.polygon([coords]);
-    //log.info("here 1");
     var axis = {};
     for (var i = 0; i < coords.length - 1; i++) {
         var point = turf.point([coords[i][0], coords[i][1]]);
@@ -70,7 +74,6 @@ function getVisiblePolygonPortion(coords) {
         }
     }
     new_coords.push(new_coords[0]);
-    //log.info("here 3, new_coords = " + new_coords);
     var new_poly = turf.polygon([new_coords]);
     return new_poly;
 }
@@ -84,8 +87,32 @@ function getVisibleRoadPortion(coords) {
     var sw_lat = bounds._sw.lat;
     var viewport_poly = turf.polygon([[[sw_lng, ne_lat], [sw_lng, sw_lat], [ne_lng, sw_lat], [ne_lng, ne_lat], [sw_lng, ne_lat]]]);
 
-    var intersect = line_intersect.default(line, viewport_poly);
-    return intersect;
+    var intersect_points = [];
+    var visible_len = 0;
+    for (var i = 0; i < coords.length - 1; i++) {
+        var current = [coords[i][0], coords[i][1]];
+        var next = [coords[i + 1][0], coords[i + 1][1]];
+        var tmp_line = turf.lineString([current, next]);
+        if (pip.default(current, viewport_poly) && pip.default(next, viewport_poly)) { 
+            visible_len += line_length.default(tmp_line);
+        } else {
+            var intersection = line_intersect.default(tmp_line, viewport_poly);
+            if (intersection.features.length == 1) {
+                var tmp_point = intersection.features[0].geometry.coordinates;
+                if (pip.default(current, viewport_poly)) {
+                    tmp_line = turf.lineString([tmp_point, current]);
+                } else if (pip.default(next, viewport_poly)) {
+                    tmp_line = turf.lineString([tmp_point, next]);
+                }
+                visible_len += line_length.default(tmp_line);
+            } else if (intersection.features.length == 2) {
+                tmp_line = turf.lineString([intersection.features[0].coordinates, intersection.features[1].coordinates]);
+                visible_len += line_length.default(tmp_line);
+            }
+        }
+    }
+
+    return visible_len;
 }
 
 function lookInAxis(axis, poly, inverted) {
