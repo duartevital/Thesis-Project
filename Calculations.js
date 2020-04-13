@@ -42,7 +42,7 @@ function getVisiblePolygonPortion(coords) {
     var sw_lat = bounds._sw.lat;
     var viewport_poly = turf.polygon([[[sw_lng, ne_lat], [sw_lng, sw_lat], [ne_lng, sw_lat], [ne_lng, ne_lat], [sw_lng, ne_lat]]]);
     var nw_ne = { id: "nw_ne", line: turf.lineString([[sw_lng, ne_lat], [ne_lng, ne_lat]]) };
-    var ne_se = { id: "ne_sw", line: turf.lineString([[ne_lng, ne_lat], [ne_lng, sw_lat]]) };
+    var ne_se = { id: "ne_se", line: turf.lineString([[ne_lng, ne_lat], [ne_lng, sw_lat]]) };
     var se_sw = { id: "se_sw", line: turf.lineString([[ne_lng, sw_lat], [sw_lng, sw_lat]]) };
     var sw_nw = { id: "sw_nw", line: turf.lineString([[sw_lng, sw_lat], [sw_lng, ne_lat]]) };
     var axis_lines = [nw_ne, ne_se, se_sw, sw_nw];
@@ -58,18 +58,21 @@ function getVisiblePolygonPortion(coords) {
                 axis = tmp_axis;
                 if (axis.id == "nw_ne") {
                     var found_points = lookInAxis(axis, coords_poly, true);
-                    new_coords.push.apply(new_coords, found_points);
-                } else if (axis.id == "ne_sw") {
+                    if (found_points.length > 0)
+                        new_coords.push.apply(new_coords, found_points);
+                } else if (axis.id == "ne_se") {
                     var found_points = lookInAxis(axis, coords_poly, true);
-                    new_coords.push.apply(new_coords, found_points);
+                    if (found_points.length > 0)
+                        new_coords.push.apply(new_coords, found_points);
                 } else if (axis.id == "se_sw") {
                     var found_points = lookInAxis(axis, coords_poly, false);
-                    new_coords.push.apply(new_coords, found_points);
+                    if (found_points.length > 0)
+                        new_coords.push.apply(new_coords, found_points);
                 } else if (axis.id == "sw_nw") {
                     var found_points = lookInAxis(axis, coords_poly, true);
-                    new_coords.push.apply(new_coords, found_points);
+                    if (found_points.length > 0)
+                        new_coords.push.apply(new_coords, found_points);
                 }
-
             }
         }
     }
@@ -90,10 +93,10 @@ function getVisibleRoadPortion(coords) {
     var intersect_points = [];
     var visible_len = 0;
     for (var i = 0; i < coords.length - 1; i++) {
-        var current = [coords[i][0], coords[i][1]];
-        var next = [coords[i + 1][0], coords[i + 1][1]];
+        var current = turf.point([coords[i][0], coords[i][1]]);
+        var next = turf.point([coords[i + 1][0], coords[i + 1][1]]);
         var tmp_line = turf.lineString([current, next]);
-        if (pip.default(current, viewport_poly) && pip.default(next, viewport_poly)) { 
+        if (pip.default(current, viewport_poly) && pip.default(next, viewport_poly)) {
             visible_len += line_length.default(tmp_line);
         } else {
             var intersection = line_intersect.default(tmp_line, viewport_poly);
@@ -143,8 +146,10 @@ function lookInAxis(axis, poly, inverted) {
         }
         if (inverted) {
             var tmp = [];
-            tmp.push(result[result.length - 1]);
-            tmp.push(result[0]);
+            if (result.length > 0) {
+                tmp.push(result[result.length - 1]);
+                tmp.push(result[0]);
+            }
             return tmp;
         } else {
             return result;
