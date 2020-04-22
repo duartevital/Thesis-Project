@@ -1,0 +1,37 @@
+dt, dd {
+    float: left;
+}
+
+.entries_section {
+    overflow: auto;
+}
+
+.sub_article {
+    height: 70px;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+}
+
+.info_holder {
+    float: left;
+    width: 80%;
+}
+
+.aqi_holder {
+    text-align: center;
+    float: right;
+    right: 10px;
+    width: 20%;
+}
+
+.dl_separator {
+    border: none;
+}
+
+.aqi {
+    top: 1px;
+    font-size: 30px;
+    font: bold;
+    color: forestgreen;
+    line-height: 20px;
+}

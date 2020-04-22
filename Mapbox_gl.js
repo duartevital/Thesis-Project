@@ -3,7 +3,7 @@ const MapboxDraw = require('@mapbox/mapbox-gl-draw');
 const log = require('electron-log');
 const area = require('@turf/area');
 const Chart = require('chart.js');
-//const line_length = require('@turf/length');
+
 var first_start = false;
 var drawing = false;
 var features = [];
@@ -18,6 +18,8 @@ var tmp_drawn_obj = {};
 var type_stats = [];
 var selected_obj = {};
 var draw_buttons = [];
+var enable_save = false;
+var all_info = {};
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZHVhcnRlOTYiLCJhIjoiY2sxbmljbHp0MGF3djNtbzYwY3FrOXFldiJ9._f9pPyMDRXb1sJdMQZmKAQ';
 var map = new mapboxgl.Map({
@@ -143,12 +145,13 @@ map.on('draw.delete', function (e) {
 map.addControl(nav);
 map.addControl(draw);
 toggleDrawButtons(false);
+fetchTags();
 
 function startAll() {
-    fetchTags();
     var zoom = map.getZoom();
     //if (zoom >= 18) {
     first_start = true;
+    enable_save = true;
     objects_layer = [];
     all_list = [];
     objects_list = [];
@@ -235,7 +238,6 @@ function findObjId(selected_props) {
             var selectedCoords = selected_props.geometry.coordinates[0][0];
             for (var i in all_list) {
                 var iterCoords = all_list[i].coords[0][0];
-                //var iterCoords = objects_layer[i].geometry.coordinates[0][0];
                 if (selectedCoords.length == iterCoords.length) {
                     if (selectedCoords[0][0] == iterCoords[0][0]) {
                         id = i;
@@ -281,7 +283,6 @@ function savePropsChanges(button) {
     var extracted_props = extractTableContents();
     var objTable = document.getElementById("objTable");
     if (drawing) {
-        //var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, area: extracted_props.area, underground: extracted_props.underground, shape: extracted_props.shape, coords: tmp_drawn_obj.coords, drawn: tmp_drawn_obj.drawn };
         var tmp = extracted_props;
         tmp.coords = tmp_drawn_obj.coords; tmp.drawn = true; tmp.index = objects_list.length;
         all_list[extracted_props.id] = tmp;
@@ -294,7 +295,6 @@ function savePropsChanges(button) {
         document.getElementById("newButton").style.visibility = "visible";
         draw.changeMode('simple_select');
     } else {
-        //var tmp = { id: extracted_props.id, type: extracted_props.type, height: extracted_props.height, area: extracted_props.area, underground: extracted_props.underground, shape: extracted_props.shape, coords: objects_list[id].coords, drawn: objects_list[id].drawn };
         var old_type = selected_obj.type;
         if (selected_obj.source == "road") {
             selected_obj.id = extracted_props.id;
@@ -332,6 +332,7 @@ function savePropsChanges(button) {
         }    
     }
     drawing = false;
+    enable_save = true;
 }
 
 function addDrawTools(button) {
@@ -462,13 +463,65 @@ function resetStats() {
     setPieGraph(type_stats);
 }
 
-function dumbFunction() {
+function saveAllInfo() {
+    if (enable_save)
+        writeToJSON();
+    else
+        alert("No changes were made");
 
-    log.info("roads_list[0].length = " + roads_list[0].length);
-    var len = getVisibleRoadPortion(roads_list[0].coords);
-    log.info("length = " + len);
-    log.info("length * 1000 = " + len * 1000);
-    log.info("Math-round(len * 1000) = " + Math.round(len * 1000));
-    log.info("Math.round(len * 1000) / 1000 = " + Math.round(len * 1000) / 1000);
-    log.info("Math.round(len * 1000000) / 1000 = " + Math.round(len * 1000000) / 1000);
+    enable_save = false;
+}
+
+//currently loading only first json in folder
+function loadAllInfo() {
+    var info = loadFromJSON(1);
+
+    map.flyTo({
+        center: info.map_center,
+        zoom: info.zoom
+    });
+
+    all_list = info.all_list;
+    type_stats = info.obj_stats;
+    roads_list = info.road_stats;
+    enable_save = false;
+
+    map.on("zoomend", function () {
+        for (var i in all_list) {
+            switch (all_list[i].source) {
+                case "building": case "landuse":
+                    objects_list.push(all_list[i]);
+            }
+        }
+
+        document.getElementById("propsTable").innerHTML = "";
+        createObjectsTable(type_stats);
+        createRoadsTable(roads_list);
+        setPieGraph(type_stats);
+    });    
+    openTab(event, 'tab_1');
+}
+
+function dumbFunction() {
+    for (var i in all_list) {
+        log.info("all_list[" + i + "] = " + all_list[i].type);
+    }
+    log.info("");
+    log.info("_____________________________");
+    log.info("");
+    for (var i in objects_list) {
+        log.info("objects_list[" + i + "] = " + objects_list[i].type);
+    }
+    log.info("");
+    log.info("_____________________________");
+    log.info("");
+    for (var i in roads_list) {
+        log.info("roads_list[" + i + "] = " + roads_list[i].type);
+    }
+    log.info("");
+    log.info("_____________________________");
+    log.info("");
+    for (var i in type_stats) {
+        log.info("type_stats[" + i + "] = " + type_stats[i].type);
+    }
 }
