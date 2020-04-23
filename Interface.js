@@ -1,6 +1,8 @@
 
 var pieChart = "";
 
+importHistoryEntries();
+
 function openTab(evt, tabName) {
     var i, tabContent, tabLinks;
 
@@ -476,4 +478,18 @@ function addEntryToHistory(info) {
 function loadSelectedEntry(sub_entry) {
     var id = parseInt(sub_entry.querySelector("#id").textContent);
     loadAllInfo(id);
+}
+
+function importHistoryEntries() {
+    var files;
+    try {
+        files = fs.readdirSync("./Saves/");
+    } catch (err) {
+        log.info("Could NOT read the folder");
+    }
+
+    for (var i = 0; i < files.length; i++) {
+        var info = loadFromJSON(i);
+        addEntryToHistory(info);
+    }
 }

@@ -3,6 +3,8 @@ dt, dd {
 }
 
 .entries_section {
+    height: 85%;
+    display: block;
     overflow: auto;
 }
 

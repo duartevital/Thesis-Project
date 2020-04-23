@@ -504,13 +504,13 @@ function saveAllInfo() {
     enable_save = false;
 }
 
-//currently loading only first json in folder
 function loadAllInfo(id) {
     var info = loadFromJSON(id);
 
     map.flyTo({
         center: info.map_center,
-        zoom: info.zoom
+        zoom: info.zoom,
+        speed: 2.3
     });
 
     all_list = info.all_list;
