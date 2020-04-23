@@ -3,6 +3,8 @@ const MapboxDraw = require('@mapbox/mapbox-gl-draw');
 const log = require('electron-log');
 const area = require('@turf/area');
 const Chart = require('chart.js');
+const fs = require('fs');
+
 
 var first_start = false;
 var drawing = false;
@@ -15,6 +17,7 @@ var objects_list = [];
 var roads_list = [];
 var tmp_drawn_list = [];
 var tmp_drawn_obj = {};
+var source_stats = {};
 var type_stats = [];
 var selected_obj = {};
 var draw_buttons = [];
@@ -156,6 +159,7 @@ function startAll() {
     all_list = [];
     objects_list = [];
     roads_list = [];
+    source_stats = { building_area: 0, landuse_area: 0, road_length: 0 };
     if (draw_object_list.length > 0) {
         draw_object_list = [];
         tmp_drawn_list = [];
@@ -193,12 +197,12 @@ function getAllObjects() {
                 name = objects_layer[i].properties.name;
                 surface = objects_layer[i].properties.surface;
                 one_way = objects_layer[i].properties.oneway;
-                //length = objects_layer[i].properties.len;
-                length = Math.round(getVisibleRoadPortion(coords) * 1000000) / 1000;
+                length = Math.round(getVisibleRoadPortion(coords) * 1000000) / 1000; //conversion km - m
                 original_id = objects_layer[i].id;
                 index = roads_list.length;
                 props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, shape: shape, coords: coords, original_id: original_id, index: index };
                 roads_list.push(props);
+                source_stats.road_length += length;
             } else {
                 var tmp_area = 0;
                 //Area calculation for Polygon or Multipolygon
@@ -457,24 +461,52 @@ function resetEveryList() {
 
 function resetStats() {
     type_stats = [];
-    getTypeStats(type_stats);
+    getTypeStats(source_stats, type_stats);
     createObjectsTable(type_stats);
     createRoadsTable(roads_list);
     setPieGraph(type_stats);
+
+    source_stats.building_area = Math.round(source_stats.building_area * 1000) / 1000;
+    source_stats.landuse_area = Math.round(source_stats.landuse_area * 1000) / 1000;
+    source_stats.road_length = Math.round(source_stats.road_length * 1000) / 1000;
 }
 
 function saveAllInfo() {
-    if (enable_save)
-        writeToJSON();
-    else
+    var files;
+    try {
+        files = fs.readdirSync("./Saves/");
+    } catch (err) {
+        log.info("Could NOT read the folder");
+    }
+    var id = files.length;
+    var timestamp = new Date().toJSON();
+    var map_center = map.getCenter().toArray();
+    var zoom = map.getZoom();
+    var aqi = 136; //replace by real AQI
+    var info = {
+        id: id,
+        timestamp: timestamp,
+        map_center: map_center,
+        zoom: zoom,
+        aqi: aqi,
+        all_list: all_list,
+        source_stats: source_stats,
+        obj_stats: type_stats,
+        road_stats: roads_list //replace by road statistics
+    }
+
+    if (enable_save) {
+        addEntryToHistory(info);
+        writeToJSON(info);
+    } else
         alert("No changes were made");
 
     enable_save = false;
 }
 
 //currently loading only first json in folder
-function loadAllInfo() {
-    var info = loadFromJSON(1);
+function loadAllInfo(id) {
+    var info = loadFromJSON(id);
 
     map.flyTo({
         center: info.map_center,
@@ -482,6 +514,7 @@ function loadAllInfo() {
     });
 
     all_list = info.all_list;
+    source_stats = info.source_stats;
     type_stats = info.obj_stats;
     roads_list = info.road_stats;
     enable_save = false;
@@ -503,25 +536,5 @@ function loadAllInfo() {
 }
 
 function dumbFunction() {
-    for (var i in all_list) {
-        log.info("all_list[" + i + "] = " + all_list[i].type);
-    }
-    log.info("");
-    log.info("_____________________________");
-    log.info("");
-    for (var i in objects_list) {
-        log.info("objects_list[" + i + "] = " + objects_list[i].type);
-    }
-    log.info("");
-    log.info("_____________________________");
-    log.info("");
-    for (var i in roads_list) {
-        log.info("roads_list[" + i + "] = " + roads_list[i].type);
-    }
-    log.info("");
-    log.info("_____________________________");
-    log.info("");
-    for (var i in type_stats) {
-        log.info("type_stats[" + i + "] = " + type_stats[i].type);
-    }
+    log.info("clicked on divvvv");
 }

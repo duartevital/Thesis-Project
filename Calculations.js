@@ -6,8 +6,7 @@ const ptld = require('@turf/point-to-line-distance');
 const line_length = require('@turf/length');
 
 
-function getTypeStats(type_stats) {
-    //let unique = [...new Set(objects_list.map(object => object.type))];
+function getTypeStats(source_stats, type_stats) {
     let unique = Array.from(new Set(objects_list.map(a => a.type)))
         .map(type => {
             return objects_list.find(a => a.type === type);
@@ -22,6 +21,11 @@ function getTypeStats(type_stats) {
             if (objects_list[i].type == type_stats[j].type) {
                 type_stats[j].number++;
                 type_stats[j].area += objects_list[i].area;
+                if (objects_list[i].source == "building")
+                    source_stats.building_area += objects_list[i].area;
+                else if (objects_list[i].source == "landuse")
+                    source_stats.landuse_area += objects_list[i].area;
+
                 total_area += objects_list[i].area;
                 break;
             }
@@ -90,7 +94,6 @@ function getVisibleRoadPortion(coords) {
     var sw_lat = bounds._sw.lat;
     var viewport_poly = turf.polygon([[[sw_lng, ne_lat], [sw_lng, sw_lat], [ne_lng, sw_lat], [ne_lng, ne_lat], [sw_lng, ne_lat]]]);
 
-    var intersect_points = [];
     var visible_len = 0;
     for (var i = 0; i < coords.length - 1; i++) {
         var current = turf.point([coords[i][0], coords[i][1]]);

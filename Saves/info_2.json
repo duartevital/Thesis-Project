@@ -1,11 +1,11 @@
 {
-  "id": 1,
-  "timestamp": "2020-04-23T15:00:11.874Z",
+  "id": 2,
+  "timestamp": "2020-04-23T15:00:56.779Z",
   "map_center": [
-    -9.174394481765034,
-    38.77699878285014
+    -9.174202105208678,
+    38.777341892280816
   ],
-  "zoom": 17.57059329214991,
+  "zoom": 18.141125652727567,
   "aqi": 136,
   "all_list": [
     {
@@ -13,7 +13,7 @@
       "source": "road",
       "type": "tertiary",
       "name": "Estrada Militar",
-      "length": 157.337,
+      "length": 80.391,
       "one_way": "false",
       "shape": "LineString",
       "coords": [
@@ -126,7 +126,7 @@
       "id": 2,
       "source": "landuse",
       "type": "wood",
-      "area": 539.434,
+      "area": 7.199,
       "shape": "MultiPolygon",
       "coords": [
         [
@@ -226,7 +226,7 @@
       "source": "building",
       "type": "industrial",
       "height": 3,
-      "area": 2430.013,
+      "area": 2675.46,
       "underground": "false",
       "shape": "Polygon",
       "coords": [
@@ -258,24 +258,24 @@
     }
   ],
   "source_stats": {
-    "building_area": 2430.013,
-    "landuse_area": 539.434,
-    "road_length": 157.337
+    "building_area": 2675.46,
+    "landuse_area": 7.199,
+    "road_length": 80.391
   },
   "obj_stats": [
     {
       "source": "landuse",
       "type": "wood",
       "number": 1,
-      "area": 539.434,
-      "percentage": 18.16614339302907
+      "area": 7.199,
+      "percentage": 0.2683531525997154
     },
     {
       "source": "building",
       "type": "industrial",
       "number": 1,
-      "area": 2430.013,
-      "percentage": 81.83385660697093
+      "area": 2675.46,
+      "percentage": 99.73164684740028
     }
   ],
   "road_stats": [
@@ -284,7 +284,7 @@
       "source": "road",
       "type": "tertiary",
       "name": "Estrada Militar",
-      "length": 157.337,
+      "length": 80.391,
       "one_way": "false",
       "shape": "LineString",
       "coords": [

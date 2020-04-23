@@ -1,11 +1,11 @@
 {
-  "id": 1,
-  "timestamp": "2020-04-23T15:00:11.874Z",
+  "id": 3,
+  "timestamp": "2020-04-23T15:01:44.634Z",
   "map_center": [
-    -9.174394481765034,
-    38.77699878285014
+    -9.174447019196236,
+    38.77712181178603
   ],
-  "zoom": 17.57059329214991,
+  "zoom": 17.788494315625403,
   "aqi": 136,
   "all_list": [
     {
@@ -126,7 +126,7 @@
       "id": 2,
       "source": "landuse",
       "type": "wood",
-      "area": 539.434,
+      "area": 383.609,
       "shape": "MultiPolygon",
       "coords": [
         [
@@ -226,7 +226,7 @@
       "source": "building",
       "type": "industrial",
       "height": 3,
-      "area": 2430.013,
+      "area": 2345.41,
       "underground": "false",
       "shape": "Polygon",
       "coords": [
@@ -258,8 +258,8 @@
     }
   ],
   "source_stats": {
-    "building_area": 2430.013,
-    "landuse_area": 539.434,
+    "building_area": 2345.41,
+    "landuse_area": 383.609,
     "road_length": 157.337
   },
   "obj_stats": [
@@ -267,15 +267,15 @@
       "source": "landuse",
       "type": "wood",
       "number": 1,
-      "area": 539.434,
-      "percentage": 18.16614339302907
+      "area": 383.609,
+      "percentage": 14.05666285210913
     },
     {
       "source": "building",
       "type": "industrial",
       "number": 1,
-      "area": 2430.013,
-      "percentage": 81.83385660697093
+      "area": 2345.41,
+      "percentage": 85.94333714789087
     }
   ],
   "road_stats": [

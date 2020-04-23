@@ -58,35 +58,41 @@
     </aside>
 
     <div id="history_tab" class="tabContent">
-        <div class="entries_section
-             ">
-            <div class="entry">
-                <h5>22/04/2020 16:30:45</h5>
-                <div class="sub_article">
-                    <div class="info_holder">
-                        <dl>
-                            <dt>Location: </dt>
-                            <dd>31.33213213, 31.123123213</dd>
-                        </dl>
-                        <hr class="dl_separator" />
-                        <dl>
-                            <dt>Building: </dt>
-                            <dd>60%</dd>
-                            <dt>Landuse: </dt>
-                            <dd>40%</dd>
-                            <dt>Road: </dt>
-                            <dd>546 meters</dd>
-                        </dl>
-                    </div>
-                    <div class="aqi_holder">
-                        <p>AQI</p>
-                        <p class="aqi"><b>136</b></p>
-                    </div>
-                </div>
-            </div>
+        <div class="entries_section">
+
         </div>
     </div>
 
+    <!--Entry template to be instanciated in history tab-->
+    <template>
+        <div class="entry">
+            <h5 id="timestamp"></h5>
+            <div onclick="loadSelectedEntry(this)" class="sub_entry">
+                <p hidden id="id"></p>
+                <div class="info_holder">
+                    <dl>
+                        <dt>Location: </dt>
+                        <dd id="location_coords"></dd>
+                    </dl>
+                    <hr class="dl_separator" />
+                    <dl>
+                        <dt>Building: </dt>
+                        <dd id="building_area"></dd>
+                        <dt>Landuse: </dt>
+                        <dd id="landuse_area"></dd>
+                        <dt>Road: </dt>
+                        <dd id="road_length"></dd>
+                    </dl>
+                </div>
+                <div class="aqi_holder">
+                    <p>AQI</p>
+                    <p id="aqi" class="aqi"><b>136</b></p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!--Import scripts-->
     <script src="./../TagsHandler.js"></script>
     <script src="./../Mapbox_gl.js"></script>
     <script src="./../Interface.js"></script>

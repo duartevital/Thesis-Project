@@ -455,3 +455,25 @@ function setPieGraph(type_stats) {
     });
 
 }
+
+function addEntryToHistory(info) {
+    var template_elem = document.getElementsByTagName("template")[0];
+    var entry_div = template_elem.content.querySelector(".entry");
+    var parent_node = document.importNode(entry_div, true);
+
+    parent_node.querySelector("#id").textContent = info.id;
+    parent_node.querySelector("#timestamp").textContent = info.timestamp;
+    parent_node.querySelector("#location_coords").textContent = info.map_center;
+    parent_node.querySelector("#building_area").textContent = info.source_stats.building_area;
+    parent_node.querySelector("#landuse_area").textContent = info.source_stats.landuse_area;
+    parent_node.querySelector("#road_length").textContent = info.source_stats.road_length;
+    parent_node.querySelector("#aqi").textContent = info.aqi;
+
+    var entries_section = document.getElementsByClassName("entries_section")[0];
+    entries_section.appendChild(parent_node);
+}
+
+function loadSelectedEntry(sub_entry) {
+    var id = parseInt(sub_entry.querySelector("#id").textContent);
+    loadAllInfo(id);
+}
