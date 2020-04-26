@@ -87,21 +87,6 @@ map.on('load', function () {
         }
     });
     map.addLayer({
-        "id": "landuse_layer",
-        "type": "fill",
-        "minzoom": 17,
-        "source": {
-            type: 'vector',
-            url: 'mapbox://mapbox.mapbox-streets-v8',
-        },
-        //"class": "grass",
-        "source-layer": "landuse_overlay",
-        "paint": {
-            "fill-color": "rgba(57, 241, 35, 0.4)",
-            "fill-outline-color": "rgba(57, 241, 35, 0.5)"
-        }
-    });
-    map.addLayer({
         "id": "roads_layer",
         "type": "line",
         "minzoom": 17,
@@ -152,6 +137,7 @@ fetchTags();
 
 function startAll() {
     var zoom = map.getZoom();
+    log.info("________________________________________________");
     //if (zoom >= 18) {
     first_start = true;
     enable_save = true;
@@ -162,7 +148,7 @@ function startAll() {
     source_stats = { building_area: 0, landuse_area: 0, road_length: 0 };
     if (draw_object_list.length > 0) {
         draw_object_list = [];
-        tmp_drawn_list = [];
+        tmp_drawn_list = []; 
         resetEveryList();
         draw.deleteAll();
     }
@@ -197,7 +183,11 @@ function getAllObjects() {
                 name = objects_layer[i].properties.name;
                 surface = objects_layer[i].properties.surface;
                 one_way = objects_layer[i].properties.oneway;
-                length = Math.round(getVisibleRoadPortion(coords) * 1000000) / 1000; //conversion km - m
+                if(shape == "LineString")
+                    length = Math.round(getVisibleRoadPortion(coords, true) * 1000000) / 1000; //conversion km - m
+                else if (shape == "MultiLineString")
+                    length = Math.round(getVisibleRoadPortion(coords, false) * 1000000) / 1000; //conversion km - m
+
                 original_id = objects_layer[i].id;
                 index = roads_list.length;
                 props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, shape: shape, coords: coords, original_id: original_id, index: index };
@@ -205,11 +195,10 @@ function getAllObjects() {
                 source_stats.road_length += length;
             } else {
                 var tmp_area = 0;
-                //Area calculation for Polygon or Multipolygon
-                if (shape == "Polygon") {
-                    tmp_area = Math.round(area.default(getVisiblePolygonPortion(coords[0])) * 1000) / 1000;
-                } else if (shape == "MultiPolygon")
-                    tmp_area = Math.round(area.default(getVisiblePolygonPortion(coords[0][0])) * 1000) / 1000;
+                if (shape == "Polygon")
+                    tmp_area = Math.round(area.default(getVisiblePolygonPortion(coords, true)) * 1000) / 1000;
+                else if(shape == "MultiPolygon")
+                    tmp_area = Math.round(area.default(getVisiblePolygonPortion(coords, false)) * 1000) / 1000;
 
                 if (source == "building") {
                     height = objects_layer[i].properties.height;
@@ -221,6 +210,11 @@ function getAllObjects() {
                 if (source == "landuse") {
                     index = objects_list.length;
                     props = { id: id, source: source, type: type, area: tmp_area, shape: shape, coords: coords, drawn: false, index: index };
+                    objects_list.push(props);
+                }
+                if (source == "water") {
+                    index = objects_list.length;
+                    props = { id: id, source: source, type: source, area: tmp_area, shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
                 }
             }
