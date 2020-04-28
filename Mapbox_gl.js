@@ -9,6 +9,8 @@ const fs = require('fs');
 var first_start = false;
 var drawing = false;
 var features = [];
+var feature_selection_count = 0;
+var isSomethingSelected = false;
 var draw_id = 0;
 var draw_object_list = [];
 var objects_layer = [];
@@ -97,7 +99,7 @@ map.on('load', function () {
         "source-layer": "road",
         "paint": {
             "line-width": 8,
-            "line-color": "rgba(255,100,251, 0.6)"
+            "line-color": "rgba(255,100,251, 0.5)"
         }
     });
 });
@@ -113,8 +115,13 @@ map.on('click', function (e) {
             draw_buttons[2].disabled = false;
             draw_buttons[2].classList.remove("disabled-control-button");
         }
-        
         createPropertiesTable("propsTable", selected_obj);
+        if (!isSomethingSelected)
+            addSelectionColor();
+        else {
+            map.removeLayer('selected_feature_' + feature_selection_count);
+            addSelectionColor();
+        }
     }
 });
 map.on('dragend', function (e) {
@@ -141,6 +148,7 @@ function startAll() {
     //if (zoom >= 18) {
     first_start = true;
     enable_save = true;
+    //feature_selection_count = 0;
     objects_layer = [];
     all_list = [];
     objects_list = [];
@@ -192,6 +200,7 @@ function getAllObjects() {
                 index = roads_list.length;
                 props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, shape: shape, coords: coords, original_id: original_id, index: index };
                 roads_list.push(props);
+                all_list.push(props);
                 source_stats.road_length += length;
             } else {
                 var tmp_area = 0;
@@ -199,28 +208,30 @@ function getAllObjects() {
                     tmp_area = Math.round(area.default(getVisiblePolygonPortion(coords, true)) * 1000) / 1000;
                 else if(shape == "MultiPolygon")
                     tmp_area = Math.round(area.default(getVisiblePolygonPortion(coords, false)) * 1000) / 1000;
-
+                
                 if (source == "building") {
                     height = objects_layer[i].properties.height;
                     under = objects_layer[i].properties.underground;
                     index = objects_list.length;
                     props = { id: id, source: source, type: type, height: height, area: tmp_area, underground: under, shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
+                    all_list.push(props);
                 }
                 if (source == "landuse") {
                     index = objects_list.length;
                     props = { id: id, source: source, type: type, area: tmp_area, shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
+                    all_list.push(props);
                 }
                 if (source == "water") {
                     index = objects_list.length;
                     props = { id: id, source: source, type: source, area: tmp_area, shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
+                    all_list.push(props);
                 }
             }
                 id++;
         }
-        all_list.push(props);
     }
     //Filter off duplicate objects in roads_list (with same orignal id)
     roads_list = Array.from(new Set(roads_list.map(a => a.original_id)))
@@ -377,6 +388,72 @@ function toggleDrawButtons(enable) {
         draw_buttons[1].classList.remove("disabled-control-button");
         draw_buttons[2].classList.remove("disabled-control-button");
     }
+}
+
+function addSelectionColor() {
+    var selection_coords, feature_color, feature_shape;
+    var isRoad = false;
+
+    selection_coords = features.geometry.coordinates;
+    feature_selection_count++;
+    feature_shape = features.geometry.type;
+    switch (features.sourceLayer) {
+        case 'building':
+            feature_color = "rgba(66, 100, 251, 0.8)";
+            break;
+        case 'landuse':
+            feature_color = "rgba(57, 241, 35, 0.8)";
+            break;
+        case 'road':
+            feature_color = "rgba(255,100,251, 0.9)";
+            isRoad = true;
+            break;
+        case 'water':
+            feature_color = "rgba(25, 22, 234, 0.8)";
+            break;
+    }
+    if (!isRoad) {
+        map.addLayer({
+            'id': ('selected_feature_' + feature_selection_count),
+            'type': 'fill',
+            'source': {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': feature_shape,
+                        'coordinates': selection_coords
+                    }
+                }
+            },
+            'layout': {},
+            'paint': {
+                'fill-color': feature_color
+            }
+        });
+    } else {
+        map.addLayer({
+            'id': ('selected_feature_' + feature_selection_count),
+            'type': 'line',
+            'source': {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': feature_shape,
+                        'coordinates': selection_coords
+                    }
+                }
+            },
+            'layout': {},
+            'paint': {
+                "line-width": 8,
+                "line-color": feature_color
+            }
+        });
+    }
+
+    isSomethingSelected = true;
 }
 
 function updateDrawObjectsInViewport() {
