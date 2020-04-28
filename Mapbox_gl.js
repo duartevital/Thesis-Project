@@ -242,40 +242,42 @@ function getAllObjects() {
 
 function findObjId(selected_props) {
     var id = -1;
-    if (selected_props.layer.source != "mapbox-gl-draw-cold") {
-        if (selected_props.geometry.type == "MultiPolygon") {
-            var selectedCoords = selected_props.geometry.coordinates[0][0];
-            for (var i in all_list) {
-                var iterCoords = all_list[i].coords[0][0];
-                if (selectedCoords.length == iterCoords.length) {
-                    if (selectedCoords[0][0] == iterCoords[0][0]) {
-                        id = i;
+    if (selected_props.length > 0) {
+        if (selected_props.layer.source != "mapbox-gl-draw-cold") {
+            if (selected_props.geometry.type == "MultiPolygon") {
+                var selectedCoords = selected_props.geometry.coordinates[0][0];
+                for (var i in all_list) {
+                    var iterCoords = all_list[i].coords[0][0];
+                    if (selectedCoords.length == iterCoords.length) {
+                        if (selectedCoords[0][0] == iterCoords[0][0]) {
+                            id = i;
+                        }
+                    }
+                }
+            } else if (selected_props.geometry.type == "Polygon" || selected_props.geometry.type == "MultiLineString") {
+                var selectedCoords = selected_props.geometry.coordinates[0];
+                for (var i in all_list) {
+                    var iterCoords = all_list[i].coords[0];
+                    if (selectedCoords.length == iterCoords.length) {
+                        if (selectedCoords[0][0] == iterCoords[0][0]) {
+                            id = i;
+                        }
+                    }
+                }
+            } else if (selected_props.geometry.type == "LineString") {
+                var selectedCoords = selected_props.geometry.coordinates;
+                for (var i in all_list) {
+                    var iterCoords = all_list[i].coords;
+                    if (selectedCoords.length == iterCoords.length) {
+                        if (selectedCoords[0][0] == iterCoords[0][0]) {
+                            id = i;
+                        }
                     }
                 }
             }
-        } else if (selected_props.geometry.type == "Polygon" || selected_props.geometry.type == "MultiLineString") {
-            var selectedCoords = selected_props.geometry.coordinates[0];
-            for (var i in all_list) {
-                var iterCoords = all_list[i].coords[0];
-                if (selectedCoords.length == iterCoords.length) {
-                    if (selectedCoords[0][0] == iterCoords[0][0]) {
-                        id = i;
-                    }
-                }
-            }
-        } else if (selected_props.geometry.type == "LineString") {
-            var selectedCoords = selected_props.geometry.coordinates;
-            for (var i in all_list) {
-                var iterCoords = all_list[i].coords;
-                if (selectedCoords.length == iterCoords.length) {
-                    if (selectedCoords[0][0] == iterCoords[0][0]) {
-                        id = i;
-                    }
-                }
-            }
+        } else if (id == -1) {
+            id = selectedDrawObject(selected_props.properties.id);
         }
-    } else if (id == -1) {
-        id = selectedDrawObject(selected_props.properties.id);
     }
     return id;
 }
@@ -313,7 +315,6 @@ function savePropsChanges(button) {
             selected_obj.surface = extracted_props.surface;
             selected_obj.one_way = extracted_props.one_way;
 
-            log.info("selectes obj = " + selected_obj);
             all_list[selected_obj.id] = selected_obj;
             roads_list[selected_obj.index] = selected_obj;
             resetStats();
@@ -361,6 +362,7 @@ function addDrawTools(button) {
 }
 
 function selectedDrawObject(draw_id) {
+    log.info("START of selectedDrawObject");
     var id = -1;
     for (var i = 0; i < draw_object_list.length; i++) {
         if (draw_object_list[i].draw_id == draw_id) {
@@ -482,8 +484,7 @@ function handleDraw() {
     var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
     draw_id = data.features[data.features.length - 1].id;
     var id = all_list.length;
-    var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords[0])) * 1000) / 1000;
-
+    var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords, true)) * 1000) / 1000;
     tmp_drawn_obj = { id: id, source: "insert source", area: tmp_area, shape: "Polygon", coords: polygonCoords, drawn: true, index: objects_list.length };
     createPropertiesTable("propsTable", tmp_drawn_obj, true);
 }
@@ -498,25 +499,29 @@ function handleUpdate() {
 }
 
 function deleteDrawnObject(id) {
-    if (all_list[id].drawn) {
-        var tmp_index = all_list[id].index;
-        all_list.splice(id, 1);
-        objects_list.splice(tmp_index, 1);
-    }
+    if (id != -1) {
+        if (all_list[id].drawn) {
+            var tmp_index = all_list[id].index;
+            all_list.splice(id, 1);
+            objects_list.splice(tmp_index, 1);
+        }
 
-    for (var i in draw_object_list) {
-        if (draw_object_list.id == id) {
-            draw_object_list.splice(i, 1);
-        }
-        if (tmp_drawn_list.id == id) {
-            tmp_drawn_list.splice(i, 1);
+        for (var i in draw_object_list) {
+            if (draw_object_list.id == id) {
+                draw_object_list.splice(i, 1);
+            }
+            if (tmp_drawn_list.id == id) {
+                tmp_drawn_list.splice(i, 1);
+            }
         }
     }
-    document.getElementById("objTable").innerHTML = "";
+    document.getElementById("propsTable").innerHTML = "";
+    document.getElementById("saveButton").style.visibility = "hidden";
     resetEveryList();
-    var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
-    draw_button[2].disabled = true;
-    draw_buttons[2].classList.add("disabled-control-button");
+    //disable trash button
+    /*var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
+    draw_buttons[2].disabled = true;
+    draw_buttons[2].classList.add("disabled-control-button");*/
 }
 
 function resetEveryList() {
