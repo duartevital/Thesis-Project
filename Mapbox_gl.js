@@ -456,7 +456,7 @@ function resetEveryList() {
 function resetStats() {
     type_stats = [];
     getTypeStats(source_stats, type_stats);
-    createObjectsTable(type_stats);
+    createObjectsTable(objects_list);
     createRoadsTable(roads_list);
     setPieGraph(type_stats);
 
@@ -522,7 +522,7 @@ function loadAllInfo(id) {
         }
 
         document.getElementById("propsTable").innerHTML = "";
-        createObjectsTable(type_stats);
+        createObjectsTable(objects_list);
         createRoadsTable(roads_list);
         setPieGraph(type_stats);
     });    

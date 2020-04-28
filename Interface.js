@@ -63,7 +63,38 @@ function createPropertiesTable(tableName, props, drawn) {
     }
 }
 
-function createObjectsTable(type_stats) {
+function createObjectsTable(list) {
+    var table = document.getElementById("objTable");
+    table.innerHTML = "";
+
+    var header = table.createTHead();
+    var header_row = header.insertRow(0);
+    header_row.insertCell(0).innerHTML = "<b>Type<b>";
+    header_row.insertCell(1).innerHTML = "<b>Area<b>";
+
+    var row, cell1, cell2;
+    for (var i in list) {
+        row = table.insertRow(-1);
+        cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+        cell1.innerText = list[i].type; cell2.innerText = list[i].area;
+
+    }
+
+    table.addEventListener("click", function (e) {
+        var clicked_row = e.target.parentNode;
+        for (var i in list) {
+            if (list[i].type == clicked_row.cells[0].innerText && list[i].area == parseFloat(clicked_row.cells[1].innerText)) {
+                createPropertiesTable("propsTable", list[i], false);
+                document.getElementById("editButton").style.visibility = "visible";
+                break;
+            }
+        }
+    });
+
+    sortTableByNumber(table, 1);
+}
+
+/*function createObjectsTable(type_stats) {
     var table = document.getElementById("objTable");
     table.innerHTML = "";
     for (var i = 0; i < type_stats.length; i++) {
@@ -73,11 +104,18 @@ function createObjectsTable(type_stats) {
         cell1.innerText = type_stats[i].type;
         cell2.innerText = type_stats[i].number;
     }
-}
+}*/
 
 function createRoadsTable(list) {
     var table = document.getElementById("roadsTable");
     table.innerHTML = "";
+    //Table header
+    var header = table.createTHead();
+    var header_row = header.insertRow(0);
+    header_row.insertCell(0).innerHTML = "<b>Name<b>";
+    header_row.insertCell(1).innerHTML = "<b>Type<b>";
+    header_row.insertCell(2).innerHTML = "<b>Length<b>";
+
     for (var i in list) {
         var row = table.insertRow(-1);
         var cell1 = row.insertCell(0); var cell2 = row.insertCell(1); var cell3 = row.insertCell(2);
@@ -90,14 +128,16 @@ function createRoadsTable(list) {
     table.addEventListener("click", function (e) {
         var row = e.target.parentNode;
         for (var i in list) {
-            if (list[i].length == parseFloat(row.cells[2].innerText)) {
-                selected_obj = list[i];
+            if (list[i].name == row.cells[0].innerText && list[i].length == parseFloat(row.cells[2].innerText)) {
+                //selected_obj = list[i];
                 createPropertiesTable("propsTable", list[i], false);
                 document.getElementById("editButton").style.visibility = "visible";
                 break;
             }
         }
     });
+
+    sortTableByNumber(table, 2);
 }
 
 function addObjectToTable(tableName, array) {
@@ -493,3 +533,34 @@ function importHistoryEntries() {
         addEntryToHistory(info);
     }
 }
+
+function sortTableByNumber(table, column) {
+    var rows, cells, switching, i, x, y, shouldSwitch;
+    //table = document.getElementById(tableName);
+    switching = true;
+
+    while (switching) {
+        switching = false;
+        rows = table.rows;
+        for (i = 1; i < rows.length - 1; i++) {
+            shouldSwitch = false;
+            x = rows[i].cells[column];
+            y = rows[i + 1].cells[column];
+            if (parseInt(x.innerHTML) < parseInt(y.innerHTML)) {
+                shouldSwitch = true;
+                break;
+            }
+        }
+
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+        }
+    }
+}
+
+
+
+
+
+
