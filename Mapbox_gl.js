@@ -121,7 +121,7 @@ map.on('click', function (e) {
         else {
             map.removeLayer('selected_feature_' + feature_selection_count);
             addSelectionColor();
-        }
+        }   
     }
 });
 map.on('dragend', function (e) {
@@ -242,7 +242,8 @@ function getAllObjects() {
 
 function findObjId(selected_props) {
     var id = -1;
-    if (selected_props.length > 0) {
+    //if (selected_props.length > 0) {
+    if (!isObjEmpty(selected_props)) {
         if (selected_props.layer.source != "mapbox-gl-draw-cold") {
             if (selected_props.geometry.type == "MultiPolygon") {
                 var selectedCoords = selected_props.geometry.coordinates[0][0];
@@ -346,16 +347,17 @@ function savePropsChanges(button) {
 }
 
 function addDrawTools(button) {
-    //mudar nome de button para cancel
-    //mudar onclick de button para removeDrawTools
     if (!drawing) {
-        button.value = "cancel";
+        button.innerText = "cancel";
         document.getElementById("propsTable").innerHTML = "";
         toggleDrawButtons(true);
         drawing = true;
+        map.removeLayer('selected_feature_' + feature_selection_count);
     } else {
-        button.value = "new";
-        document.getElementById("propsTable").innerHTML = "";
+        var id = draw.getSelectedIds();
+        draw.delete(id);
+        deleteDrawnObject(findObjId(features));
+        button.innerText = "new";
         toggleDrawButtons(false);
         drawing = false;
     }
@@ -517,6 +519,7 @@ function deleteDrawnObject(id) {
     }
     document.getElementById("propsTable").innerHTML = "";
     document.getElementById("saveButton").style.visibility = "hidden";
+    drawing = false;
     resetEveryList();
     //disable trash button
     /*var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
