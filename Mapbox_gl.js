@@ -165,7 +165,7 @@ function startAll() {
     document.getElementById("objTable").innerHTML = "";
     getAllObjects();
     updateDrawObjectsInViewport();
-    openTab(event, 'tab_1');
+    openTab(event, 'features_tab');
 
     //Calculate statistics and create graphs
     resetStats();
@@ -284,75 +284,89 @@ function findObjId(selected_props) {
 }
 
 function savePropsChanges(button) {
-    button.style.visibility = "hidden";
-    //document.getElementById("editButton").style.visibility = "hidden";
-    var elems = document.getElementsByClassName("cell2");
-    for (var i = 0; i < elems.length; i++) {
-        elems[i].setAttribute("contenteditable", "false");
-    }
-    toggleDrawButtons(false);
-    //Guardar as alterações no objeto do array com o mesmo id:
     var extracted_props = extractTableContents();
     var objTable = document.getElementById("objTable");
-    if (drawing) {
-        var tmp = extracted_props;
-        tmp.coords = tmp_drawn_obj.coords; tmp.drawn = true; tmp.index = objects_list.length;
-        all_list[extracted_props.id] = tmp;
-        objects_list[tmp.index] = tmp;
-        resetStats();
-        var draw_obj = { id: extracted_props.id, draw_id: draw_id };
-        draw_object_list.push(draw_obj);
-        tmp_drawn_list.push(tmp);
-        draw_id = 0;
-        document.getElementById("newButton").style.visibility = "visible";
-        draw.changeMode('simple_select');
+    if (extracted_props.type != "") {
+        button.style.visibility = "hidden";
+        //document.getElementById("editButton").style.visibility = "hidden";
+        var elems = document.getElementsByClassName("cell2");
+        for (var i = 0; i < elems.length; i++) {
+            elems[i].setAttribute("contenteditable", "false");
+        }
+        toggleDrawButtons(false);
+        //Guardar as alterações no objeto do array com o mesmo id:
+        var extracted_props = extractTableContents();
+        var objTable = document.getElementById("objTable");
+        if (drawing) {
+            var tmp = extracted_props;
+            tmp.coords = tmp_drawn_obj.coords; tmp.drawn = true; tmp.index = objects_list.length;
+            all_list[extracted_props.id] = tmp;
+            objects_list[tmp.index] = tmp;
+            resetStats();
+            var draw_obj = { id: extracted_props.id, draw_id: draw_id };
+            draw_object_list.push(draw_obj);
+            tmp_drawn_list.push(tmp);
+            draw_id = 0;
+            var newButton = document.getElementById("newButton");
+            newButton.style.visibility = "visible";
+            newButton.innerText = "new";
+            draw.changeMode('simple_select');
+        } else {
+            if (selected_obj.source == "road") {
+                selected_obj.id = extracted_props.id;
+                selected_obj.type = extracted_props.type;
+                selected_obj.name = extracted_props.name;
+                selected_obj.length = extracted_props.length;
+                selected_obj.surface = extracted_props.surface;
+                selected_obj.one_way = extracted_props.one_way;
+
+                all_list[selected_obj.id] = selected_obj;
+                roads_list[selected_obj.index] = selected_obj;
+                resetStats();
+                //incluir uma função igual á seguinte mas para a table das roads
+                /*if (old_type != selected_obj.type)
+                    changeObjectInTable(selected_obj, old_type);*/
+            } else if (selected_obj.source == "building") {
+                selected_obj.id = extracted_props.id;
+                selected_obj.type = extracted_props.type;
+                selected_obj.height = extracted_props.height;
+                selected_obj.area = extracted_props.area;
+                selected_obj.underground = extracted_props.underground;
+
+                all_list[selected_obj.id] = selected_obj;
+                objects_list[selected_obj.index] = selected_obj;
+                resetStats();
+            } else if (selected_obj.source == "landuse") {
+                selected_obj.id = extracted_props.id;
+                selected_obj.type = extracted_props.type;
+                selected_obj.area = extracted_props.area;
+
+                all_list[selected_obj.id] = selected_obj;
+                objects_list[selected_obj.index] = selected_obj;
+                resetStats();
+            }
+        }
+        drawing = false;
+        enable_save = true;
+
     } else {
-        var old_type = selected_obj.type;
-        if (selected_obj.source == "road") {
-            selected_obj.id = extracted_props.id;
-            selected_obj.type = extracted_props.type;
-            selected_obj.name = extracted_props.name;
-            selected_obj.length = extracted_props.length;
-            selected_obj.surface = extracted_props.surface;
-            selected_obj.one_way = extracted_props.one_way;
-
-            all_list[selected_obj.id] = selected_obj;
-            roads_list[selected_obj.index] = selected_obj;
-            resetStats();
-            //incluir uma função igual á seguinte mas para a table das roads
-            /*if (old_type != selected_obj.type)
-                changeObjectInTable(selected_obj, old_type);*/
-        } else if (selected_obj.source == "building") {
-            selected_obj.id = extracted_props.id;
-            selected_obj.type = extracted_props.type;
-            selected_obj.height = extracted_props.height;
-            selected_obj.area = extracted_props.area;
-            selected_obj.underground = extracted_props.underground;
-
-            all_list[selected_obj.id] = selected_obj;
-            objects_list[selected_obj.index] = selected_obj;
-            resetStats();
-        } else if (selected_obj.source == "landuse") {
-            selected_obj.id = extracted_props.id;
-            selected_obj.type = extracted_props.type;
-            selected_obj.area = extracted_props.area;
-
-            all_list[selected_obj.id] = selected_obj;
-            objects_list[selected_obj.index] = selected_obj;
-            resetStats();
-        }    
+        document.getElementById("type_popup").classList.toggle("show");
+        setTimeout(function () {
+            document.getElementById("type_popup").classList.toggle("show");
+        }, 3000);
     }
-    drawing = false;
-    enable_save = true;
 }
 
 function addDrawTools(button) {
-    if (!drawing) {
+    if (button.innerText == "new") {
         button.innerText = "cancel";
         document.getElementById("propsTable").innerHTML = "";
         toggleDrawButtons(true);
         drawing = true;
-        map.removeLayer('selected_feature_' + feature_selection_count);
+        document.getElementById("editButton").style.visibility = "hidden";
+        document.getElementById("saveButton").style.visibility = "hidden";
+        if (feature_selection_count > 0)
+            map.removeLayer('selected_feature_' + feature_selection_count);
     } else {
         var id = draw.getSelectedIds();
         draw.delete(id);
@@ -364,7 +378,6 @@ function addDrawTools(button) {
 }
 
 function selectedDrawObject(draw_id) {
-    log.info("START of selectedDrawObject");
     var id = -1;
     for (var i = 0; i < draw_object_list.length; i++) {
         if (draw_object_list[i].draw_id == draw_id) {
@@ -506,6 +519,9 @@ function deleteDrawnObject(id) {
             var tmp_index = all_list[id].index;
             all_list.splice(id, 1);
             objects_list.splice(tmp_index, 1);
+            draw_buttons[2].disabled = true;
+            draw_buttons[2].classList.add("disabled-control-button");
+            document.getElementById("newButton").innerText = "new";
         }
 
         for (var i in draw_object_list) {
@@ -519,6 +535,7 @@ function deleteDrawnObject(id) {
     }
     document.getElementById("propsTable").innerHTML = "";
     document.getElementById("saveButton").style.visibility = "hidden";
+    document.getElementById("editButton").style.visibility = "hidden";
     drawing = false;
     resetEveryList();
     //disable trash button
@@ -557,30 +574,44 @@ function saveAllInfo() {
     } catch (err) {
         log.info("Could NOT read the folder");
     }
+
     var id = files.length;
-    var timestamp = new Date().toJSON();
+    var timestamp = new Date();
     var map_center = map.getCenter().toArray();
     var zoom = map.getZoom();
     var aqi = 136; //replace by real AQI
-    var info = {
+
+    var infoToHistory = {
         id: id,
-        timestamp: timestamp,
+        timestamp: timestamp.toLocaleString(),
         map_center: map_center,
         zoom: zoom,
         aqi: aqi,
         all_list: all_list,
         source_stats: source_stats,
         obj_stats: type_stats,
-        road_stats: roads_list //replace by road statistics
+        road_stats: roads_list
+    }
+    var infoToJSON = {
+        id: id,
+        timestamp: timestamp.toJSON(),
+        map_center: map_center,
+        zoom: zoom,
+        aqi: aqi,
+        all_list: all_list,
+        source_stats: source_stats,
+        obj_stats: type_stats,
+        road_stats: roads_list 
     }
 
     if (enable_save) {
-        addEntryToHistory(info);
-        writeToJSON(info);
+        addEntryToHistory(infoToHistory);
+        writeToJSON(infoToJSON);
     } else
         alert("No changes were made");
 
     enable_save = false;
+    document.getElementById("empty_history").style.visibility = "hidden";
 }
 
 function loadAllInfo(id) {
@@ -611,7 +642,11 @@ function loadAllInfo(id) {
         createRoadsTable(roads_list);
         setPieGraph(type_stats);
     });    
-    openTab(event, 'tab_1');
+    openTab(event, 'features_tab');
+}
+
+function sendInfo() {
+    location.reload();
 }
 
 function dumbFunction() {

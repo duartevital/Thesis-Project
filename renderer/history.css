@@ -43,3 +43,8 @@ dt, dd {
     color: forestgreen;
     line-height: 20px;
 }
+
+#empty_history {
+    visibility: visible;
+    text-align: center;
+}

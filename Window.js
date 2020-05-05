@@ -20,7 +20,9 @@ class Window extends BrowserWindow {
 
         this.once('ready-to-show', () => {
             this.show()
-        })
+        });
+
+        
     }
 }
 

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="autocomplete.css" />
     <link rel="stylesheet" href="history.css" />
+    <link rel="stylesheet" href="popup.css" />
 
 </head>
 <body>
@@ -19,30 +20,31 @@
 
     <div class="tab">
         <button class="tabLinks" onclick="openTab(event, 'features_tab')">Labels</button>
-        <button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>
+        <!--<button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>-->
         <button class="tabLinks" onclick="openTab(event, 'history_tab')">History</button>
     </div>
 
-    <div id="tab_1" class="tabContent">
+    <div id="features_tab" class="tabContent">
         <section id="left_side_section">
             <div id='features'>
-                <button id="newButton" onclick="addDrawTools(this)">new</button>
+                <button id="newButton" onclick="addDrawTools(this)" title="Enable drawing tools">new</button>
                 <button id="editButton" onclick="setPropsTableEditable(this)" style="visibility:hidden">edit</button>
                 <button id="saveButton" onclick="savePropsChanges(this)" style="visibility:hidden">save</button>
                 <table id="propsTable" style="width:100%"></table>
             </div>
             <div id='objDiv'>
-                <table id="objTable" style="width:100%"></table>
+                <table id="objTable" style="width:100%" title="List of all building/landuse objects"></table>
             </div>
         </section>
 
         <section id="top_right_section">
+            <h5 class="title_text">Object areas (%)</h5>
             <canvas id="myChart" width="100" height="80"></canvas>
         </section>
 
         <section id="bottom_right_section">
             <div id="roadsDiv">
-                <table id="roadsTable" style="width:100%"></table>
+                <table id="roadsTable" style="width:100%" title="List of all roads"></table>
             </div>
             <!-- Inserir coisas relacionads com o AQI nesta secção -->
         </section>
@@ -50,7 +52,8 @@
 
     <button onclick="dumbFunction()" id="dumb_btn">dumb btn</button>
     <!--<button onclick="loadAllInfo()" id="loadAll_btn">LOAD</button>-->
-    <button onclick="saveAllInfo()" id="saveAll_btn">SAVE</button>
+    <button onclick="saveAllInfo()" id="saveAll_btn" title="Saves everything in a JSON file">SAVE</button>
+    <button onclick="sendInfo()" id="send_btn" title="Send to server">SEND</button>
 
     <aside id='buttonContainer' class="tabContent">
         <button type="button" id="countButtons" onclick="countFeatures()">Count Features</button>
@@ -59,10 +62,11 @@
 
     <div id="history_tab" class="tabContent">
         <div class="entries_section">
-
+            <h4 id="empty_history">Your history is empty</h4>
         </div>
     </div>
 
+    <!--      TEMPLATES       -->
     <!--Entry template to be instanciated in history tab-->
     <template>
         <div class="entry">
@@ -92,11 +96,24 @@
         </div>
     </template>
 
+    <!--Popups templates-->
+    <template id="type_popup_template">
+        <span class="popuptext" id="type_popup">Object must have a type</span>
+    </template>
+
+    <!--Hints template-->
+    <template id="hint_template">
+        <div>
+            <img src="../Media/hint_icon.png" alt="hint icon" width="5" height="5" />
+        </div>
+    </template>
+
     <!--Import scripts-->
     <script src="./../TagsHandler.js"></script>
     <script src="./../Mapbox_gl.js"></script>
     <script src="./../jsonHandler.js"></script>
     <script src="./../Interface.js"></script>
     <script src="./../Calculations.js"></script>
+    <script src="./../Misc.js"></script>
 </body>
 </html>

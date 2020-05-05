@@ -111,17 +111,26 @@ tr:nth-child(even) {
     background-color: #dddddd;
 }
 
+.title_text {
+    text-align: center;
+}
+
 #saveAll_btn {
     position: absolute;
     bottom: 3%;
-    right: 5%;
+    right: 10%;
 }
-
 
 #loadAll_btn {
     position: absolute;
     bottom: 3%;
     right: 10%;
+}
+
+#send_btn {
+    position: absolute;
+    bottom: 3%;
+    right: 5%;
 }
 
 #dumb_btn {

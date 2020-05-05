@@ -33,6 +33,14 @@ function createPropertiesTable(tableName, props, drawn) {
             cell1.classList.add("cell1"); cell2.classList.add("cell2");
             cell2.setAttribute("contenteditable", "false");
         }
+        //var type_popup_holder = document.getElementsByClassName("cell2")[2]
+        //type_popup_holder.id = "type_popup_holder";
+        var parent_div = document.getElementById("features");
+        var template = document.getElementById("type_popup_template");
+        var popup_text = template.content.querySelector(".popuptext");
+        var parent_node = document.importNode(popup_text, true);
+        parent_div.classList.add("popup");
+        parent_div.appendChild(parent_node);
     } else {
         //only show id and source fields
         row = table.insertRow(-1);
@@ -69,7 +77,7 @@ function createObjectsTable(list) {
 
     var header = table.createTHead();
     var header_row = header.insertRow(0);
-    header_row.insertCell(0).innerHTML = "<b>Type<b>";
+    header_row.insertCell(0).innerHTML = "<b>Object  Type<b>";
     header_row.insertCell(1).innerHTML = "<b>Area<b>";
 
     var row, cell1, cell2;
@@ -94,25 +102,13 @@ function createObjectsTable(list) {
     sortTableByNumber(table, 1);
 }
 
-/*function createObjectsTable(type_stats) {
-    var table = document.getElementById("objTable");
-    table.innerHTML = "";
-    for (var i = 0; i < type_stats.length; i++) {
-        var row = table.insertRow(-1);
-        var cell1 = row.insertCell(0), cell2 = row.insertCell(1);
-
-        cell1.innerText = type_stats[i].type;
-        cell2.innerText = type_stats[i].number;
-    }
-}*/
-
 function createRoadsTable(list) {
     var table = document.getElementById("roadsTable");
     table.innerHTML = "";
     //Table header
     var header = table.createTHead();
     var header_row = header.insertRow(0);
-    header_row.insertCell(0).innerHTML = "<b>Name<b>";
+    header_row.insertCell(0).innerHTML = "<b>Road  Name<b>";
     header_row.insertCell(1).innerHTML = "<b>Type<b>";
     header_row.insertCell(2).innerHTML = "<b>Length<b>";
 
@@ -262,31 +258,6 @@ function setPropsTableEditable(button) {
         elems[4].onkeydown = function () { return numericKeyPressed(event) };
         addBooleanDropdownMenu(elems[6]);
     }
-
-
-    /*if (elems[2].getAttribute("contenteditable") == "false") {
-        for (var i = 2; i < elems.length - 4; i++) {
-            elems[i].setAttribute("contenteditable", "true");
-        }
-        addBooleanDropdownMenu(elems[5]);
-        elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
-        elems[3].onkeydown = function () { return numericKeyPressed(event) };
-        switch (source) {
-            case "building":
-                autocomplete(elems[2], elems[3], building_array);
-                break;
-            case "road":
-                autocomplete(elems[2], elems[3], highway_array);
-                break;
-            case "landuse":
-                autocomplete(elems[2], elems[3], landuse_array);
-                break;
-        }
-    } else {
-        for (var i in elems) {
-            elems[i].setAttribute("contenteditable", "false");
-        }
-    }*/
 }
 
 //Extrai todas as filas, menos as ultimas 2 (coords, drawn)
@@ -528,10 +499,14 @@ function importHistoryEntries() {
         log.info("Could NOT read the folder");
     }
 
+    if (files.length > 0)
+        document.getElementById("empty_history").style.visibility = "hidden";
+
     for (var i = 0; i < files.length; i++) {
         var info = loadFromJSON(i);
+        info.timestamp = new Date(info.timestamp).toLocaleString();
         addEntryToHistory(info);
-    }
+    }       
 }
 
 function sortTableByNumber(table, column) {
