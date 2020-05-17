@@ -14,7 +14,17 @@
 
 </head>
 <body>
-    <div id='map'></div>
+    <div id='map_div'>
+        <div id='map'></div>
+        <div class='dropdown_div'>
+            <button onclick="showViewOptions()" class="dropdown_btn">view</button>
+            <div id="dropdown_content" class="dropdown_content" onclick="dropdownClick()">
+                <a>Normal</a>
+                <a>Heatmap</a>
+                <!--<a>Hillshade</a>-->
+            </div>
+        </div>
+    </div>
 
     <button id="actionButton" onclick="startAll()">Start</button>
 
@@ -114,6 +124,6 @@
     <script src="./../jsonHandler.js"></script>
     <script src="./../Interface.js"></script>
     <script src="./../Calculations.js"></script>
-    <script src="./../Misc.js"></script>
+    <script src="./../Heatmap.js"></script>
 </body>
 </html>

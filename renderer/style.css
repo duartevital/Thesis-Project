@@ -34,6 +34,38 @@ body {
     opacity: .5;
 }
 
+.dropdown_div {
+    position: relative;
+    display: inline-block;
+}
+    .dropdown_div a:hover {
+        background-color: #ddd;
+    }
+
+.dropdown_btn {
+
+}
+
+.dropdown_content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    overflow: auto;
+    z-index: 1;
+}
+
+    .dropdown_content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+    }
+
+    .dropdown_content .show {
+        display: block;
+    }
+
 
 #left_side_section{
     position: absolute;
@@ -78,12 +110,20 @@ body {
     background: rgb(230, 230, 230);
 }
 
-#map {
+#map_div {
     position: absolute;
     top: 0;
     bottom: 0;
     width: 47%;
-    height: 99%;
+    height: 99%
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: auto;
 }
 

@@ -43,7 +43,7 @@ async function fetchTags() {
             handle_data(data5.data, landuse_array);
             all_results_array = all_results_array.push.apply(landuse_array);
         });
-}l
+}
 
 
 function handle_data(from , to) {

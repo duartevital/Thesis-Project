@@ -1,9 +1,11 @@
 {
   "ExpandedNodes": [
     "",
+    "\\Data",
     "\\Media",
-    "\\renderer"
+    "\\renderer",
+    "\\Saves"
   ],
-  "SelectedNode": "\\Window.js",
+  "SelectedNode": "\\renderer\\index.html",
   "PreviewInSolutionExplorer": false
 }

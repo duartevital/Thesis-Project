@@ -4,12 +4,14 @@ const log = require('electron-log');
 const area = require('@turf/area');
 const Chart = require('chart.js');
 const fs = require('fs');
+const com = require('@turf/center-of-mass');
 
 
 var first_start = false;
 var drawing = false;
 var features = [];
-var feature_selection_count = 0;
+var object_selection_count = 0;
+var road_selection_count = 0;
 var isSomethingSelected = false;
 var draw_id = 0;
 var draw_object_list = [];
@@ -25,13 +27,19 @@ var selected_obj = {};
 var draw_buttons = [];
 var enable_save = false;
 var all_info = {};
+var current_view = "Normal";
+var selection_object_features = { type: "FeatureCollection", features: [] };
+var selection_road_features = { type: "FeatureCollection", features: [] };
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZHVhcnRlOTYiLCJhIjoiY2sxbmljbHp0MGF3djNtbzYwY3FrOXFldiJ9._f9pPyMDRXb1sJdMQZmKAQ';
 var map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/satellite-v9',
+    style: 'mapbox://styles/mapbox/satellite-streets-v11',
     center: [-9.134152829647064, 38.73655900843423],
-    zoom: 12,
+    zoom: 12
+    /*style: 'mapbox://styles/mapbox/dark-v10',
+    center: [-79.999732, 40.4374],
+    zoom: 11*/
 });
 var draw = new MapboxDraw({
     drawing: true,
@@ -45,10 +53,11 @@ var draw = new MapboxDraw({
 var nav = new mapboxgl.NavigationControl();
 
 map.on('load', function () {
+
     map.addLayer({
         "id": "buildings_layer",
         "type": "fill",
-        "minzoom": 17,
+        "minzoom": 16,
         "source": {
             type: 'vector',
             url: 'mapbox://mapbox.mapbox-streets-v8',
@@ -62,7 +71,7 @@ map.on('load', function () {
     map.addLayer({
         "id": "water_layer",
         "type": "fill",
-        "minzoom": 17,
+        "minzoom": 16,
         "source": {
             type: 'vector',
             url: 'mapbox://mapbox.mapbox-streets-v8',
@@ -76,7 +85,7 @@ map.on('load', function () {
     map.addLayer({
         "id": "landuse_layer",
         "type": "fill",
-        "minzoom": 17,
+        "minzoom": 16,
         "source": {
             type: 'vector',
             url: 'mapbox://mapbox.mapbox-streets-v8',
@@ -91,7 +100,7 @@ map.on('load', function () {
     map.addLayer({
         "id": "roads_layer",
         "type": "line",
-        "minzoom": 17,
+        "minzoom": 16,
         "source": {
             type: 'vector',
             url: 'mapbox://mapbox.mapbox-streets-v8',
@@ -102,12 +111,41 @@ map.on('load', function () {
             "line-color": "rgba(255,100,251, 0.5)"
         }
     });
+
+    map.addSource("selection_object_source", {
+        type: "geojson",
+        data: selection_object_features
+    });
+    map.addLayer({
+        id: "selection_object_layer",
+        type: "fill",
+        source: "selection_object_source",
+        layout: {},
+        paint: {
+            'fill-color': ["get", "color"]
+        }
+    });
+    map.addSource("selection_road_source", {
+        type: "geojson",
+        data: selection_road_features
+    });
+    map.addLayer({
+        id: "selection_road_layer",
+        type: "line",
+        source: "selection_road_source",
+        layout: {},
+        paint: {
+            "line-width": 8,
+            'line-color': ["get", "color"]
+        }
+    });
+    
 });
 map.on('click', function (e) {
-    if (drawing == false) {
+    features = map.queryRenderedFeatures(e.point)[0];
+    if (drawing == false && typeof features !== 'undefined') {
         document.getElementById("editButton").style.visibility = "visible";
-        features = map.queryRenderedFeatures(e.point)[0];
-        var tmp_props = features;
+        var tmp_props = features; log.info("features = " + JSON.stringify(features));
         id = findObjId(tmp_props);
         selected_obj = all_list[id];
         if (selected_obj.drawn) {
@@ -119,8 +157,19 @@ map.on('click', function (e) {
         if (!isSomethingSelected)
             addSelectionColor();
         else {
-            map.removeLayer('selected_feature_' + feature_selection_count);
-            addSelectionColor();
+            if (features.sourceLayer == "road") {
+                selection_road_features.features.splice(road_selection_count-1, 1);
+                map.getSource("selection_road_source").setData(selection_road_features);
+                road_selection_count--;
+            } else {
+                selection_object_features.features.splice(object_selection_count-1, 1);
+                map.getSource("selection_object_source").setData(selection_object_features);
+                object_selection_count--;
+            }
+            if (features.source != "selection_object_source") {
+                addSelectionColor();
+            } else
+                document.getElementById("propsTable").innerHTML = "";
         }   
     }
 });
@@ -128,6 +177,9 @@ map.on('dragend', function (e) {
     if (first_start) {
         startAll();
     }
+});
+map.on('zoomend', function () {
+    log.info("zoom = " + map.getZoom());
 });
 
 map.on('draw.create', handleDraw);
@@ -146,9 +198,8 @@ function startAll() {
     var zoom = map.getZoom();
     log.info("________________________________________________");
     //if (zoom >= 18) {
-    first_start = true;
+    if(!first_start) first_start = true;
     enable_save = true;
-    //feature_selection_count = 0;
     objects_layer = [];
     all_list = [];
     objects_list = [];
@@ -185,7 +236,7 @@ function getAllObjects() {
             type = objects_layer[i].properties.type;
             shape = objects_layer[i].geometry.type;
             coords = objects_layer[i].geometry.coordinates;
-
+            
             //Different attributes for different sources of features
             if (source == "road") {
                 name = objects_layer[i].properties.name;
@@ -213,13 +264,13 @@ function getAllObjects() {
                     height = objects_layer[i].properties.height;
                     under = objects_layer[i].properties.underground;
                     index = objects_list.length;
-                    props = { id: id, source: source, type: type, height: height, area: tmp_area, underground: under, shape: shape, coords: coords, drawn: false, index: index };
+                    props = { id: id, source: source, type: type, height: height, area: tmp_area, polution: 0, range: 0, shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
                     all_list.push(props);
                 }
                 if (source == "landuse") {
                     index = objects_list.length;
-                    props = { id: id, source: source, type: type, area: tmp_area, shape: shape, coords: coords, drawn: false, index: index };
+                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
                     all_list.push(props);
                 }
@@ -238,6 +289,8 @@ function getAllObjects() {
         .map(id => {
             return roads_list.find(a => a.original_id === id);
         });
+
+    //Filter off duplicate roads in all_list...
 }
 
 function findObjId(selected_props) {
@@ -331,19 +384,25 @@ function savePropsChanges(button) {
                 selected_obj.type = extracted_props.type;
                 selected_obj.height = extracted_props.height;
                 selected_obj.area = extracted_props.area;
-                selected_obj.underground = extracted_props.underground;
+                selected_obj.polution = extracted_props.polution;
+                selected_obj.range = extracted_props.range;
+                //selected_obj.underground = extracted_props.underground;
 
                 all_list[selected_obj.id] = selected_obj;
                 objects_list[selected_obj.index] = selected_obj;
                 resetStats();
+                addHeatFeature(selected_obj);
             } else if (selected_obj.source == "landuse") {
                 selected_obj.id = extracted_props.id;
                 selected_obj.type = extracted_props.type;
                 selected_obj.area = extracted_props.area;
+                selected_obj.polution = extracted_props.polution;
+                selected_obj.range = extracted_props.range;
 
                 all_list[selected_obj.id] = selected_obj;
                 objects_list[selected_obj.index] = selected_obj;
                 resetStats();
+                addHeatFeature(selected_obj);
             }
         }
         drawing = false;
@@ -365,8 +424,11 @@ function addDrawTools(button) {
         drawing = true;
         document.getElementById("editButton").style.visibility = "hidden";
         document.getElementById("saveButton").style.visibility = "hidden";
-        if (feature_selection_count > 0)
-            map.removeLayer('selected_feature_' + feature_selection_count);
+        if (object_selection_count > 0) {
+            selection_object_features.features.splice(object_selection_count - 1, 1);
+            map.getSource("selection_object_source").setData(selection_object_features);
+            object_selection_count--;
+        }
     } else {
         var id = draw.getSelectedIds();
         draw.delete(id);
@@ -408,12 +470,14 @@ function toggleDrawButtons(enable) {
 }
 
 function addSelectionColor() {
-    var selection_coords, feature_color, feature_shape;
+    var feature_color;
     var isRoad = false;
+    var feature = {
+        type: "Feature",
+        properties: {},
+        geometry: {}
+    };
 
-    selection_coords = features.geometry.coordinates;
-    feature_selection_count++;
-    feature_shape = features.geometry.type;
     switch (features.sourceLayer) {
         case 'building':
             feature_color = "rgba(66, 100, 251, 0.8)";
@@ -422,16 +486,36 @@ function addSelectionColor() {
             feature_color = "rgba(57, 241, 35, 0.8)";
             break;
         case 'road':
-            feature_color = "rgba(255,100,251, 0.9)";
+            feature_color = "rgba(255,100,251, 0.8)";
             isRoad = true;
             break;
         case 'water':
             feature_color = "rgba(25, 22, 234, 0.8)";
             break;
     }
+
+    var properties = feature.properties;
+    var geometry = feature.geometry;
+
+    geometry.type = features.geometry.type;
+    geometry.coordinates = features.geometry.coordinates
+
+    properties.color = feature_color;
     if (!isRoad) {
+        properties.id = 'selected_object_feature_' + object_selection_count;
+        selection_object_features.features.push(feature);
+        object_selection_count++;
+        map.getSource("selection_object_source").setData(selection_object_features);
+    } else {
+        properties.id = 'selected_road_feature_' + road_selection_count;
+        selection_road_features.features.push(feature);
+        road_selection_count++;
+        map.getSource("selection_road_source").setData(selection_road_features);
+    }
+
+    /*if (!isRoad) {
         map.addLayer({
-            'id': ('selected_feature_' + feature_selection_count),
+            'id': ('selected_feature_' + object_selection_count),
             'type': 'fill',
             'source': {
                 'type': 'geojson',
@@ -450,7 +534,7 @@ function addSelectionColor() {
         });
     } else {
         map.addLayer({
-            'id': ('selected_feature_' + feature_selection_count),
+            'id': ('selected_feature_' + object_selection_count),
             'type': 'line',
             'source': {
                 'type': 'geojson',
@@ -468,8 +552,7 @@ function addSelectionColor() {
                 "line-color": feature_color
             }
         });
-    }
-
+    }*/
     isSomethingSelected = true;
 }
 
@@ -649,6 +732,90 @@ function sendInfo() {
     location.reload();
 }
 
+function removeAllSelections() {
+    object_selection_count = 0;
+    road_selection_count = 0;
+    selection_object_features.features = [];
+    selection_road_features.features = [];
+
+    map.getSource("selection_object_source").setData(selection_object_features);
+    map.getSource("selection_road_source").setData(selection_road_features);
+
+}
+
 function dumbFunction() {
-    log.info("clicked on divvvv");
+    log.info("START");
+    map.addSource("polution", {
+        "type": "geojson",
+        "data": "./Data/polution.geojson"
+    });
+    
+    map.addLayer({
+        'id': 'polution_heat',
+        'type': 'heatmap',
+        'source': 'polution',
+        'paint': {
+            'heatmap-weight': [
+                'interpolate',
+                ['linear'],
+                ['get', 'mag'],
+                0,
+                0,
+                6,
+                1
+            ],
+            // Increase the heatmap color weight weight by zoom level
+            // heatmap-intensity is a multiplier on top of heatmap-weight
+            'heatmap-intensity': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                0,
+                1,
+                9,
+                3
+            ],
+            // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+            // Begin color ramp at 0-stop with a 0-transparancy color
+            // to create a blur-like effect.
+            'heatmap-color': [
+                'interpolate',
+                ['linear'],
+                ['heatmap-density'],
+                0,
+                'rgba(33,102,172,0)',
+                0.2,
+                'rgb(103,169,207)',
+                0.4,
+                'rgb(209,229,240)',
+                0.6,
+                'rgb(253,219,199)',
+                0.8,
+                'rgb(239,138,98)',
+                1,
+                'rgb(178,24,43)'
+            ],
+            // Adjust the heatmap radius by zoom level
+            'heatmap-radius': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                0,
+                2,
+                9,
+                20
+            ],
+            // Transition from heatmap to circle layer by zoom level
+            'heatmap-opacity': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                7,
+                1,
+                9,
+                0
+            ]
+        }
+    });
+    log.info("END");
 }

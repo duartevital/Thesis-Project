@@ -13,3 +13,11 @@ function writeToJSON(info) {
 function loadFromJSON(save_id) {
     return JSON.parse(fs.readFileSync("./Saves/info_" + save_id + ".json", "utf8"));
 }
+
+function loadFromGeoJson(path) {
+
+}
+
+function saveToGeoJson(info, path) {
+
+}

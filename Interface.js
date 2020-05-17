@@ -2,6 +2,17 @@
 var pieChart = "";
 
 importHistoryEntries();
+window.onclick = function (event) {
+    if (!event.target.matches('.dropdown_btn')) {
+        var dropdowns = this.document.getElementsByClassName("dropdown_content");
+        for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains("show")) {
+                openDropdown.classList.remove("show");
+            }
+        }
+    }
+}
 
 function openTab(evt, tabName) {
     var i, tabContent, tabLinks;
@@ -33,8 +44,7 @@ function createPropertiesTable(tableName, props, drawn) {
             cell1.classList.add("cell1"); cell2.classList.add("cell2");
             cell2.setAttribute("contenteditable", "false");
         }
-        //var type_popup_holder = document.getElementsByClassName("cell2")[2]
-        //type_popup_holder.id = "type_popup_holder";
+        //popup logic
         var parent_div = document.getElementById("features");
         var template = document.getElementById("type_popup_template");
         var popup_text = template.content.querySelector(".popuptext");
@@ -238,7 +248,9 @@ function setPropsTableEditable(button) {
         elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
         elems[3].onkeydown = function () { return numericKeyPressed(event) };
         elems[4].onkeydown = function () { return numericKeyPressed(event) };
-        addBooleanDropdownMenu(elems[5]);
+        elems[5].onkeydown = function () { return numericKeyPressed(event) };
+        elems[6].onkeydown = function () { return numericKeyPressed(event) };
+        //addBooleanDropdownMenu(elems[5]);
         autocomplete(elems[2], elems[3], building_array);
 
     } else if (source == "landuse") {
@@ -269,7 +281,7 @@ function extractTableContents() {
             case "id": case "area": case "height":
                 props[table.rows[i].cells[0].innerHTML] = parseInt(table.rows[i].cells[1].innerText);
                 break;
-            case "length":
+            case "length": case "polution": case "range":
                 props[table.rows[i].cells[0].innerHTML] = parseFloat(table.rows[i].cells[1].innerText);
                 break;
             case "one_way": case "underground":
@@ -279,13 +291,6 @@ function extractTableContents() {
             default:
                 props[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerText;
         }
-
-
-        /*if (table.rows[i].cells[0].innerText == "underground")
-            props[table.rows[i].cells[0].innerHTML] = document.getElementById("idSelect").options[document.getElementById("idSelect").selectedIndex].value;
-        else {
-            props[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerText;
-        }*/
     }
 
     return props;
@@ -532,6 +537,10 @@ function sortTableByNumber(table, column) {
             switching = true;
         }
     }
+}
+
+function showViewOptions() {
+    document.getElementById("dropdown_content").classList.toggle("show");
 }
 
 
