@@ -29,7 +29,7 @@ map.on('load', () => {
                 id: 'polution_heat',
                 type: 'heatmap',
                 source: 'polution',
-                minzoom: 15,
+                minzoom: 14,
                 maxzoom: 20,
                 paint: {
                     // increase weight as diameter breast height increases
@@ -43,7 +43,7 @@ map.on('load', () => {
                             //[250, 1],
                             //[350, 7],
                             //[300, 1.5],
-                            [500, 2]
+                            [500, 1]
                         ]
                     },
 
@@ -53,12 +53,16 @@ map.on('load', () => {
                     'heatmap-color': [
                         'interpolate', ['linear'], ['heatmap-density'],
                         0, 'rgba(0, 255, 0, 0)',
-                        0.167, 'rgb(0, 228, 0)',
-                        0.27, 'rgb(255,255,0)',
-                        0.38, 'rgb(255, 126, 0)',
-                        0.5, 'rgb(255, 0, 0)',
-                        0.6, 'rgb(143, 63, 151)',
-                        1, 'rgb(126, 0, 35)'
+                        0.1, 'rgb(0, 228, 0)', //green
+                        0.15, 'rgb(0, 228, 0)', //green
+                        0.2, 'rgb(255,255,0)', //yellow
+                        0.4, 'rgb(255,255,0)', //yellow
+                        0.5, 'rgb(255, 126, 0)', //orange
+                        0.6, 'rgb(255, 126, 0)', //orange
+                        0.7, 'rgb(255, 0, 0)', //red
+                        0.8, 'rgb(255, 0, 0)', //red
+                        0.9, 'rgb(143, 63, 151)', //purple
+                        1.1, 'rgb(126, 0, 35)' //maroon
                     ],
                     //'heatmap-radius': ['get', 'range'],
                     'heatmap-radius': [
@@ -136,13 +140,11 @@ function addHeatFeature(info) {
     var properties = feature.properties;
     var geometry = feature.geometry;
 
-    getEdgesFeatureCoordinates(info.coords, 4);
-
     properties.id = info.id;
     properties.level = info.polution;
     properties.intensity_level = info.polution / 10;
     properties.range_1 = info.range / 10;
-    properties.range_2 = info.range / 6;
+    properties.range_2 = info.range / 4;
     properties.range_3 = info.range / 2;
     properties.range_base = info.range;
 
@@ -158,13 +160,13 @@ function addHeatFeature(info) {
     geometry.coordinates = center.default(tmp_feat).geometry.coordinates;*/
 
     geometry.type = info.shape;
-    geometry.coordinates = [getEdgesFeatureCoordinates(info.coords, info.range / 32)]; 
+    geometry.coordinates = [getEdgesFeatureCoordinates(info.coords, Math.log(info.range))]; 
 
     heatmap_features.features.push(feature);
     map.getSource("polution").setData(heatmap_features);
 
     //Painting "poluted" polygons
-    var fill_feature = {
+    /*var fill_feature = {
         type: "Feature",
         properties: {},
         geometry: {}
@@ -189,20 +191,23 @@ function addHeatFeature(info) {
     fill_feature.geometry.coordinates = info.coords;
 
     heatmap_fill_features.features.push(fill_feature);
-    map.getSource("polution_fill").setData(heatmap_fill_features);
+    map.getSource("polution_fill").setData(heatmap_fill_features);*/
 }
 
 function getEdgesFeatureCoordinates(coords, space) {
     var line, chunks;
     var new_coords = [];
-    for (var i = 0; i < coords[0].length - 1; i++) {
-        //line = turf.lineString(coords[0]);
-        line = turf.lineString([coords[0][i], coords[0][i+1]]);
-        chunks = chunk.default(line, space, { units: 'meters' });
+    //for (var i = 0; i < coords[0].length - 1; i++) {
+    line = turf.lineString(coords[0]);
+    var tmp = line_length.default(line); log.info("line length = " + tmp);
+        //line = turf.lineString([coords[0][i], coords[0][i+1]]);
+    space *= (tmp / 0.04);
+    chunks = chunk.default(line, space, { units: 'meters' });
+    log.info("number of chunks = " + chunks.features.length);
         for (var j = 0; j < chunks.features.length-1; j++) {
             new_coords.push(chunks.features[j].geometry.coordinates[1]);
         }
-    }
+    //}
 
     return new_coords;
 }
