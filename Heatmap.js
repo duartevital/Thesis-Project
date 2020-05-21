@@ -49,12 +49,16 @@ map.on('load', () => {
 
                     //'heatmap-intensity': 1,
                     'heatmap-intensity': [
-                        'interpolate',
-                        ['linear'],
-                        ['zoom'],
-                        14, 1.5,
+                        'interpolate', ['exponential', 1], ['zoom'],
+                        12, 0.2,
+                        13, 0.4,
+                        14, 0.95,
+                        14.5, 0.95,
+                        15, 0.98,
+                        15.5, 1,
+                        16, 1.25,
                         17, 1.95,
-                        20, 2.95
+                        19, 2.95
                     ],
 
                     // assign color values be applied to points depending on their density
@@ -82,13 +86,6 @@ map.on('load', () => {
                         14, ['get', 'range_1'],
                         20, ['get', 'range_base']
                     ],
-                    /*'heatmap-radius': [
-                        'interpolate', ['linear'], ['zoom'],
-                        15, ['get', 'range_1'],
-                        17, ['get', 'range_2'],
-                        19, ['get', 'range_3'],
-                        20, ['get', 'range_base']
-                    ],*/
                     'heatmap-opacity': 0.9
                 }
             });
@@ -150,7 +147,7 @@ function addHeatFeature(info) {
         type: "Feature",
         properties: {},
         geometry: {
-            type: "",
+            type: "MultiPoint",
             coordinates: []
         }
     };
@@ -176,8 +173,8 @@ function addHeatFeature(info) {
     };
     geometry.coordinates = center.default(tmp_feat).geometry.coordinates;*/
 
-    geometry.type = info.shape;
-    geometry.coordinates = [getEdgesFeatureCoordinates(info.coords, 2*Math.log(info.range))]; 
+    //geometry.type = info.shape;
+    geometry.coordinates = getEdgesFeatureCoordinates(info.coords, 4*Math.log(info.range)); 
 
     heatmap_features.features.push(feature);
     map.getSource("polution").setData(heatmap_features);
@@ -217,11 +214,9 @@ function getEdgesFeatureCoordinates(coords, space) {
     //for (var i = 0; i < coords[0].length - 1; i++) {
     line = turf.lineString(coords[0]);
     var tmp = line_length.default(line);
-    log.info("space before = " + space);
+    //log.info("space before = " + space);
         //line = turf.lineString([coords[0][i], coords[0][i+1]]);
     //space *= (tmp / 0.04);
-    log.info("tmp = " + tmp);
-    log.info("tmp / 0.04 " + (tmp / 0.04));
     log.info("space after = " + space);
     chunks = chunk.default(line, space, { units: 'meters' });
     log.info("number of chunks = " + chunks.features.length);
