@@ -29,10 +29,10 @@ map.on('load', () => {
                 id: 'polution_heat',
                 type: 'heatmap',
                 source: 'polution',
-                minzoom: 14,
-                maxzoom: 20,
+                minzoom: 12,
+                maxzoom: 24,
                 paint: {
-                    // increase weight as diameter breast height increases
+                    
                     'heatmap-weight': {
                         property: 'level',
                         type: 'exponential',
@@ -47,7 +47,15 @@ map.on('load', () => {
                         ]
                     },
 
-                    'heatmap-intensity': 1,
+                    //'heatmap-intensity': 1,
+                    'heatmap-intensity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        14, 1.5,
+                        17, 1.95,
+                        20, 2.95
+                    ],
 
                     // assign color values be applied to points depending on their density
                     'heatmap-color': [
@@ -64,14 +72,23 @@ map.on('load', () => {
                         0.9, 'rgb(143, 63, 151)', //purple
                         1.1, 'rgb(126, 0, 35)' //maroon
                     ],
-                    //'heatmap-radius': ['get', 'range'],
+                    /*'heatmap-radius': [
+                        'interpolate', ['exponential', 1], ['zoom'],
+                        14, 25,
+                        20, 250
+                    ],*/
                     'heatmap-radius': [
+                        'interpolate', ['exponential', 1], ['zoom'],
+                        14, ['get', 'range_1'],
+                        20, ['get', 'range_base']
+                    ],
+                    /*'heatmap-radius': [
                         'interpolate', ['linear'], ['zoom'],
                         15, ['get', 'range_1'],
                         17, ['get', 'range_2'],
                         19, ['get', 'range_3'],
                         20, ['get', 'range_base']
-                    ],
+                    ],*/
                     'heatmap-opacity': 0.9
                 }
             });
@@ -143,9 +160,9 @@ function addHeatFeature(info) {
     properties.id = info.id;
     properties.level = info.polution;
     properties.intensity_level = info.polution / 10;
-    properties.range_1 = info.range / 10;
-    properties.range_2 = info.range / 4;
-    properties.range_3 = info.range / 2;
+    properties.range_1 = info.range * 0.1;
+    properties.range_2 = properties.range_3 * 0.85;
+    properties.range_3 = properties.range_base * 0.85;
     properties.range_base = info.range;
 
     //insert heat on polygon's centroid
@@ -160,7 +177,7 @@ function addHeatFeature(info) {
     geometry.coordinates = center.default(tmp_feat).geometry.coordinates;*/
 
     geometry.type = info.shape;
-    geometry.coordinates = [getEdgesFeatureCoordinates(info.coords, Math.log(info.range))]; 
+    geometry.coordinates = [getEdgesFeatureCoordinates(info.coords, 2*Math.log(info.range))]; 
 
     heatmap_features.features.push(feature);
     map.getSource("polution").setData(heatmap_features);
@@ -199,9 +216,13 @@ function getEdgesFeatureCoordinates(coords, space) {
     var new_coords = [];
     //for (var i = 0; i < coords[0].length - 1; i++) {
     line = turf.lineString(coords[0]);
-    var tmp = line_length.default(line); log.info("line length = " + tmp);
+    var tmp = line_length.default(line);
+    log.info("space before = " + space);
         //line = turf.lineString([coords[0][i], coords[0][i+1]]);
-    space *= (tmp / 0.04);
+    //space *= (tmp / 0.04);
+    log.info("tmp = " + tmp);
+    log.info("tmp / 0.04 " + (tmp / 0.04));
+    log.info("space after = " + space);
     chunks = chunk.default(line, space, { units: 'meters' });
     log.info("number of chunks = " + chunks.features.length);
         for (var j = 0; j < chunks.features.length-1; j++) {
@@ -209,5 +230,6 @@ function getEdgesFeatureCoordinates(coords, space) {
         }
     //}
 
+    log.info("new coords = " + new_coords);
     return new_coords;
 }

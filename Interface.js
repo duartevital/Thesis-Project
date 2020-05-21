@@ -38,11 +38,15 @@ function createPropertiesTable(tableName, props, drawn) {
     var cell1, cell2;
     if (!drawn) {
         for (var key in props) {
-            row = table.insertRow(-1);
-            cell1 = row.insertCell(0); cell2 = row.insertCell(1);
-            cell1.innerText = key; cell2.innerText = props[key];
-            cell1.classList.add("cell1"); cell2.classList.add("cell2");
-            cell2.setAttribute("contenteditable", "false");
+            switch (key) {
+                case "source": case "type": case "name": case "area": case "length": case "polution": case "range": case "surface": case "one_way":
+                    row = table.insertRow(-1);
+                    cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+                    cell1.innerText = key; cell2.innerText = props[key];
+                    cell1.classList.add("cell1"); cell2.classList.add("cell2");
+                    cell2.setAttribute("contenteditable", "false");
+                    break;
+            }
         }
         //popup logic
         var parent_div = document.getElementById("features");
@@ -55,9 +59,9 @@ function createPropertiesTable(tableName, props, drawn) {
         //only show id and source fields
         row = table.insertRow(-1);
         cell1 = row.insertCell(0); cell2 = row.insertCell(1);
-        cell1.innerText = "id"; cell2.innerText = props.id;
-        row = table.insertRow(-1);
-        cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+        //cell1.innerText = "id"; cell2.innerText = props.id;
+        //row = table.insertRow(-1);
+        //cell1 = row.insertCell(0); cell2 = row.insertCell(1);
         cell1.innerText = "source"; cell2.innerText = props.source;
         cell1.classList.add("cell1"); cell2.classList.add("cell2");
         addSourcesDropdownMenu(cell2);
@@ -66,7 +70,7 @@ function createPropertiesTable(tableName, props, drawn) {
             var inp = document.getElementById("id_source_select").options[document.getElementById("id_source_select").selectedIndex].value;
             switch (inp) {
                 case "building":
-                    props = { id: props.id, source: inp, type: "", height: "", area: props.area, underground: "", shape: props.shape, coords: props.coords, drawn: true, index: -1 };
+                    props = { id: props.id, source: inp, type: "", area: props.area, underground: "", shape: props.shape, coords: props.coords, drawn: true, index: -1 };
                     createPropertiesTable("propsTable", props, false);
                     setPropsTableEditable(document.getElementById("editButton"));
                     break;
@@ -239,36 +243,48 @@ function setPropsTableEditable(button) {
     button.style.visibility = "hidden";
     document.getElementById("saveButton").style.visibility = "visible";
     var elems = document.getElementsByClassName("cell2");
-    var source = document.getElementById("propsTable").rows[1].cells[1].innerText;
+    var source = document.getElementById("propsTable").rows[0].cells[1].innerText;
 
     if (source == "building") {
-        for (var i = 2; i < elems.length - 4; i++) {
+        /*for (var i = 1; i < elems.length; i++) {
             elems[i].setAttribute("contenteditable", "true");
-        }
-        elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
+        }*/
+        elems[1].setAttribute("contenteditable", "true");
+        elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
+        //elems[2].onkeydown = function () { return numericKeyPressed(event) };
+        //elems[3].onkeydown = function () { return numericKeyPressed(event) };
+        elems[3].setAttribute("contenteditable", "true");
         elems[3].onkeydown = function () { return numericKeyPressed(event) };
+        elems[4].setAttribute("contenteditable", "true");
         elems[4].onkeydown = function () { return numericKeyPressed(event) };
-        elems[5].onkeydown = function () { return numericKeyPressed(event) };
-        elems[6].onkeydown = function () { return numericKeyPressed(event) };
         //addBooleanDropdownMenu(elems[5]);
-        autocomplete(elems[2], elems[3], building_array);
+        autocomplete(elems[1], elems[2], building_array);
 
     } else if (source == "landuse") {
-        for (var i = 2; i < elems.length - 4; i++) {
+        /*for (var i = 2; i < elems.length - 4; i++) {
             elems[i].setAttribute("contenteditable", "true");
-        }
-        elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
+        }*/
+        elems[1].setAttribute("contenteditable", "true");
+        elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
+        autocomplete(elems[1], elems[2], landuse_array);
+        elems[3].setAttribute("contenteditable", "true");
         elems[3].onkeydown = function () { return numericKeyPressed(event) };
-        autocomplete(elems[2], elems[3], landuse_array);
+        elems[4].setAttribute("contenteditable", "true");
+        elems[4].onkeydown = function () { return numericKeyPressed(event) };
 
     } else if (source == "road") {
-        for (var i = 2; i < elems.length - 4; i++) {
+        /*for (var i = 1; i < elems.length - 4; i++) {
             elems[i].setAttribute("contenteditable", "true");
-        }
-        elems[2].onkeydown = function () { return alphabetKeyPressed(event) };
-        autocomplete(elems[2], elems[3], highway_array);
-        elems[4].onkeydown = function () { return numericKeyPressed(event) };
-        addBooleanDropdownMenu(elems[6]);
+        }*/
+        elems[1].setAttribute("contenteditable", "true");
+        elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
+        autocomplete(elems[1], elems[2], highway_array);
+        //elems[4].onkeydown = function () { return numericKeyPressed(event) };
+        elems[6].setAttribute("contenteditable", "true");
+        elems[6].onkeydown = function () { return numericKeyPressed(event) };
+        elems[7].setAttribute("contenteditable", "true");
+        elems[7].onkeydown = function () { return numericKeyPressed(event) };
+        //addBooleanDropdownMenu(elems[6]);
     }
 }
 
@@ -276,7 +292,7 @@ function setPropsTableEditable(button) {
 function extractTableContents() {
     var props = {};
     var table = document.getElementById("propsTable");
-    for (var i = 0; i < table.rows.length - 3; i++) {
+    for (var i = 0; i < table.rows.length; i++) {
         switch (table.rows[i].cells[0].innerText) {
             case "id": case "area": case "height":
                 props[table.rows[i].cells[0].innerHTML] = parseInt(table.rows[i].cells[1].innerText);

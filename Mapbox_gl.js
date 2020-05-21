@@ -145,7 +145,7 @@ map.on('click', function (e) {
     features = map.queryRenderedFeatures(e.point)[0];
     if (drawing == false && typeof features !== 'undefined') {
         document.getElementById("editButton").style.visibility = "visible";
-        var tmp_props = features; log.info("features = " + JSON.stringify(features));
+        var tmp_props = features;
         id = findObjId(tmp_props);
         selected_obj = all_list[id];
         if (selected_obj.drawn) {
@@ -249,7 +249,7 @@ function getAllObjects() {
 
                 original_id = objects_layer[i].id;
                 index = roads_list.length;
-                props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, shape: shape, coords: coords, original_id: original_id, index: index };
+                props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, polution: 0, range: 0, shape: shape, coords: coords, original_id: original_id, index: index };
                 roads_list.push(props);
                 all_list.push(props);
                 source_stats.road_length += length;
@@ -348,7 +348,7 @@ function savePropsChanges(button) {
         }
         toggleDrawButtons(false);
         //Guardar as alterações no objeto do array com o mesmo id:
-        var extracted_props = extractTableContents();
+        //var extracted_props = extractTableContents();
         var objTable = document.getElementById("objTable");
         if (drawing) {
             var tmp = extracted_props;
@@ -366,7 +366,7 @@ function savePropsChanges(button) {
             draw.changeMode('simple_select');
         } else {
             if (selected_obj.source == "road") {
-                selected_obj.id = extracted_props.id;
+                //selected_obj.id = extracted_props.id;
                 selected_obj.type = extracted_props.type;
                 selected_obj.name = extracted_props.name;
                 selected_obj.length = extracted_props.length;
@@ -376,24 +376,24 @@ function savePropsChanges(button) {
                 all_list[selected_obj.id] = selected_obj;
                 roads_list[selected_obj.index] = selected_obj;
                 resetStats();
+                addHeatFeature(selected_obj);
                 //incluir uma função igual á seguinte mas para a table das roads
                 /*if (old_type != selected_obj.type)
                     changeObjectInTable(selected_obj, old_type);*/
             } else if (selected_obj.source == "building") {
-                selected_obj.id = extracted_props.id;
+                //selected_obj.id = extracted_props.id;
                 selected_obj.type = extracted_props.type;
-                selected_obj.height = extracted_props.height;
+                //selected_obj.height = extracted_props.height;
                 selected_obj.area = extracted_props.area;
                 selected_obj.polution = extracted_props.polution;
                 selected_obj.range = extracted_props.range;
                 //selected_obj.underground = extracted_props.underground;
-
                 all_list[selected_obj.id] = selected_obj;
                 objects_list[selected_obj.index] = selected_obj;
                 resetStats();
                 addHeatFeature(selected_obj);
             } else if (selected_obj.source == "landuse") {
-                selected_obj.id = extracted_props.id;
+                //selected_obj.id = extracted_props.id;
                 selected_obj.type = extracted_props.type;
                 selected_obj.area = extracted_props.area;
                 selected_obj.polution = extracted_props.polution;
@@ -467,6 +467,77 @@ function toggleDrawButtons(enable) {
         draw_buttons[1].classList.remove("disabled-control-button");
         draw_buttons[2].classList.remove("disabled-control-button");
     }
+}
+
+function updateDrawObjectsInViewport() {
+    var bounds = map.getBounds();
+    var ne_bounds = bounds._ne;
+    var sw_bounds = bounds._sw;
+
+    for (var i = 0; i < tmp_drawn_list.length; i++) {
+        var coords = tmp_drawn_list[i].coords[0];
+        for (var j = 0; j < coords.length; j++) {
+            if (coords[j][0] > sw_bounds.lng && coords[j][0] < ne_bounds.lng && coords[j][1] > sw_bounds.lat && coords[j][1] < ne_bounds.lat) {
+                //Pelo menos uma das coordenadas está dentro do polígono.
+                tmp_drawn_list[i].id = all_list.length;
+                tmp_drawn_list[i].index = objects_list.length;
+                all_list.push(tmp_drawn_list[i]);
+                objects_list.push(tmp_drawn_list[i]);
+                resetStats();
+                break;
+            }
+        }
+    }
+}
+
+function handleDraw() {
+    var data = draw.getAll();
+    var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
+    draw_id = data.features[data.features.length - 1].id;
+    var id = all_list.length;
+    var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords, true)) * 1000) / 1000;
+    tmp_drawn_obj = { id: id, source: "insert source", area: tmp_area, shape: "Polygon", coords: polygonCoords, drawn: true, index: objects_list.length };
+    createPropertiesTable("propsTable", tmp_drawn_obj, true);
+}
+
+function deleteDrawnObject(id) {
+    if (id != -1) {
+        if (all_list[id].drawn) {
+            var tmp_index = all_list[id].index;
+            all_list.splice(id, 1);
+            objects_list.splice(tmp_index, 1);
+            draw_buttons[2].disabled = true;
+            draw_buttons[2].classList.add("disabled-control-button");
+            document.getElementById("newButton").innerText = "new";
+        }
+
+        for (var i in draw_object_list) {
+            if (draw_object_list.id == id) {
+                draw_object_list.splice(i, 1);
+            }
+            if (tmp_drawn_list.id == id) {
+                tmp_drawn_list.splice(i, 1);
+            }
+        }
+    }
+    document.getElementById("propsTable").innerHTML = "";
+    document.getElementById("saveButton").style.visibility = "hidden";
+    document.getElementById("editButton").style.visibility = "hidden";
+    drawing = false;
+    resetEveryList();
+    //disable trash button
+    /*var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
+    draw_buttons[2].disabled = true;
+    draw_buttons[2].classList.add("disabled-control-button");*/
+}
+
+function handleUpdate() {
+    var data = draw.getSelected().features[0];
+    var id = selectedDrawObject(data.id);
+    var polygonCoords = data.geometry.coordinates;
+
+    all_list[id].coords = polygonCoords;
+    createPropertiesTable("propsTable", all_list[id]);
 }
 
 function addSelectionColor() {
@@ -554,77 +625,6 @@ function addSelectionColor() {
         });
     }*/
     isSomethingSelected = true;
-}
-
-function updateDrawObjectsInViewport() {
-    var bounds = map.getBounds();
-    var ne_bounds = bounds._ne;
-    var sw_bounds = bounds._sw;
-
-    for (var i = 0; i < tmp_drawn_list.length; i++) {
-        var coords = tmp_drawn_list[i].coords[0];
-        for (var j = 0; j < coords.length; j++) {
-            if (coords[j][0] > sw_bounds.lng && coords[j][0] < ne_bounds.lng && coords[j][1] > sw_bounds.lat && coords[j][1] < ne_bounds.lat) {
-                //Pelo menos uma das coordenadas está dentro do polígono.
-                tmp_drawn_list[i].id = all_list.length;
-                tmp_drawn_list[i].index = objects_list.length;
-                all_list.push(tmp_drawn_list[i]);
-                objects_list.push(tmp_drawn_list[i]);
-                resetStats();
-                break;
-            }
-        }
-    }
-}
-
-function handleDraw() {
-    var data = draw.getAll();
-    var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
-    draw_id = data.features[data.features.length - 1].id;
-    var id = all_list.length;
-    var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords, true)) * 1000) / 1000;
-    tmp_drawn_obj = { id: id, source: "insert source", area: tmp_area, shape: "Polygon", coords: polygonCoords, drawn: true, index: objects_list.length };
-    createPropertiesTable("propsTable", tmp_drawn_obj, true);
-}
-
-function handleUpdate() {
-    var data = draw.getSelected().features[0];
-    var id = selectedDrawObject(data.id);
-    var polygonCoords = data.geometry.coordinates;
-
-    all_list[id].coords = polygonCoords;
-    createPropertiesTable("propsTable", all_list[id]);
-}
-
-function deleteDrawnObject(id) {
-    if (id != -1) {
-        if (all_list[id].drawn) {
-            var tmp_index = all_list[id].index;
-            all_list.splice(id, 1);
-            objects_list.splice(tmp_index, 1);
-            draw_buttons[2].disabled = true;
-            draw_buttons[2].classList.add("disabled-control-button");
-            document.getElementById("newButton").innerText = "new";
-        }
-
-        for (var i in draw_object_list) {
-            if (draw_object_list.id == id) {
-                draw_object_list.splice(i, 1);
-            }
-            if (tmp_drawn_list.id == id) {
-                tmp_drawn_list.splice(i, 1);
-            }
-        }
-    }
-    document.getElementById("propsTable").innerHTML = "";
-    document.getElementById("saveButton").style.visibility = "hidden";
-    document.getElementById("editButton").style.visibility = "hidden";
-    drawing = false;
-    resetEveryList();
-    //disable trash button
-    /*var draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
-    draw_buttons[2].disabled = true;
-    draw_buttons[2].classList.add("disabled-control-button");*/
 }
 
 function resetEveryList() {
