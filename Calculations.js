@@ -250,3 +250,15 @@ function isObjEmpty(obj) {
     }
     return true;
 }
+
+function getMuliLineStringCoords(coords) {
+    var new_coords = [];
+
+    for (var i = 0; i < coords.length; i++) {
+        for (var j = 0; j < coords[i].length; j++) {
+            new_coords.push(coords[i][j]);
+        }
+    }
+
+    return new_coords;
+}

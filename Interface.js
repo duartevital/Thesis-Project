@@ -70,12 +70,12 @@ function createPropertiesTable(tableName, props, drawn) {
             var inp = document.getElementById("id_source_select").options[document.getElementById("id_source_select").selectedIndex].value;
             switch (inp) {
                 case "building":
-                    props = { id: props.id, source: inp, type: "", area: props.area, underground: "", shape: props.shape, coords: props.coords, drawn: true, index: -1 };
+                    props = { id: props.id, source: inp, type: "", area: props.area, polution: 0, range: 0, shape: props.shape, coords: props.coords, drawn: true, index: -1 };
                     createPropertiesTable("propsTable", props, false);
                     setPropsTableEditable(document.getElementById("editButton"));
                     break;
                 case "landuse":
-                    props = { id: props.id, source: inp, type: "", area: props.area, shape: props.shape, coords: props.coords, drawn: true, index: -1 };
+                    props = { id: props.id, source: inp, type: "", area: props.area, polution: 0, range: 0, shape: props.shape, coords: props.coords, drawn: true, index: -1 };
                     createPropertiesTable("propsTable", props, false);
                     setPropsTableEditable(document.getElementById("editButton"));
                     break;

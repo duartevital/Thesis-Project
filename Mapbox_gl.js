@@ -264,7 +264,7 @@ function getAllObjects() {
                     height = objects_layer[i].properties.height;
                     under = objects_layer[i].properties.underground;
                     index = objects_list.length;
-                    props = { id: id, source: source, type: type, height: height, area: tmp_area, polution: 0, range: 0, shape: shape, coords: coords, drawn: false, index: index };
+                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
                     all_list.push(props);
                 }
@@ -352,7 +352,7 @@ function savePropsChanges(button) {
         var objTable = document.getElementById("objTable");
         if (drawing) {
             var tmp = extracted_props;
-            tmp.coords = tmp_drawn_obj.coords; tmp.drawn = true; tmp.index = objects_list.length;
+            tmp.coords = tmp_drawn_obj.coords; tmp.shape = tmp_drawn_obj.shape; tmp.drawn = true; tmp.index = objects_list.length;
             all_list[extracted_props.id] = tmp;
             objects_list[tmp.index] = tmp;
             resetStats();
@@ -360,6 +360,8 @@ function savePropsChanges(button) {
             draw_object_list.push(draw_obj);
             tmp_drawn_list.push(tmp);
             draw_id = 0;
+            //add heat points
+            addHeatFeature(tmp);
             var newButton = document.getElementById("newButton");
             newButton.style.visibility = "visible";
             newButton.innerText = "new";
@@ -372,6 +374,8 @@ function savePropsChanges(button) {
                 selected_obj.length = extracted_props.length;
                 selected_obj.surface = extracted_props.surface;
                 selected_obj.one_way = extracted_props.one_way;
+                selected_obj.polution = extracted_props.polution;
+                selected_obj.range = extracted_props.range;
 
                 all_list[selected_obj.id] = selected_obj;
                 roads_list[selected_obj.index] = selected_obj;

@@ -33,19 +33,11 @@ map.on('load', () => {
                 maxzoom: 24,
                 paint: {
                     
-                    'heatmap-weight': {
-                        property: 'level',
-                        type: 'exponential',
-                        stops: [
-                            [0, 0],
-                            //[100, 1],
-                            //[150, 1],
-                            //[250, 1],
-                            //[350, 7],
-                            //[300, 1.5],
-                            [500, 1]
-                        ]
-                    },
+                    'heatmap-weight': [
+                        'interpolate', ['exponential', 1], ['get', 'level'],
+                        0, 0,
+                        500, 1
+                    ],
 
                     //'heatmap-intensity': 1,
                     'heatmap-intensity': [
@@ -82,9 +74,9 @@ map.on('load', () => {
                         20, 250
                     ],*/
                     'heatmap-radius': [
-                        'interpolate', ['exponential', 1], ['zoom'],
+                        'interpolate', ['exponential', 2], ['zoom'],
                         14, ['get', 'range_1'],
-                        20, ['get', 'range_base']
+                        18, ['get', 'range_base']
                     ],
                     'heatmap-opacity': 0.9
                 }
@@ -106,7 +98,6 @@ map.on('load', () => {
     };
     waiting();
 });
-
 
 function dropdownClick() {
     var name = event.target.textContent;
@@ -147,7 +138,8 @@ function addHeatFeature(info) {
         type: "Feature",
         properties: {},
         geometry: {
-            type: "MultiPoint",
+            //type: "MultiPoint",
+            type: "Point",
             coordinates: []
         }
     };
@@ -156,14 +148,14 @@ function addHeatFeature(info) {
 
     properties.id = info.id;
     properties.level = info.polution;
-    properties.intensity_level = info.polution / 10;
+    //properties.intensity_level = info.polution / 10;
     properties.range_1 = info.range * 0.1;
-    properties.range_2 = properties.range_3 * 0.85;
-    properties.range_3 = properties.range_base * 0.85;
+    //properties.range_2 = properties.range_3 * 0.85;
+    //properties.range_3 = properties.range_base * 0.85;
     properties.range_base = info.range;
 
     //insert heat on polygon's centroid
-    /*var tmp_feat = {
+    var tmp_feat = {
         type: "Feature",
         properties: {},
         geometry: {
@@ -171,10 +163,24 @@ function addHeatFeature(info) {
             coordinates: info.coords
         }
     };
-    geometry.coordinates = center.default(tmp_feat).geometry.coordinates;*/
+    //geometry.type = "Point";
+    var center_coord = center.default(tmp_feat).geometry.coordinates;
 
-    //geometry.type = info.shape;
-    geometry.coordinates = getEdgesFeatureCoordinates(info.coords, 4*Math.log(info.range)); 
+    //insert heat over the entirity of the polygon
+    geometry.type = "MultiPoint";
+    if (info.shape == "LineString")
+        geometry.coordinates = getEdgesFeatureCoordinates(info.coords, 2 * Math.log(info.range));
+    else if (info.shape == "MultiLineString")
+        geometry.coordinates = getEdgesFeatureCoordinates(getMuliLineStringCoords(info.coords), 2 * Math.log(info.range));
+    else if (info.shape == "Polygon") {
+        var new_coords = getEdgesFeatureCoordinates(info.coords[0], 5 * Math.log(info.range));
+        if (new_coords.length > 3)
+            geometry.coordinates = new_coords;
+        else {
+            geometry.coordinates = center_coord;
+            geometry.type = "Point";
+        }
+    }
 
     heatmap_features.features.push(feature);
     map.getSource("polution").setData(heatmap_features);
@@ -212,19 +218,17 @@ function getEdgesFeatureCoordinates(coords, space) {
     var line, chunks;
     var new_coords = [];
     //for (var i = 0; i < coords[0].length - 1; i++) {
-    line = turf.lineString(coords[0]);
-    var tmp = line_length.default(line);
+    line = turf.lineString(coords);
+    //var tmp = line_length.default(line);
     //log.info("space before = " + space);
         //line = turf.lineString([coords[0][i], coords[0][i+1]]);
     //space *= (tmp / 0.04);
-    log.info("space after = " + space);
     chunks = chunk.default(line, space, { units: 'meters' });
-    log.info("number of chunks = " + chunks.features.length);
-        for (var j = 0; j < chunks.features.length-1; j++) {
+    log.info("# chunks = " + chunks.features.length);
+        for (var j = 0; j < chunks.features.length; j++) {
             new_coords.push(chunks.features[j].geometry.coordinates[1]);
         }
     //}
 
-    log.info("new coords = " + new_coords);
     return new_coords;
 }
