@@ -9,23 +9,24 @@ const com = require('@turf/center-of-mass');
 
 var first_start = false;
 var drawing = false;
-var features = [];
+var isSomethingSelected = false;
+var drawing_focus = false;
 var object_selection_count = 0;
 var road_selection_count = 0;
-var isSomethingSelected = false;
 var draw_id = 0;
+var features = [];
 var draw_object_list = [];
 var objects_layer = [];
 var all_list = [];
 var objects_list = [];
 var roads_list = [];
 var tmp_drawn_list = [];
-var tmp_drawn_obj = {};
-var source_stats = {};
 var type_stats = [];
-var selected_obj = {};
 var draw_buttons = [];
-var enable_save = false;
+var tmp_drawn_obj = {};
+var tmp_focus_obj = {};
+var source_stats = {};
+var selected_obj = {};
 var all_info = {};
 var current_view = "Normal";
 var selection_object_features = { type: "FeatureCollection", features: [] };
@@ -144,6 +145,7 @@ map.on('load', function () {
 map.on('click', function (e) {
     features = map.queryRenderedFeatures(e.point)[0];
     if (drawing == false && typeof features !== 'undefined') {
+        log.info("herere ");
         document.getElementById("editButton").style.visibility = "visible";
         var tmp_props = features;
         id = findObjId(tmp_props);
@@ -182,7 +184,12 @@ map.on('zoomend', function () {
     log.info("zoom = " + map.getZoom());
 });
 
-map.on('draw.create', handleDraw);
+map.on('draw.create', function () {
+    if (drawing_focus)
+        handleFocusDraw();
+    else
+        handleDraw();
+});
 map.on('draw.update', handleUpdate);
 map.on('draw.delete', function (e) {
     var id = findObjId(features);
@@ -196,7 +203,7 @@ fetchTags();
 
 function startAll() {
     var zoom = map.getZoom();
-    log.info("________________________________________________");
+    log.info("====================================================");
     //if (zoom >= 18) {
     if(!first_start) first_start = true;
     enable_save = true;
@@ -249,7 +256,7 @@ function getAllObjects() {
 
                 original_id = objects_layer[i].id;
                 index = roads_list.length;
-                props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, polution: 0, range: 0, shape: shape, coords: coords, original_id: original_id, index: index };
+                props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, polution: 0, range: 0, focus: [], shape: shape, coords: coords, original_id: original_id, index: index };
                 roads_list.push(props);
                 all_list.push(props);
                 source_stats.road_length += length;
@@ -264,13 +271,13 @@ function getAllObjects() {
                     height = objects_layer[i].properties.height;
                     under = objects_layer[i].properties.underground;
                     index = objects_list.length;
-                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, shape: shape, coords: coords, drawn: false, index: index };
+                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, focus: [], shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
                     all_list.push(props);
                 }
                 if (source == "landuse") {
                     index = objects_list.length;
-                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, shape: shape, coords: coords, drawn: false, index: index };
+                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, focus: [], shape: shape, coords: coords, drawn: false, index: index };
                     objects_list.push(props);
                     all_list.push(props);
                 }
@@ -440,6 +447,7 @@ function addDrawTools(button) {
         button.innerText = "new";
         toggleDrawButtons(false);
         drawing = false;
+        //document.getElementById("saveButton").onclick = function () { savePropsChanges(this) }; //nãi tenho a certeza se o this funciona aqui
     }
 }
 
@@ -502,6 +510,16 @@ function handleDraw() {
     var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords, true)) * 1000) / 1000;
     tmp_drawn_obj = { id: id, source: "insert source", area: tmp_area, shape: "Polygon", coords: polygonCoords, drawn: true, index: objects_list.length };
     createPropertiesTable("propsTable", tmp_drawn_obj, true);
+}
+
+function handleFocusDraw() {
+    var data = draw.getAll();
+    var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
+    var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords, true)) * 1000) / 1000;
+    tmp_focus_obj = { area: tmp_area, polution: 0, range: 0, shape: "Polygon", coords: polygonCoords, drawn: true };
+    createPropertiesTable("propsTable", { area: tmp_area, polution: 0, range: 0 }, false);
+    setPropsTableEditable(document.getElementById("editButton"));
+    document.getElementById("saveButton").onclick = function () { saveFocus(this) };
 }
 
 function deleteDrawnObject(id) {
@@ -745,6 +763,27 @@ function removeAllSelections() {
     map.getSource("selection_object_source").setData(selection_object_features);
     map.getSource("selection_road_source").setData(selection_road_features);
 
+}
+
+function saveFocus(button) {
+    button.style.visibility = "hidden";
+    var extracted_props = extractTableContents();
+    tmp_focus_obj.polution = extracted_props.polution;
+    tmp_focus_obj.range = extracted_props.range;
+
+    log.info("extracted_props = " + JSON.stringify(extracted_props));
+    log.info("tmp_focus obj = " + JSON.stringify(tmp_focus_obj));
+    all_list[selected_obj.id].focus.push(tmp_focus_obj);
+    objects_list[selected_obj.index].focus.push(tmp_focus_obj);
+    addHeatFeature(tmp_focus_obj);
+
+    var newButton = document.getElementById("newButton");
+    newButton.style.visibility = "visible";
+    newButton.innerText = "new";
+    draw.changeMode('simple_select');
+    drawing_focus = false;
+    drawing = false;
+    document.getElementById("saveButton").onclick = function () { savePropsChanges(this) }; //não tenho a certeza se o this funciona aqui
 }
 
 function dumbFunction() {

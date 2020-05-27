@@ -66,6 +66,11 @@ body {
         display: block;
     }
 
+.focus_btn {
+    left: 7px;
+    width: 125px;
+    position: relative;
+}
 
 #left_side_section{
     position: absolute;

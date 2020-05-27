@@ -48,6 +48,15 @@ function createPropertiesTable(tableName, props, drawn) {
                     break;
             }
         }
+        //add focus button
+        if (props.id) {
+            var btn = document.createElement('input');
+            btn.type = "button"; btn.className = "focus_btn"; btn.value = "Add focus";
+            btn.onclick = function () { addFocus() };
+            row = table.insertRow(-1);
+            row.appendChild(btn);
+        }
+
         //popup logic
         var parent_div = document.getElementById("features");
         var template = document.getElementById("type_popup_template");
@@ -242,50 +251,36 @@ function changeObjectInTable(props, old_type) {
 function setPropsTableEditable(button) {
     button.style.visibility = "hidden";
     document.getElementById("saveButton").style.visibility = "visible";
-    var elems = document.getElementsByClassName("cell2");
-    var source = document.getElementById("propsTable").rows[0].cells[1].innerText;
+    var elems_1 = document.getElementsByClassName("cell1");
+    var elems_2 = document.getElementsByClassName("cell2");
+    var autocomplete_array = [];
 
-    if (source == "building") {
-        /*for (var i = 1; i < elems.length; i++) {
-            elems[i].setAttribute("contenteditable", "true");
-        }*/
-        elems[1].setAttribute("contenteditable", "true");
-        elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
-        //elems[2].onkeydown = function () { return numericKeyPressed(event) };
-        //elems[3].onkeydown = function () { return numericKeyPressed(event) };
-        elems[3].setAttribute("contenteditable", "true");
-        elems[3].onkeydown = function () { return numericKeyPressed(event) };
-        elems[4].setAttribute("contenteditable", "true");
-        elems[4].onkeydown = function () { return numericKeyPressed(event) };
-        //addBooleanDropdownMenu(elems[5]);
-        autocomplete(elems[1], elems[2], building_array);
-
-    } else if (source == "landuse") {
-        /*for (var i = 2; i < elems.length - 4; i++) {
-            elems[i].setAttribute("contenteditable", "true");
-        }*/
-        elems[1].setAttribute("contenteditable", "true");
-        elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
-        autocomplete(elems[1], elems[2], landuse_array);
-        elems[3].setAttribute("contenteditable", "true");
-        elems[3].onkeydown = function () { return numericKeyPressed(event) };
-        elems[4].setAttribute("contenteditable", "true");
-        elems[4].onkeydown = function () { return numericKeyPressed(event) };
-
-    } else if (source == "road") {
-        /*for (var i = 1; i < elems.length - 4; i++) {
-            elems[i].setAttribute("contenteditable", "true");
-        }*/
-        elems[1].setAttribute("contenteditable", "true");
-        elems[1].onkeydown = function () { return alphabetKeyPressed(event) };
-        autocomplete(elems[1], elems[2], highway_array);
-        //elems[4].onkeydown = function () { return numericKeyPressed(event) };
-        elems[6].setAttribute("contenteditable", "true");
-        elems[6].onkeydown = function () { return numericKeyPressed(event) };
-        elems[7].setAttribute("contenteditable", "true");
-        elems[7].onkeydown = function () { return numericKeyPressed(event) };
-        //addBooleanDropdownMenu(elems[6]);
-    }
+    for (var i = 0; i < elems_1.length; i++) {
+        switch (elems_1[i].innerText) {
+            case "source":
+                switch (elems_2[i].innerText) {
+                    case "building":
+                        autocomplete_array = building_array;
+                        break;
+                    case "landuse":
+                        autocomplete_array = landuse_array;
+                        break;
+                    case "road":
+                        autocomplete_array = highway_array;
+                        break;
+                };
+                break;
+            case "type":
+                elems_2[i].setAttribute("contenteditable", "true");
+                elems_2[i].onkeydown = function () { return alphabetKeyPressed(event) };
+                autocomplete(elems_2[i], elems_2[i + 1], autocomplete_array);
+                break;
+            case "polution": case "range":
+                elems_2[i].setAttribute("contenteditable", "true");
+                elems_2[i].onkeydown = function () { return numericKeyPressed(event) };
+                break;
+        }
+    };
 }
 
 //Extrai todas as filas, menos as ultimas 2 (coords, drawn)
@@ -293,19 +288,22 @@ function extractTableContents() {
     var props = {};
     var table = document.getElementById("propsTable");
     for (var i = 0; i < table.rows.length; i++) {
-        switch (table.rows[i].cells[0].innerText) {
-            case "id": case "area": case "height":
-                props[table.rows[i].cells[0].innerHTML] = parseInt(table.rows[i].cells[1].innerText);
-                break;
-            case "length": case "polution": case "range":
-                props[table.rows[i].cells[0].innerHTML] = parseFloat(table.rows[i].cells[1].innerText);
-                break;
-            case "one_way": case "underground":
-                var val = (table.rows[i].cells[0].innerText === "true");
-                props[table.rows[i].cells[0].innerHTML] = val;
-                break;
-            default:
-                props[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerText;
+        //log.info("cell 0 = " + table.rows[i].cells[0]);
+        if (typeof table.rows[i].cells[0] !== 'undefined') {
+            switch (table.rows[i].cells[0].innerText) {
+                case "id": case "area": case "height":
+                    props[table.rows[i].cells[0].innerHTML] = parseInt(table.rows[i].cells[1].innerText);
+                    break;
+                case "length": case "polution": case "range":
+                    props[table.rows[i].cells[0].innerHTML] = parseFloat(table.rows[i].cells[1].innerText);
+                    break;
+                case "one_way": case "underground":
+                    var val = (table.rows[i].cells[0].innerText === "true");
+                    props[table.rows[i].cells[0].innerHTML] = val;
+                    break;
+                default:
+                    props[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerText;
+            }
         }
     }
 
@@ -559,8 +557,9 @@ function showViewOptions() {
     document.getElementById("dropdown_content").classList.toggle("show");
 }
 
-
-
-
+function addFocus() {
+    addDrawTools(document.getElementById("newButton"));
+    drawing_focus = true;
+}
 
 

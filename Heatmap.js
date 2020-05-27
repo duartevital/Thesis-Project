@@ -1,10 +1,11 @@
 const center = require('@turf/center-of-mass');
 const chunk = require('@turf/line-chunk');
+const along = require('@turf/along');
 
 var heatmap_features = {
     type: "FeatureCollection",
     features: []
-}
+};
 var heatmap_fill_features = {
     type: "FeatureCollection",
     features: []
@@ -36,6 +37,7 @@ map.on('load', () => {
                     'heatmap-weight': [
                         'interpolate', ['exponential', 1], ['get', 'level'],
                         0, 0,
+                        250, 0.15,
                         500, 1
                     ],
 
@@ -57,16 +59,16 @@ map.on('load', () => {
                     'heatmap-color': [
                         'interpolate', ['linear'], ['heatmap-density'],
                         0, 'rgba(0, 255, 0, 0)',
-                        0.1, 'rgb(0, 228, 0)', //green
-                        0.15, 'rgb(0, 228, 0)', //green
-                        0.2, 'rgb(255,255,0)', //yellow
-                        0.4, 'rgb(255,255,0)', //yellow
-                        0.5, 'rgb(255, 126, 0)', //orange
-                        0.6, 'rgb(255, 126, 0)', //orange
-                        0.7, 'rgb(255, 0, 0)', //red
-                        0.8, 'rgb(255, 0, 0)', //red
-                        0.9, 'rgb(143, 63, 151)', //purple
-                        1.1, 'rgb(126, 0, 35)' //maroon
+                        0.0125, 'rgb(0, 228, 0)', //green
+                        0.01875, 'rgb(0, 228, 0)', //green
+                        0.03125, 'rgb(255,255,0)', //yellow
+                        0.05, 'rgb(255,255,0)', //yellow
+                        0.0625, 'rgb(255, 126, 0)', //orange
+                        0.075, 'rgb(255, 126, 0)', //orange
+                        0.0875, 'rgb(255, 0, 0)', //red
+                        0.1, 'rgb(255, 0, 0)', //red
+                        0.225, 'rgb(143, 63, 151)', //purple
+                        1, 'rgb(126, 0, 35)' //maroon
                     ],
                     /*'heatmap-radius': [
                         'interpolate', ['exponential', 1], ['zoom'],
@@ -146,7 +148,7 @@ function addHeatFeature(info) {
     var properties = feature.properties;
     var geometry = feature.geometry;
 
-    properties.id = info.id;
+    //properties.id = info.id;
     properties.level = info.polution;
     //properties.intensity_level = info.polution / 10;
     properties.range_1 = info.range * 0.1;
@@ -215,20 +217,11 @@ function addHeatFeature(info) {
 }
 
 function getEdgesFeatureCoordinates(coords, space) {
-    var line, chunks;
-    var new_coords = [];
-    //for (var i = 0; i < coords[0].length - 1; i++) {
+    var line, length, new_coords = [];
     line = turf.lineString(coords);
-    //var tmp = line_length.default(line);
-    //log.info("space before = " + space);
-        //line = turf.lineString([coords[0][i], coords[0][i+1]]);
-    //space *= (tmp / 0.04);
-    chunks = chunk.default(line, space, { units: 'meters' });
-    log.info("# chunks = " + chunks.features.length);
-        for (var j = 0; j < chunks.features.length; j++) {
-            new_coords.push(chunks.features[j].geometry.coordinates[1]);
-        }
-    //}
-
+    length = line_length.default(line, { units: 'meters' });
+    for (var step = space; step < length; step += space) {
+        new_coords.push(along.default(line, step, { units: 'meters' }).geometry.coordinates);
+    }
     return new_coords;
 }
