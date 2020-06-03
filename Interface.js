@@ -439,7 +439,7 @@ function setPieGraph(type_stats) {
     }
     var labels = type_stats.map(obj => obj.type);
     var values = type_stats.map(obj => obj.percentage);
-    var ctx = document.getElementById('myChart').getContext('2d');
+    var ctx = document.getElementById('pieChart').getContext('2d');
     pieChart = new Chart(ctx, {
         type: 'pie',
         data: {

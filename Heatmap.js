@@ -31,7 +31,7 @@ map.on('load', () => {
                 type: 'heatmap',
                 source: 'polution',
                 minzoom: 12,
-                maxzoom: 24,
+                maxzoom: 18,
                 paint: {
                     
                     'heatmap-weight': [
@@ -148,10 +148,10 @@ function addHeatFeature(info) {
     var properties = feature.properties;
     var geometry = feature.geometry;
 
-    //properties.id = info.id;
+    properties.id = info.id;
     properties.level = info.polution;
     //properties.intensity_level = info.polution / 10;
-    properties.range_1 = info.range * 0.1;
+    properties.range_1 = info.range * 0.08;
     //properties.range_2 = properties.range_3 * 0.85;
     //properties.range_3 = properties.range_base * 0.85;
     properties.range_base = info.range;
@@ -184,7 +184,16 @@ function addHeatFeature(info) {
         }
     }
 
-    heatmap_features.features.push(feature);
+    var feature_exists = false;
+    for (var i in heatmap_features.features) {
+        if (heatmap_features.features[i].properties.id == properties.id) {
+            heatmap_features.features[i] = feature;
+            feature_exists = true;
+            break;
+        }
+    }
+    if (!feature_exists)
+        heatmap_features.features.push(feature);
     map.getSource("polution").setData(heatmap_features);
 
     //Painting "poluted" polygons

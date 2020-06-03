@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="autocomplete.css" />
     <link rel="stylesheet" href="history.css" />
+    <link rel="stylesheet" href="curves.css" />
     <link rel="stylesheet" href="popup.css" />
 
 </head>
@@ -30,6 +31,7 @@
 
     <div class="tab">
         <button class="tabLinks" onclick="openTab(event, 'features_tab')">Labels</button>
+        <button class="tabLinks" onclick="openTab(event, 'curves_tab')">Curves</button>
         <!--<button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>-->
         <button class="tabLinks" onclick="openTab(event, 'history_tab')">History</button>
     </div>
@@ -49,7 +51,7 @@
 
         <section id="top_right_section">
             <h5 class="title_text">Object areas (%)</h5>
-            <canvas id="myChart" width="100" height="80"></canvas>
+            <canvas id="pieChart" width="100" height="80"></canvas>
         </section>
 
         <section id="bottom_right_section">
@@ -76,6 +78,19 @@
         </div>
     </div>
 
+    <div id="curves_tab" class="tabContent">
+        <select id="day_dropdown" onchange="changeDay(this)">
+            <option selected value="STANDART">Standart</option>
+            <option value="MONDAY">Monday</option>
+            <option value="TUESDAY">Tuesday</option>
+            <option value="WEDNESDAY">Wednesday</option>
+            <option value="THURSDAY">Thursday</option>
+            <option value="FRIDAY">Friday</option>
+            <option value="SATURDAY">Saturday</option>
+            <option value="SUNDAY">Sunday</option>
+        </select>
+        <canvas id="line_graph"></canvas>
+    </div>
     <!--      TEMPLATES       -->
     <!--Entry template to be instanciated in history tab-->
     <template>
@@ -125,5 +140,8 @@
     <script src="./../Interface.js"></script>
     <script src="./../Calculations.js"></script>
     <script src="./../Heatmap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@latest/dist/chartjs-plugin-dragdata.min.js"></script>
+
+    <script src="./../Curves.js"></script>
 </body>
 </html>

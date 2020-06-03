@@ -145,7 +145,6 @@ map.on('load', function () {
 map.on('click', function (e) {
     features = map.queryRenderedFeatures(e.point)[0];
     if (drawing == false && typeof features !== 'undefined') {
-        log.info("herere ");
         document.getElementById("editButton").style.visibility = "visible";
         var tmp_props = features;
         id = findObjId(tmp_props);
@@ -413,11 +412,12 @@ function savePropsChanges(button) {
                 all_list[selected_obj.id] = selected_obj;
                 objects_list[selected_obj.index] = selected_obj;
                 resetStats();
-                addHeatFeature(selected_obj);
+                
             }
         }
         drawing = false;
         enable_save = true;
+        updateChart();
 
     } else {
         document.getElementById("type_popup").classList.toggle("show");
@@ -787,78 +787,5 @@ function saveFocus(button) {
 }
 
 function dumbFunction() {
-    log.info("START");
-    map.addSource("polution", {
-        "type": "geojson",
-        "data": "./Data/polution.geojson"
-    });
-    
-    map.addLayer({
-        'id': 'polution_heat',
-        'type': 'heatmap',
-        'source': 'polution',
-        'paint': {
-            'heatmap-weight': [
-                'interpolate',
-                ['linear'],
-                ['get', 'mag'],
-                0,
-                0,
-                6,
-                1
-            ],
-            // Increase the heatmap color weight weight by zoom level
-            // heatmap-intensity is a multiplier on top of heatmap-weight
-            'heatmap-intensity': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                0,
-                1,
-                9,
-                3
-            ],
-            // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
-            // Begin color ramp at 0-stop with a 0-transparancy color
-            // to create a blur-like effect.
-            'heatmap-color': [
-                'interpolate',
-                ['linear'],
-                ['heatmap-density'],
-                0,
-                'rgba(33,102,172,0)',
-                0.2,
-                'rgb(103,169,207)',
-                0.4,
-                'rgb(209,229,240)',
-                0.6,
-                'rgb(253,219,199)',
-                0.8,
-                'rgb(239,138,98)',
-                1,
-                'rgb(178,24,43)'
-            ],
-            // Adjust the heatmap radius by zoom level
-            'heatmap-radius': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                0,
-                2,
-                9,
-                20
-            ],
-            // Transition from heatmap to circle layer by zoom level
-            'heatmap-opacity': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                7,
-                1,
-                9,
-                0
-            ]
-        }
-    });
-    log.info("END");
+    console.log("data = " + line_chart.data.datasets[0].data);
 }

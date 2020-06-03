@@ -1,0 +1,13 @@
+figure.quadratic {
+    float: left;
+    display: block;
+    margin-right: 1em;
+}
+
+#line_graph {
+    position: absolute;
+    top: 15%;
+    left: 1%;
+    width: 200px;
+    height: 200px;
+}

@@ -262,3 +262,15 @@ function getMuliLineStringCoords(coords) {
 
     return new_coords;
 }
+
+function getAveragePolution(list) {
+    var sum = 0, count = 0;
+    for (var i in list) {
+        if (list[i].polution > 0) {
+            sum += list[i].polution;
+            count++;
+        }
+    }
+    if (sum == 0) return 0.0001;
+    else return sum / count;
+}
