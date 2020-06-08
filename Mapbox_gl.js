@@ -11,6 +11,7 @@ var first_start = false;
 var drawing = false;
 var isSomethingSelected = false;
 var drawing_focus = false;
+var cntrl_pressed = false;
 var object_selection_count = 0;
 var road_selection_count = 0;
 var draw_id = 0;
@@ -27,10 +28,19 @@ var tmp_drawn_obj = {};
 var tmp_focus_obj = {};
 var source_stats = {};
 var selected_obj = {};
+var selected_objs = [];
 var all_info = {};
 var current_view = "Normal";
 var selection_object_features = { type: "FeatureCollection", features: [] };
 var selection_road_features = { type: "FeatureCollection", features: [] };
+var heatmap_features = {
+    type: "FeatureCollection",
+    features: []
+};
+var heatmap_fill_features = {
+    type: "FeatureCollection",
+    features: []
+};
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZHVhcnRlOTYiLCJhIjoiY2sxbmljbHp0MGF3djNtbzYwY3FrOXFldiJ9._f9pPyMDRXb1sJdMQZmKAQ';
 var map = new mapboxgl.Map({
@@ -54,7 +64,7 @@ var draw = new MapboxDraw({
 var nav = new mapboxgl.NavigationControl();
 
 map.on('load', function () {
-
+    //Objects layers
     map.addLayer({
         "id": "buildings_layer",
         "type": "fill",
@@ -113,6 +123,7 @@ map.on('load', function () {
         }
     });
 
+    //Object selection sources and layers
     map.addSource("selection_object_source", {
         type: "geojson",
         data: selection_object_features
@@ -140,6 +151,85 @@ map.on('load', function () {
             'line-color': ["get", "color"]
         }
     });
+
+    //Heatmap sources and layers
+    map.addSource('polution', {
+        type: 'geojson',
+        data: heatmap_features
+        //data: JSON.parse(fs.readFileSync("./Data/polution.geojson", "utf8"))
+    });
+    map.addLayer({
+        id: 'polution_heat',
+        type: 'heatmap',
+        source: 'polution',
+        minzoom: 12,
+        maxzoom: 21,
+        paint: {
+
+            'heatmap-weight': [
+                'interpolate', ['exponential', 1], ['get', 'level'],
+                0, 0,
+                250, 0.15,
+                500, 1
+            ],
+
+            //'heatmap-intensity': 1,
+            'heatmap-intensity': [
+                'interpolate', ['exponential', 1], ['zoom'],
+                12, 0.2,
+                13, 0.4,
+                14, 0.95,
+                14.5, 0.95,
+                15, 0.98,
+                15.5, 1,
+                16, 1.25,
+                17, 1.95,
+                19, 2.95
+            ],
+
+            // assign color values be applied to points depending on their density
+            'heatmap-color': [
+                'interpolate', ['linear'], ['heatmap-density'],
+                0, 'rgba(0, 255, 0, 0)',
+                0.0125, 'rgb(0, 228, 0)', //green
+                0.01875, 'rgb(0, 228, 0)', //green
+                0.03125, 'rgb(255,255,0)', //yellow
+                0.05, 'rgb(255,255,0)', //yellow
+                0.0625, 'rgb(255, 126, 0)', //orange
+                0.075, 'rgb(255, 126, 0)', //orange
+                0.0875, 'rgb(255, 0, 0)', //red
+                0.1, 'rgb(255, 0, 0)', //red
+                0.225, 'rgb(143, 63, 151)', //purple
+                1, 'rgb(126, 0, 35)' //maroon
+            ],
+            /*'heatmap-radius': [
+                'interpolate', ['exponential', 1], ['zoom'],
+                14, 25,
+                20, 250
+            ],*/
+            'heatmap-radius': [
+                'interpolate', ['exponential', 2], ['zoom'],
+                14, ['get', 'range_1'],
+                18, ['get', 'range_base']
+            ],
+            'heatmap-opacity': 0.9
+        }
+    });
+    map.addSource('polution_fill', {
+        type: 'geojson',
+        data: heatmap_fill_features
+    });
+    map.addLayer({
+        id: 'polution_heat_fill',
+        type: 'fill',
+        source: 'polution_fill',
+        layout: {},
+        paint: {
+            'fill-color': ['get', 'color']
+        }
+    });
+    map.setLayoutProperty("polution_heat", "visibility", "none");
+    map.setLayoutProperty("polution_heat_fill", "visibility", "none");
     
 });
 map.on('click', function (e) {
@@ -147,31 +237,56 @@ map.on('click', function (e) {
     if (drawing == false && typeof features !== 'undefined') {
         document.getElementById("editButton").style.visibility = "visible";
         var tmp_props = features;
+        console.log(features);
         id = findObjId(tmp_props);
-        selected_obj = all_list[id];
-        if (selected_obj.drawn) {
-            //tratar aqui do botão delete
-            draw_buttons[2].disabled = false;
-            draw_buttons[2].classList.remove("disabled-control-button");
-        }
-        createPropertiesTable("propsTable", selected_obj);
-        if (!isSomethingSelected)
-            addSelectionColor();
-        else {
-            if (features.sourceLayer == "road") {
-                selection_road_features.features.splice(road_selection_count-1, 1);
-                map.getSource("selection_road_source").setData(selection_road_features);
-                road_selection_count--;
-            } else {
-                selection_object_features.features.splice(object_selection_count-1, 1);
-                map.getSource("selection_object_source").setData(selection_object_features);
-                object_selection_count--;
+        //selected_obj = all_list[id];
+        //DEVE SER REORGANIZADO...
+        if (!cntrl_pressed) {
+            selected_objs = []; selected_objs.push(all_list[id]);
+            //props table creation
+            if (id > -1) {
+                if (selected_objs[0].drawn) {
+                    //tratar aqui do botão delete
+                    draw_buttons[2].disabled = false;
+                    draw_buttons[2].classList.remove("disabled-control-button");
+                    createPropertiesTable("propsTable", selected_objs[0], true);
+                } else
+                    createPropertiesTable("propsTable", selected_objs[0], false);
             }
-            if (features.source != "selection_object_source") {
+            if (!isSomethingSelected)
                 addSelectionColor();
-            } else
-                document.getElementById("propsTable").innerHTML = "";
-        }   
+            else {
+                //remove object selections
+                //selection_object_features.features.splice(object_selection_count - 1, 1);
+                selection_object_features.features = [];
+                map.getSource("selection_object_source").setData(selection_object_features);
+                object_selection_count = 0; //object_selection_count--;
+                //remove road selections
+                //selection_road_features.features.splice(road_selection_count - 1, 1);
+                selection_road_features.features = [];
+                map.getSource("selection_road_source").setData(selection_road_features);
+                road_selection_count = 0; //road_selection_count--;
+
+                if (features.source != "selection_object_source" && features.source != "selection_road_source") {
+                    addSelectionColor();
+                } else
+                    document.getElementById("propsTable").innerHTML = "";
+            }
+        } else {
+            /*if (Object.entries(selected_obj).length > 0) {
+                selected_objs.push(selected_obj)
+            }*/
+            selected_objs.push(all_list[id]);
+            //props table creation
+            var total_area = 0;
+            for (var i in selected_objs) total_area += selected_objs[i].area;
+            var tmp_selections = { source: "-", type: "-", area: total_area, polution: getAveragePolution(selected_objs), range: getAverageRange(selected_objs)};
+            createPropertiesTable("propsTable", tmp_selections, false);
+            
+            if (features.source != "selection_object_source" && features.source != "selection_road_source") {
+                addSelectionColor();
+            }
+        }
     }
 });
 map.on('dragend', function (e) {
@@ -255,9 +370,9 @@ function getAllObjects() {
 
                 original_id = objects_layer[i].id;
                 index = roads_list.length;
-                props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, polution: 0, range: 0, focus: [], shape: shape, coords: coords, original_id: original_id, index: index };
+                props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, polution: 0, range: 0, focus: [], shape: shape, coords: coords, original_id: original_id, altered: false, index: index };
                 roads_list.push(props);
-                all_list.push(props);
+                //all_list.push(props);
                 source_stats.road_length += length;
             } else {
                 var tmp_area = 0;
@@ -270,19 +385,19 @@ function getAllObjects() {
                     height = objects_layer[i].properties.height;
                     under = objects_layer[i].properties.underground;
                     index = objects_list.length;
-                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, focus: [], shape: shape, coords: coords, drawn: false, index: index };
+                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, focus: [], shape: shape, coords: coords, drawn: false, altered: false, index: index };
                     objects_list.push(props);
                     all_list.push(props);
                 }
                 if (source == "landuse") {
                     index = objects_list.length;
-                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, focus: [], shape: shape, coords: coords, drawn: false, index: index };
+                    props = { id: id, source: source, type: type, area: tmp_area, polution: 0, range: 0, focus: [], shape: shape, coords: coords, drawn: false, altered: false, index: index };
                     objects_list.push(props);
                     all_list.push(props);
                 }
                 if (source == "water") {
                     index = objects_list.length;
-                    props = { id: id, source: source, type: source, area: tmp_area, shape: shape, coords: coords, drawn: false, index: index };
+                    props = { id: id, source: source, type: source, area: tmp_area, shape: shape, coords: coords, drawn: false, altered: false, index: index };
                     objects_list.push(props);
                     all_list.push(props);
                 }
@@ -297,6 +412,8 @@ function getAllObjects() {
         });
 
     //Filter off duplicate roads in all_list...
+    all_list.push.apply(all_list, roads_list);
+    for (var i in all_list) all_list[i].id = i;
 }
 
 function findObjId(selected_props) {
@@ -344,7 +461,74 @@ function findObjId(selected_props) {
 
 function savePropsChanges(button) {
     var extracted_props = extractTableContents();
-    var objTable = document.getElementById("objTable");
+    let final_props = extracted_props;
+    if (extracted_props.type == "") {
+        document.getElementById("type_popup").classList.toggle("show");
+        setTimeout(function () { document.getElementById("type_popup").classList.toggle("show") }, 3000);
+        return;
+    }
+    //handle buttons' visibility and table editable
+    button.style.visibility = "hidden";
+    toggleDrawButtons(false);
+    var elems = document.getElementsByClassName("cell2");
+    for (var i = 0; i < elems.length; i++) elems[i].setAttribute("contenteditable", "false");
+    //save drawed objects
+    if (drawing) {
+        final_props.id = all_list.length; final_props.coords = tmp_drawn_obj.coords; final_props.shape = tmp_drawn_obj.shape;
+        final_props.drawn = true; final_props.index = objects_list.length;
+        all_list[extracted_props.id] = tmp;
+        objects_list[tmp.index] = tmp;
+        resetStats();
+        var draw_obj = { id: extracted_props.id, draw_id: draw_id };
+        draw_object_list.push(draw_obj);
+        tmp_drawn_list.push(tmp);
+        draw_id = 0;
+        //handle heatmap
+            //addHeatFeature(tmp);
+        //handle buttons' style
+        var newButton = document.getElementById("newButton");
+        newButton.style.visibility = "visible";
+        newButton.innerText = "new";
+        draw.changeMode('simple_select');
+        drawing = false;
+        return;
+    }
+    //handle empty objects
+    if (final_props.polution == 0 && final_props.range == 0) {
+        for (var i in selected_objs) {
+            let tmp_id = selected_objs[i].id;
+            all_list[tmp_id].altered = false;
+            removeHeatFeature(selected_objs[i]);
+        }
+        return;
+    }
+    console.log("final_props . poluition = " + final_props.polution);
+    console.log(selected_objs);
+    for (var i in selected_objs) {
+        selected_objs[i].altered = true;
+        selected_objs[i].polution = final_props.polution; selected_objs[i].range = final_props.range;
+        if (final_props.type != "-") selected_objs[i].type = final_props.type;
+
+        let tmp_id = selected_objs[i].id;
+        all_list[tmp_id] = selected_objs[i];
+        switch (selected_objs[i].type) {
+            case "road":
+                roads_list[selected_objs[i].index] = selected_objs[i];
+                break;
+            case "building": case "landuse":
+                objects_list[selected_objs[i].index] = selected_objs[i];
+                break;
+        }
+        addHeatFeature(selected_objs[i]);
+    }
+    enable_save = true;
+    updateChart();
+    resetStats();
+}
+
+/*function savePropsChanges(button) {
+    var extracted_props = extractTableContents();
+    //Buttons handler
     if (extracted_props.type != "") {
         button.style.visibility = "hidden";
         //document.getElementById("editButton").style.visibility = "hidden";
@@ -353,12 +537,12 @@ function savePropsChanges(button) {
             elems[i].setAttribute("contenteditable", "false");
         }
         toggleDrawButtons(false);
-        //Guardar as alterações no objeto do array com o mesmo id:
-        //var extracted_props = extractTableContents();
+
+        //Guardar as alterações no objeto do array com o mesmo id:        
         var objTable = document.getElementById("objTable");
         if (drawing) {
             var tmp = extracted_props;
-            tmp.coords = tmp_drawn_obj.coords; tmp.shape = tmp_drawn_obj.shape; tmp.drawn = true; tmp.index = objects_list.length;
+            tmp.id = all_list.length; tmp.coords = tmp_drawn_obj.coords; tmp.shape = tmp_drawn_obj.shape; tmp.drawn = true; tmp.index = objects_list.length;
             all_list[extracted_props.id] = tmp;
             objects_list[tmp.index] = tmp;
             resetStats();
@@ -366,13 +550,23 @@ function savePropsChanges(button) {
             draw_object_list.push(draw_obj);
             tmp_drawn_list.push(tmp);
             draw_id = 0;
-            //add heat points
-            addHeatFeature(tmp);
             var newButton = document.getElementById("newButton");
             newButton.style.visibility = "visible";
             newButton.innerText = "new";
             draw.changeMode('simple_select');
+
+            //add heat points
+            //addHeatFeature(tmp);
         } else {
+            selected_obj.polution = extracted_props.polution;
+            selected_obj.range = extracted_props.range;
+            if (extracted_props.polution == 0 && extracted_props.range == 0) {
+                selected_obj.altered = false;
+                removeHeatFeature(selected_obj);
+            } else {
+                selected_obj.altered = true;
+                addHeatFeature(selected_obj);
+            }
             if (selected_obj.source == "road") {
                 //selected_obj.id = extracted_props.id;
                 selected_obj.type = extracted_props.type;
@@ -380,40 +574,33 @@ function savePropsChanges(button) {
                 selected_obj.length = extracted_props.length;
                 selected_obj.surface = extracted_props.surface;
                 selected_obj.one_way = extracted_props.one_way;
-                selected_obj.polution = extracted_props.polution;
-                selected_obj.range = extracted_props.range;
+                
 
                 all_list[selected_obj.id] = selected_obj;
                 roads_list[selected_obj.index] = selected_obj;
                 resetStats();
-                addHeatFeature(selected_obj);
                 //incluir uma função igual á seguinte mas para a table das roads
                 /*if (old_type != selected_obj.type)
-                    changeObjectInTable(selected_obj, old_type);*/
+                    changeObjectInTable(selected_obj, old_type); /
             } else if (selected_obj.source == "building") {
                 //selected_obj.id = extracted_props.id;
                 selected_obj.type = extracted_props.type;
                 //selected_obj.height = extracted_props.height;
                 selected_obj.area = extracted_props.area;
-                selected_obj.polution = extracted_props.polution;
-                selected_obj.range = extracted_props.range;
                 //selected_obj.underground = extracted_props.underground;
                 all_list[selected_obj.id] = selected_obj;
                 objects_list[selected_obj.index] = selected_obj;
                 resetStats();
-                addHeatFeature(selected_obj);
             } else if (selected_obj.source == "landuse") {
                 //selected_obj.id = extracted_props.id;
                 selected_obj.type = extracted_props.type;
                 selected_obj.area = extracted_props.area;
-                selected_obj.polution = extracted_props.polution;
-                selected_obj.range = extracted_props.range;
 
                 all_list[selected_obj.id] = selected_obj;
                 objects_list[selected_obj.index] = selected_obj;
                 resetStats();
                 
-            }
+            } 
         }
         drawing = false;
         enable_save = true;
@@ -425,7 +612,7 @@ function savePropsChanges(button) {
             document.getElementById("type_popup").classList.toggle("show");
         }, 3000);
     }
-}
+}*/
 
 function addDrawTools(button) {
     if (button.innerText == "new") {
@@ -435,10 +622,14 @@ function addDrawTools(button) {
         drawing = true;
         document.getElementById("editButton").style.visibility = "hidden";
         document.getElementById("saveButton").style.visibility = "hidden";
-        if (object_selection_count > 0) {
-            selection_object_features.features.splice(object_selection_count - 1, 1);
+        if (object_selection_count > 0 || road_selection_count > 0) {
+            //selection_object_features.features.splice(object_selection_count - 1, 1);
+            selection_object_features.features = [];
             map.getSource("selection_object_source").setData(selection_object_features);
-            object_selection_count--;
+            object_selection_count = 0;
+            selection_road_features.features = [];
+            map.getSource("selection_road_source").setData(selection_road_features);
+            road_selection_count = 0;
         }
     } else {
         var id = draw.getSelectedIds();
@@ -447,7 +638,7 @@ function addDrawTools(button) {
         button.innerText = "new";
         toggleDrawButtons(false);
         drawing = false;
-        //document.getElementById("saveButton").onclick = function () { savePropsChanges(this) }; //nãi tenho a certeza se o this funciona aqui
+        //document.getElementById("saveButton").onclick = function () { savePropsChanges(this) }; //não tenho a certeza se o this funciona aqui
     }
 }
 
@@ -508,7 +699,7 @@ function handleDraw() {
     draw_id = data.features[data.features.length - 1].id;
     var id = all_list.length;
     var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords, true)) * 1000) / 1000;
-    tmp_drawn_obj = { id: id, source: "insert source", area: tmp_area, shape: "Polygon", coords: polygonCoords, drawn: true, index: objects_list.length };
+    tmp_drawn_obj = { id: id, source: "insert source", area: tmp_area, shape: "Polygon", coords: polygonCoords, drawn: true, altered: false,  index: objects_list.length };
     createPropertiesTable("propsTable", tmp_drawn_obj, true);
 }
 
@@ -516,7 +707,7 @@ function handleFocusDraw() {
     var data = draw.getAll();
     var polygonCoords = data.features[data.features.length - 1].geometry.coordinates;
     var tmp_area = Math.round(area.default(getVisiblePolygonPortion(polygonCoords, true)) * 1000) / 1000;
-    tmp_focus_obj = { area: tmp_area, polution: 0, range: 0, shape: "Polygon", coords: polygonCoords, drawn: true };
+    tmp_focus_obj = { area: tmp_area, polution: 0, range: 0, shape: "Polygon", coords: polygonCoords, drawn: true, altered: false};
     createPropertiesTable("propsTable", { area: tmp_area, polution: 0, range: 0 }, false);
     setPropsTableEditable(document.getElementById("editButton"));
     document.getElementById("saveButton").onclick = function () { saveFocus(this) };
@@ -765,16 +956,14 @@ function removeAllSelections() {
 
 }
 
-function saveFocus(button) {
+function saveFocus(button) { //add focus must be disabled if multiple objcts are selected
     button.style.visibility = "hidden";
     var extracted_props = extractTableContents();
     tmp_focus_obj.polution = extracted_props.polution;
     tmp_focus_obj.range = extracted_props.range;
 
-    log.info("extracted_props = " + JSON.stringify(extracted_props));
-    log.info("tmp_focus obj = " + JSON.stringify(tmp_focus_obj));
-    all_list[selected_obj.id].focus.push(tmp_focus_obj);
-    objects_list[selected_obj.index].focus.push(tmp_focus_obj);
+    all_list[selected_objs[0].id].focus.push(tmp_focus_obj);
+    objects_list[selected_objs[0].index].focus.push(tmp_focus_obj);
     addHeatFeature(tmp_focus_obj);
 
     var newButton = document.getElementById("newButton");
@@ -787,5 +976,5 @@ function saveFocus(button) {
 }
 
 function dumbFunction() {
-    console.log("data = " + line_chart.data.datasets[0].data);
+    console.log(all_list);
 }

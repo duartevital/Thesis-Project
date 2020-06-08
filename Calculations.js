@@ -271,6 +271,18 @@ function getAveragePolution(list) {
             count++;
         }
     }
-    if (sum == 0) return 0.0001;
+    if (sum == 0) return 0;
+    else return sum / count;
+}
+
+function getAverageRange(list) {
+    var sum = 0, count = 0;
+    for (var i in list) {
+        if (list[i].range > 0) {
+            sum += list[i].range;
+            count++;
+        }
+    }
+    if (sum == 0) return 0;
     else return sum / count;
 }

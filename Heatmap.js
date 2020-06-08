@@ -1,105 +1,6 @@
 const center = require('@turf/center-of-mass');
-const chunk = require('@turf/line-chunk');
 const along = require('@turf/along');
 
-var heatmap_features = {
-    type: "FeatureCollection",
-    features: []
-};
-var heatmap_fill_features = {
-    type: "FeatureCollection",
-    features: []
-};
-
-map.addSource('polution', {
-    type: 'geojson',
-    data: heatmap_features
-    //data: JSON.parse(fs.readFileSync("./Data/polution.geojson", "utf8"))
-});
-map.addSource('polution_fill', {
-    type: 'geojson',
-    data: heatmap_fill_features
-});
-
-map.on('load', () => {
-    const waiting = () => {
-        if (!map.isStyleLoaded()) {
-            setTimeout(waiting, 200);
-        } else {
-            map.addLayer({
-                id: 'polution_heat',
-                type: 'heatmap',
-                source: 'polution',
-                minzoom: 12,
-                maxzoom: 18,
-                paint: {
-                    
-                    'heatmap-weight': [
-                        'interpolate', ['exponential', 1], ['get', 'level'],
-                        0, 0,
-                        250, 0.15,
-                        500, 1
-                    ],
-
-                    //'heatmap-intensity': 1,
-                    'heatmap-intensity': [
-                        'interpolate', ['exponential', 1], ['zoom'],
-                        12, 0.2,
-                        13, 0.4,
-                        14, 0.95,
-                        14.5, 0.95,
-                        15, 0.98,
-                        15.5, 1,
-                        16, 1.25,
-                        17, 1.95,
-                        19, 2.95
-                    ],
-
-                    // assign color values be applied to points depending on their density
-                    'heatmap-color': [
-                        'interpolate', ['linear'], ['heatmap-density'],
-                        0, 'rgba(0, 255, 0, 0)',
-                        0.0125, 'rgb(0, 228, 0)', //green
-                        0.01875, 'rgb(0, 228, 0)', //green
-                        0.03125, 'rgb(255,255,0)', //yellow
-                        0.05, 'rgb(255,255,0)', //yellow
-                        0.0625, 'rgb(255, 126, 0)', //orange
-                        0.075, 'rgb(255, 126, 0)', //orange
-                        0.0875, 'rgb(255, 0, 0)', //red
-                        0.1, 'rgb(255, 0, 0)', //red
-                        0.225, 'rgb(143, 63, 151)', //purple
-                        1, 'rgb(126, 0, 35)' //maroon
-                    ],
-                    /*'heatmap-radius': [
-                        'interpolate', ['exponential', 1], ['zoom'],
-                        14, 25,
-                        20, 250
-                    ],*/
-                    'heatmap-radius': [
-                        'interpolate', ['exponential', 2], ['zoom'],
-                        14, ['get', 'range_1'],
-                        18, ['get', 'range_base']
-                    ],
-                    'heatmap-opacity': 0.9
-                }
-            });
-
-            map.addLayer({
-                id: 'polution_heat_fill',
-                type: 'fill',
-                source: 'polution_fill',
-                layout: {},
-                paint: {
-                    'fill-color': ['get', 'color']
-                }
-            });
-
-            map.setLayoutProperty("polution_heat", "visibility", "none");
-            map.setLayoutProperty("polution_heat_fill", "visibility", "none");
-        }
-    };
-    waiting();
-});
 
 function dropdownClick() {
     var name = event.target.textContent;
@@ -140,8 +41,8 @@ function addHeatFeature(info) {
         type: "Feature",
         properties: {},
         geometry: {
-            //type: "MultiPoint",
-            type: "Point",
+            type: "MultiPoint",
+            //type: "Point",
             coordinates: []
         }
     };
@@ -169,13 +70,13 @@ function addHeatFeature(info) {
     var center_coord = center.default(tmp_feat).geometry.coordinates;
 
     //insert heat over the entirity of the polygon
-    geometry.type = "MultiPoint";
+    //geometry.type = "MultiPoint";
     if (info.shape == "LineString")
         geometry.coordinates = getEdgesFeatureCoordinates(info.coords, 2 * Math.log(info.range));
     else if (info.shape == "MultiLineString")
         geometry.coordinates = getEdgesFeatureCoordinates(getMuliLineStringCoords(info.coords), 2 * Math.log(info.range));
     else if (info.shape == "Polygon") {
-        var new_coords = getEdgesFeatureCoordinates(info.coords[0], 5 * Math.log(info.range));
+        var new_coords = getEdgesFeatureCoordinates(info.coords[0], 4 * Math.log(info.range));
         if (new_coords.length > 3)
             geometry.coordinates = new_coords;
         else {
@@ -223,6 +124,19 @@ function addHeatFeature(info) {
 
     heatmap_fill_features.features.push(fill_feature);
     map.getSource("polution_fill").setData(heatmap_fill_features);*/
+}
+
+function removeHeatFeature(info) {
+    console.log("info id = " + info.id);
+    var feats = heatmap_features.features
+    for (var i in feats) {
+        console.log("feats id = " + feats[i].properties.id);
+        if (feats[i].properties.id == info.id) {
+            feats.splice(i, 1);
+            map.getSource("polution").setData(heatmap_features);
+            break;
+        }
+    }
 }
 
 function getEdgesFeatureCoordinates(coords, space) {

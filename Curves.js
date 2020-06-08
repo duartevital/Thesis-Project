@@ -19,6 +19,7 @@ const days = {
 let day = days.STANDART;
  
 var valueBeforeDrag = 0.0001;
+var ondrag_value = 0.0001;
 
 var line_chart = new Chart(ctx, {
     type: 'line',
@@ -47,13 +48,17 @@ var line_chart = new Chart(ctx, {
             showTooltip: true
         },
         onDragStart: function (e, element) { storeValueBeforeDrag(element) },
+        //onDrag: function (e, datasetIndex, index, value) { enableListUpdate(index, value) },
         onDragEnd: function (e, datasetIndex, index, value) { updateList(index, value) }
     }
 });
 
 function updateChart() {
     var avg = getAveragePolution(all_list);
-    var new_avg = (avg / 100) * 2;
+    var new_avg = 0.0001;
+    if (avg > 0) 
+        new_avg = (avg / 100) * 2;
+    
     var data = line_chart.data.datasets[0].data;
     day.avg = avg;
     switch (day.name) {
@@ -87,6 +92,9 @@ function updateChart() {
 }
 
 function updateList(index, value) {
+    for (var i in all_list) {
+        console.log(all_list[i]);
+    }
     var after_value = 0.0001;
     if (value > 0.0001)
         after_value = (value / 2) * 100;
@@ -125,13 +133,13 @@ function updateList(index, value) {
 
 function storeValueBeforeDrag(element) {
     valueBeforeDrag = line_chart.data.datasets[0].data[element._index];
+    ondrag_value = valueBeforeDrag;
 }
 
 function changeDay(elem) {
     var before_value = day.avg;
     day = days[elem.value];
     var after_value = day.avg;
-    console.log("current day avg = " + after_value);
     if (before_value != after_value) {
         var new_value = Math.abs(after_value - before_value);
         changePolutionValues(before_value, after_value, new_value);
@@ -142,7 +150,9 @@ function changeDay(elem) {
 function changePolutionValues(before_value, after_value, new_value) {
     for (var i in all_list) {
         let pol = all_list[i].polution;
-        if (pol > 0 && pol <= 500) { //resolver dexer para 0 e voltar a subir
+        //if (pol > 0 && pol <= 500) { //resolver dexer para 0 e voltar a subir
+        if (all_list[i].altered) {
+            console.log("before = " + all_list[i].polution);
             if (after_value > before_value) {
                 let tmp = all_list[i].polution + new_value
                 if (tmp > 500) all_list[i].polution = 500;
@@ -152,7 +162,14 @@ function changePolutionValues(before_value, after_value, new_value) {
                 if (tmp < 0) all_list[i].polution = 0;
                 else all_list[i].polution = tmp;
             }
+            console.log("after = " + all_list[i].polution);
             addHeatFeature(all_list[i]);
         }
     }
+}
+
+function enableListUpdate(index, value) {
+    if (value != ondrag_value)
+        updateList(index, value);
+    ondrag_value = value;
 }

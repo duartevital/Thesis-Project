@@ -562,4 +562,12 @@ function addFocus() {
     drawing_focus = true;
 }
 
+function toggleCntrlPress(e) {
+    if (e.keyCode == 17 && !e.repeat) {
+        if (cntrl_pressed)
+            cntrl_pressed = false;
+        else
+            cntrl_pressed = true;
+    }
+}
 
