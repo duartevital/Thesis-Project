@@ -23,6 +23,7 @@ var objects_list = [];
 var roads_list = [];
 var tmp_drawn_list = [];
 var type_stats = [];
+var altered_list = [];
 var draw_buttons = [];
 var tmp_drawn_obj = {};
 var tmp_focus_obj = {};
@@ -236,9 +237,10 @@ map.on('click', function (e) {
     features = map.queryRenderedFeatures(e.point)[0];
     if (drawing == false && typeof features !== 'undefined') {
         document.getElementById("editButton").style.visibility = "visible";
-        var tmp_props = features;
         console.log(features);
+        var tmp_props = features;
         id = findObjId(tmp_props);
+        console.log("selected ID = " + id);
         //selected_obj = all_list[id];
         //DEVE SER REORGANIZADO...
         if (!cntrl_pressed) {
@@ -269,19 +271,32 @@ map.on('click', function (e) {
 
                 if (features.source != "selection_object_source" && features.source != "selection_road_source") {
                     addSelectionColor();
-                } else
+                } else {
+                    selected_objs = [];
                     document.getElementById("propsTable").innerHTML = "";
+                }
             }
         } else {
-            /*if (Object.entries(selected_obj).length > 0) {
-                selected_objs.push(selected_obj)
-            }*/
-            selected_objs.push(all_list[id]);
+            var selected_source = all_list[id].source;
+            /*if (selected_objs.length == 0) {
+                selected_objs.push(all_list[id]);
+                selected_source = all_list[id].source;
+            } else */if (all_list[id].source == selected_source) {
+                selected_objs.push(all_list[id]);
+            }
+            console.log("selected_soruce = " + selected_source);
             //props table creation
-            var total_area = 0;
-            for (var i in selected_objs) total_area += selected_objs[i].area;
-            var tmp_selections = { source: "-", type: "-", area: total_area, polution: getAveragePolution(selected_objs), range: getAverageRange(selected_objs)};
-            createPropertiesTable("propsTable", tmp_selections, false);
+            var area_len_counter = 0;
+            if (selected_source == "building") {
+                for (var i in selected_objs) area_len_counter += selected_objs[i].area;
+                var tmp_selections = { source: "-", type: "-", area: area_len_counter, polution: getAveragePolution(selected_objs), range: getAverageRange(selected_objs) };
+                createPropertiesTable("propsTable", tmp_selections, false);
+            } else if (selected_source == "road") {
+                for (var i in selected_objs) area_len_counter += selected_objs[i].length;
+                var tmp_selections = { source: "-", type: "-", name: "-", length: area_len_counter, surface: "-", one_way: "-", polution: getAveragePolution(selected_objs), range: getAverageRange(selected_objs) };
+                createPropertiesTable("propsTable", tmp_selections, false);
+            }
+            
             
             if (features.source != "selection_object_source" && features.source != "selection_road_source") {
                 addSelectionColor();
@@ -316,13 +331,18 @@ toggleDrawButtons(false);
 fetchTags();
 
 function startAll() {
-    var zoom = map.getZoom();
+    var zoom = map.getZoom(); 
     log.info("====================================================");
     //if (zoom >= 18) {
-    if(!first_start) first_start = true;
+    if (!first_start) first_start = true;
     enable_save = true;
     objects_layer = [];
     all_list = [];
+    if (altered_list.length > 0) {
+        for (var i in altered_list)
+            all_list.push(altered_list[i]);
+    }
+
     objects_list = [];
     roads_list = [];
     source_stats = { building_area: 0, landuse_area: 0, road_length: 0 };
@@ -335,7 +355,9 @@ function startAll() {
     draw_buttons = document.getElementsByClassName("mapbox-gl-draw_ctrl-draw-btn");
     document.getElementById("propsTable").innerHTML = "";
     document.getElementById("objTable").innerHTML = "";
+
     getAllObjects();
+
     updateDrawObjectsInViewport();
     openTab(event, 'features_tab');
 
@@ -347,17 +369,46 @@ function startAll() {
     }*/
 }
 
+//RESTRUTURAR TODA A FUNÇÃO
 function getAllObjects() {
     objects_layer = map.queryRenderedFeatures();
     var id = 0;
     var props = {};
     for (var i in objects_layer) {
-        if (objects_layer[i].layer.source != "mapbox-gl-draw-cold") {
+        var tmp_source = objects_layer[i].layer.source
+        if (tmp_source != "mapbox-gl-draw-cold" && tmp_source != "composite") {
             source = objects_layer[i].layer["source-layer"];
             type = objects_layer[i].properties.type;
             shape = objects_layer[i].geometry.type;
-            coords = objects_layer[i].geometry.coordinates;
-            
+            var coords = objects_layer[i].geometry.coordinates;
+            console.log(objects_layer[i]);
+            var found_altered = false;
+            for (var j in altered_list) {
+                switch (shape) {
+                    case "Polygon":
+                        if (altered_list[j].coords[0][0][0] == coords[0][0][0]) {
+                            found_altered = true;
+                            break;
+                        }
+                        break;
+                    case "MultiPolygon":
+                        if (altered_list[j].coords[0][0][0][0] == coords[0][0][0][0]) {
+                            found_altered = true;
+                            break;
+                        }
+                        break;
+                    case "LineString":
+                        if (altered_list[j].coords[0][0] == coords[0][0]) {
+                            found_altered = true;
+                            break;
+                        }
+                        break;
+                }
+            }
+            if (found_altered) {
+                continue;
+            }
+
             //Different attributes for different sources of features
             if (source == "road") {
                 name = objects_layer[i].properties.name;
@@ -372,7 +423,7 @@ function getAllObjects() {
                 index = roads_list.length;
                 props = { id: id, source: source, type: type, name: name, length: length, surface: surface, one_way: one_way, polution: 0, range: 0, focus: [], shape: shape, coords: coords, original_id: original_id, altered: false, index: index };
                 roads_list.push(props);
-                //all_list.push(props);
+                all_list.push(props);
                 source_stats.road_length += length;
             } else {
                 var tmp_area = 0;
@@ -411,7 +462,6 @@ function getAllObjects() {
             return roads_list.find(a => a.original_id === id);
         });
 
-    //Filter off duplicate roads in all_list...
     all_list.push.apply(all_list, roads_list);
     for (var i in all_list) all_list[i].id = i;
 }
@@ -493,17 +543,24 @@ function savePropsChanges(button) {
         drawing = false;
         return;
     }
+    //console.log("altered list 1 = "); console.log(altered_list);
     //handle empty objects
     if (final_props.polution == 0 && final_props.range == 0) {
         for (var i in selected_objs) {
             let tmp_id = selected_objs[i].id;
             all_list[tmp_id].altered = false;
+            for (var j in altered_list) {
+                if (altered_list[j].id == tmp_id) {
+                    altered_list.splice(j, 1);
+                    break;
+                }
+            }
             removeHeatFeature(selected_objs[i]);
         }
         return;
     }
-    console.log("final_props . poluition = " + final_props.polution);
-    console.log(selected_objs);
+
+    //console.log("altered list 2 = "); console.log(altered_list);
     for (var i in selected_objs) {
         selected_objs[i].altered = true;
         selected_objs[i].polution = final_props.polution; selected_objs[i].range = final_props.range;
@@ -511,6 +568,7 @@ function savePropsChanges(button) {
 
         let tmp_id = selected_objs[i].id;
         all_list[tmp_id] = selected_objs[i];
+        altered_list.push(selected_objs[i]);
         switch (selected_objs[i].type) {
             case "road":
                 roads_list[selected_objs[i].index] = selected_objs[i];
@@ -976,5 +1034,6 @@ function saveFocus(button) { //add focus must be disabled if multiple objcts are
 }
 
 function dumbFunction() {
-    console.log(all_list);
+    log.info("all_list = " + all_list);
+    log.info("altered_list = " + altered_list);
 }
