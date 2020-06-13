@@ -372,6 +372,7 @@ function startAll() {
 //RESTRUTURAR TODA A FUNÇÃO
 function getAllObjects() {
     objects_layer = map.queryRenderedFeatures();
+    console.log(objects_layer);
     var id = 0;
     var props = {};
     for (var i in objects_layer) {
