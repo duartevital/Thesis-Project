@@ -6,7 +6,7 @@ const defaultProps = {
     height: 600,
     center: true,
     show: false,
-
+    
     webPreferences: {
         nodeIntegration: true
     }

@@ -1,3 +1,5 @@
+const path = require('path');
+//const Window = require('./Window');
 
 const cvs = document.getElementById("line_graph");
 let ctx = cvs.getContext("2d");
@@ -52,6 +54,8 @@ var line_chart = new Chart(ctx, {
         onDragEnd: function (e, datasetIndex, index, value) { updateList(index, value) }
     }
 });
+
+//addWeightSlider(document.getElementById("weight_sliders_container"));
 
 function updateChart() {
     var avg = getAveragePolution(all_list);
@@ -162,7 +166,6 @@ function changePolutionValues(before_value, after_value, new_value) {
                 if (tmp < 0) all_list[i].polution = 0;
                 else all_list[i].polution = tmp;
             }
-            console.log("after = " + all_list[i].polution);
             addHeatFeature(all_list[i]);
         }
     }
@@ -172,4 +175,24 @@ function enableListUpdate(index, value) {
     if (value != ondrag_value)
         updateList(index, value);
     ondrag_value = value;
+}
+
+function openGraphCreationWindow() {
+    const remote = require('electron').remote;
+    const BrowserWindow = remote.BrowserWindow;
+    const win = new BrowserWindow({
+        width: 770,
+        height: 600,
+        resizable: false,
+
+
+        webPreferences: {
+            nodeIntegration: true
+        }
+    });
+    win.loadFile(path.join('renderer', 'creator.html'));
+
+    //funções aqui
+
+
 }

@@ -6,6 +6,11 @@ const Chart = require('chart.js');
 const fs = require('fs');
 const com = require('@turf/center-of-mass');
 
+/* CÓDIGO DE ENVIAR CENAS
+var test_stuff_1 = "nothing happened";
+localStorage.setItem("test_stuff", test_stuff_1);
+*/
+
 
 var first_start = false;
 var drawing = false;
@@ -1035,6 +1040,6 @@ function saveFocus(button) { //add focus must be disabled if multiple objcts are
 }
 
 function dumbFunction() {
-    log.info("all_list = " + all_list);
-    log.info("altered_list = " + altered_list);
+    let stuff = localStorage.getItem("test_stuff");
+    console.log(stuff);
 }

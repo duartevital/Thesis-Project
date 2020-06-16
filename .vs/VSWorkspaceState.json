@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\renderer"
   ],
-  "SelectedNode": "\\Mapbox_gl.js",
+  "SelectedNode": "\\Creator.js",
   "PreviewInSolutionExplorer": false
 }

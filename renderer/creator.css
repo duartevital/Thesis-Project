@@ -1,0 +1,72 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+td {
+    border: 2px solid;
+    text-align: left;
+    padding: 0px;
+}
+
+input {
+    font-size: 20px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.graph_btns {
+    float: left;
+    width: 50%;
+}
+
+.small_table_btns {
+    float: left;
+}
+
+#graph_name {
+    position: absolute;
+    top: 3%;
+    left: 35%;
+    width: 30%;
+}
+
+#mid_section {
+    position: relative;
+    top: 10%
+}
+
+#params_section {
+    position: relative;
+    background-color: #bebebe;
+    float: left;
+    width: 40%;
+    height: 90%;
+}
+
+#graph_section {
+    position: relative;
+    background-color: #f0f0f0;
+    float: left;
+    width: 60%;
+    height: 90%;
+}
+
+#creator_slider_div {
+    padding: 70px;
+}
+
+#creator_table_div {
+    position: absolute;
+    width: 100%;
+    float: left;
+    top: 100px;
+    overflow: auto;
+    max-height: 380px;
+}
+
+#creator_btn_container {
+    padding-top: 60px;
+}
+
+#creator_graph {
+    padding-top: 20%;
+}

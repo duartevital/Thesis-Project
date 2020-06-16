@@ -1,0 +1,49 @@
+﻿<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Dinamic Graph Creator</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link rel="stylesheet" href="creator.css" />
+</head>
+
+<body>
+
+    <header id="creator_header">
+        <input type="text" id="graph_name" name="graph_name" />
+    </header>
+
+    <section id="mid_section">
+        <section id="params_section">
+            <div class="creator_slider_div">
+                <p id="name">Weight</p>
+                <input type="range" min="1" max="10" value="5" class="slider" />
+            </div>
+            <div id="creator_table_div">
+                <button class="small_table_btns" onclick="addRow()">+</button>
+                <table id="creator_table" width="100%" contenteditable="true">
+                    <tr>
+                        <td><input type="text" value="item0" id="0"/></td>
+                        <td><input type="number" value=0 id="0" /></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" value="item1" id="1"/></td>
+                        <td><input type="number" value=0 id="1"/></td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <section id="graph_section">
+            <canvas id="creator_graph"></canvas>
+            <div id="creator_btn_container">
+                <button class="graph_btns" onclick="erase_creator()">cancel</button>
+                <button class="graph_btns" onclick="save_creator()">save</button>
+            </div>
+        </section>
+    </section>
+
+
+    <script src="./../Creator.js"></script>
+</body>
+</html>

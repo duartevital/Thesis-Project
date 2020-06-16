@@ -79,17 +79,35 @@
     </div>
 
     <div id="curves_tab" class="tabContent">
-        <select id="day_dropdown" onchange="changeDay(this)">
-            <option selected value="STANDART">Standart</option>
-            <option value="MONDAY">Monday</option>
-            <option value="TUESDAY">Tuesday</option>
-            <option value="WEDNESDAY">Wednesday</option>
-            <option value="THURSDAY">Thursday</option>
-            <option value="FRIDAY">Friday</option>
-            <option value="SATURDAY">Saturday</option>
-            <option value="SUNDAY">Sunday</option>
-        </select>
-        <canvas id="line_graph"></canvas>
+        <div id="curves_top">
+            <select id="graph_dropdown">
+                <option selected value="weekday">Weekday</option>
+            </select>
+            <button class="small_button" value="new_graph" onclick="openGraphCreationWindow()">new graph</button>
+            <button class="small_button" value="edit_graph">edit</button>
+            <button class="small_button" value="clear">clear</button>
+            <select id="item_dropdown" onchange="changeDay(this)">
+                <option selected value="STANDART">Standart</option>
+                <option value="MONDAY">Monday</option>
+                <option value="TUESDAY">Tuesday</option>
+                <option value="WEDNESDAY">Wednesday</option>
+                <option value="THURSDAY">Thursday</option>
+                <option value="FRIDAY">Friday</option>
+                <option value="SATURDAY">Saturday</option>
+                <option value="SUNDAY">Sunday</option>
+            </select>
+        </div>
+        <div id="curves_graph">
+            <canvas id="line_graph"></canvas>
+        </div>
+        <div id="curves_weights">
+            <p><b>Weights</b></p>
+            <div id="weight_sliders_container">
+                <!--adicionar aqui os ranges (sliders)-->
+                
+            </div>
+        </div>
+
     </div>
     <!--      TEMPLATES       -->
     <!--Entry template to be instanciated in history tab-->
@@ -130,6 +148,14 @@
     <template id="hint_template">
         <div>
             <img src="../Media/hint_icon.png" alt="hint icon" width="5" height="5" />
+        </div>
+    </template>
+
+    <!--Weight Slider Template-->
+    <template id="weight_slider_template">
+        <div class="weight_slider">
+            <p id="name"></p>
+            <input type="range" min="1" max="10" value="5" class="slider" />          
         </div>
     </template>
 
