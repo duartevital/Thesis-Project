@@ -51,16 +51,22 @@ input {
 }
 
 #creator_slider_div {
-    padding: 70px;
+    padding: 10px;
 }
+    #creator_slider_div input {
+        float: left;
+    }
+    #creator_slider_div p {
+        padding-left: 150px;
+    }
 
 #creator_table_div {
-    position: absolute;
+    position: relative;
     width: 100%;
     float: left;
-    top: 100px;
+    top: 10px;
     overflow: auto;
-    max-height: 380px;
+    max-height: 270px;
 }
 
 #creator_btn_container {
@@ -69,4 +75,24 @@ input {
 
 #creator_graph {
     padding-top: 20%;
+}
+
+#profile_section {
+    position: relative;
+    float: left;
+    padding: 10px;
+}
+    #profile_section h4 {
+    }
+    #profile_section button {
+        position: relative;
+    }
+    #profile_section div {
+        padding: 5px;   
+    }
+
+#profile_input {
+    width: 250px;
+    height: 20px;
+    border: 1px solid black;
 }

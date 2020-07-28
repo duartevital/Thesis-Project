@@ -16,10 +16,11 @@ function dropdownClick() {
                 map.setLayoutProperty("polution_heat", "visibility", "none");
                 map.setLayoutProperty("polution_heat_fill", "visibility", "none");
                 current_view = "Normal";
+                showDescBox = false;
             }
             break;
         case "Heatmap":
-            removeAllSelections();
+            clearSelections();
             if (current_view == "Normal") {
                 map.setPaintProperty("buildings_layer", "fill-opacity", 0);
                 map.setPaintProperty("water_layer", "fill-opacity", 0);
@@ -30,6 +31,8 @@ function dropdownClick() {
                 map.setLayoutProperty("polution_heat", "visibility", "visible");
                 map.setLayoutProperty("polution_heat_fill", "visibility", "visible");
                 current_view = "Heatmap";
+
+                showDescBox = true;
             }
             break;
     }
@@ -52,7 +55,8 @@ function addHeatFeature(info) {
     properties.id = info.id;
     properties.level = info.polution;
     //properties.intensity_level = info.polution / 10;
-    properties.range_1 = info.range * 0.08;
+    properties.range_1 = info.range * 0.1;
+    properties.range_2 = info.range * 0.4;
     //properties.range_2 = properties.range_3 * 0.85;
     //properties.range_3 = properties.range_base * 0.85;
     properties.range_base = info.range;
@@ -127,10 +131,8 @@ function addHeatFeature(info) {
 }
 
 function removeHeatFeature(info) {
-    console.log("info id = " + info.id);
     var feats = heatmap_features.features
     for (var i in feats) {
-        console.log("feats id = " + feats[i].properties.id);
         if (feats[i].properties.id == info.id) {
             feats.splice(i, 1);
             map.getSource("polution").setData(heatmap_features);

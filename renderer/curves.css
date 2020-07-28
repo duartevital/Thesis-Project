@@ -8,6 +8,16 @@ figure.quadratic {
     width: 125px;
 }
 
+#disabler {
+    position: absolute;
+    height: 68%;
+    width: 100%;
+    z-index: 10;
+    background-color: black;
+    opacity: 0.3;
+    visibility: hidden;
+}
+
 #curves_top {
     position: absolute;
     top: 6%;
@@ -22,7 +32,7 @@ figure.quadratic {
     height: 55%;
 }
 
-#curves_weights {
+#weights_div {
     position: relative;
     top: 70%;
     left: 2%;
@@ -33,4 +43,31 @@ figure.quadratic {
     position: center;
     width: 80%;
     height: 100%;
+}
+
+#weight_table {
+    background-color: #ffffff;
+}
+
+#weight_table_div {
+    float: left;
+    width: 42%;
+    max-height: 140px;
+    overflow: auto;
+}
+
+#profile_info_div {
+    position:relative;
+    top: 70%;
+    left: 10%;
+    float: left;
+    width: 42%;
+}
+    #profile_info_div > div {
+        padding: 8px;
+    }
+
+#profile_info {
+    border: 1px solid black;
+    height: 20px;
 }

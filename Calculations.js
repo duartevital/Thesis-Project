@@ -286,3 +286,39 @@ function getAverageRange(list) {
     if (sum == 0) return 0;
     else return sum / count;
 }
+
+//color-geometry calculations
+function pointToPointSquared(p1, p2) {
+    var r_sub, g_sub, b_sub;
+    r_sub = Math.pow((p1.r - p2.r), 2);
+    g_sub = Math.pow((p1.g - p2.g), 2);
+    b_sub = Math.pow((p1.b - p2.b), 2);
+
+    return (r_sub + g_sub + b_sub);
+}
+
+function pointToLineDist(point, line_point_a, line_point_b) {
+    var line_dist = pointToPointSquared(line_point_a, line_point_b);
+    if (line_dist == 0) return pointToPointSquared(point, line_point_a);
+    
+    var t = ((point.r - line_point_a.r) * (line_point_b.r - line_point_a.r) +
+        (point.g - line_point_a.g) * (line_point_b.g - line_point_a.g) +
+        (point.b - line_point_a.b) * (line_point_b.b - line_point_a.b)) / line_dist;
+
+    //constrain between 0-1
+    if (t > 1)
+        t = 1;
+    else if (t < 0)
+        t = 0;
+
+    var final_dist = pointToPointSquared(point, {
+        r: line_point_a.r + t * (line_point_b.r - line_point_a.r),
+        g: line_point_a.g + t * (line_point_b.g - line_point_a.g),
+        b: line_point_a.b + t * (line_point_b.b - line_point_a.b)
+    });
+
+    return {
+        dist: Math.sqrt(final_dist),
+        weight: t
+    };
+}

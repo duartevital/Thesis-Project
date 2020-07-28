@@ -2,12 +2,7 @@ body {
     overflow: hidden;
     margin: 0;
     padding: 0;
-}
-
-#actionButton {
-    position: absolute;
-    top: 0;
-    left: 48.5%;
+    background-color: #e0e0e0;
 }
 
 .tab {
@@ -17,6 +12,20 @@ body {
     border: 1px solid #ccc;
     background-color: #f1f1f1;
 }
+    .tab button {
+        background-color: #4CAF50;
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        float: left;
+    }
+
+        .tab button:hover {
+            background-color: #3e8e41;
+        }
 
 .tabContent {
     position: absolute;
@@ -34,6 +43,19 @@ body {
     opacity: .5;
 }
 
+.hover_btns {
+    width: 70px;
+    padding: 5px;
+    color: white;
+    background-color: grey;
+}
+
+.hover_boxes {
+    width: 300px;  
+    background-color: khaki;
+    visibility: hidden;
+}
+
 .dropdown_div {
     position: relative;
     display: inline-block;
@@ -41,10 +63,6 @@ body {
     .dropdown_div a:hover {
         background-color: #ddd;
     }
-
-.dropdown_btn {
-
-}
 
 .dropdown_content {
     display: none;
@@ -62,14 +80,45 @@ body {
         display: block;
     }
 
-    .dropdown_content .show {
-        display: block;
+.selections_div {
+    top: 20px;
+    width: 13%;
+    height: 0%;
+    background-color: rgb(255,255,255);
+    position: relative;
+    right: 0px;
+}
+    .selections_div label {
+        color: white;
+        background-color: darkslategrey;
     }
 
 .focus_btn {
     left: 7px;
     width: 125px;
     position: relative;
+}
+
+.table_dropdown {
+    width: 100%;
+    background-color: lightslategrey;
+}
+
+.standart_buttons {
+    background-color: #4caf50;
+    color: white;
+    font-size: medium;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+
+#actionButton {
+    position: absolute;
+    top: 0;
+    left: 48.5%;
 }
 
 #left_side_section{
@@ -140,6 +189,20 @@ body {
     width: 14%;
 }
 
+#desc_box {
+    position: relative;
+    width: 95px;
+    height: 20px;
+    border: 2px solid black;
+    z-index: 3;
+    visibility: hidden;
+}
+
+#layer_dropdown_btn {
+    top: 5px;
+    left: 5px;
+}
+
 table {
     font-family: Arial, sans-serif;
     border-collapse: collapse;
@@ -178,9 +241,15 @@ tr:nth-child(even) {
     right: 5%;
 }
 
-#dumb_btn {
+#generate_csv_btn {
     position: absolute;
     bottom: 3%;
     right: 15%;
+}
+
+#dumb_btn {
+    position: absolute;
+    bottom: 3%;
+    right: 24%;
 }
 

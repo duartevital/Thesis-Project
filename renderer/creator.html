@@ -15,9 +15,18 @@
 
     <section id="mid_section">
         <section id="params_section">
-            <div class="creator_slider_div">
-                <p id="name">Weight</p>
-                <input type="range" min="1" max="10" value="5" class="slider" />
+            <div id="profile_section">
+                <div>
+                    <p><b>Profile(s)</b></p>
+                    <button class="small_button" onclick="profile_handler()">edit</button>
+                    <!--<input type="text" id="profile_input" width="20" />-->
+                </div>
+                <div id="profile_input"></div>
+            </div>
+            <div id="creator_slider_div">
+                <h4 id="name">Weight</h4>
+                <input type="range" min="1" max="10" value="5" class="slider" oninput="updateSliderValue(this)" />
+                <p id="slider_value">5</p>
             </div>
             <div id="creator_table_div">
                 <button class="small_table_btns" onclick="addRow()">+</button>
@@ -38,7 +47,7 @@
             <canvas id="creator_graph"></canvas>
             <div id="creator_btn_container">
                 <button class="graph_btns" onclick="erase_creator()">cancel</button>
-                <button class="graph_btns" onclick="save_creator()">save</button>
+                <button class="graph_btns" onclick="save_creator()">save and close</button>
             </div>
         </section>
     </section>

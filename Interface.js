@@ -14,7 +14,7 @@ window.onclick = function (event) {
     }
 }
 
-function openTab(evt, tabName) {
+function openTab(tabName) {
     var i, tabContent, tabLinks;
 
     tabContent = document.getElementsByClassName("tabContent");
@@ -27,8 +27,9 @@ function openTab(evt, tabName) {
         tabLink[i].className = tabLink[i].className.replace(" active", "");
     }
 
-    document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
+    var tab = document.getElementById(tabName);
+    tab.style.display = "block";
+    tab.className.className += " active";
 }
 
 function createPropertiesTable(tableName, props, drawn) {
@@ -39,15 +40,41 @@ function createPropertiesTable(tableName, props, drawn) {
     if (!drawn) {
         for (var key in props) {
             switch (key) {
-                case "source": case "type": case "name": case "area": case "length": case "polution": case "range": case "surface": case "one_way":
+                case "source": case "type": case "name": case "polution": case "range": case "surface": case "one_way":
                     row = table.insertRow(-1);
                     cell1 = row.insertCell(0); cell2 = row.insertCell(1);
                     cell1.innerText = key; cell2.innerText = props[key];
                     cell1.classList.add("cell1"); cell2.classList.add("cell2");
                     cell2.setAttribute("contenteditable", "false");
                     break;
+                case "area": case "length":
+                    if (props[key] == -1)
+                        break;
+                    row = table.insertRow(-1);
+                    cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+                    cell1.innerText = key; cell2.innerText = props[key];
+                    cell1.classList.add("cell1"); cell2.classList.add("cell2");
+                    cell2.setAttribute("contenteditable", "false");
+                    break;
+                case "profile":
+                    row = table.insertRow(-1);
+                    cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+                    cell1.innerText = key;
+                    for (var i in props[key]) {
+                        cell2.innerText += props[key][i] + ", ";
+                    }
+                    cell1.classList.add("cell1"); cell2.classList.add("cell2");
+                    cell2.setAttribute("contenteditable", "false");
+                    break;
             }
         }
+        //add 'edit profile' button
+        var prof_btn = document.createElement('input');
+        prof_btn.type = "button"; prof_btn.className = "focus_btn"; prof_btn.value = "edit profile";
+        prof_btn.onclick = function () { editProfile() };
+        row = table.insertRow(-1);
+        row.appendChild(prof_btn);
+
         //add focus button
         if (props.id) {
             var btn = document.createElement('input');
@@ -65,14 +92,12 @@ function createPropertiesTable(tableName, props, drawn) {
         parent_div.classList.add("popup");
         parent_div.appendChild(parent_node);
     } else {
-        //only show id and source fields
         row = table.insertRow(-1);
         cell1 = row.insertCell(0); cell2 = row.insertCell(1);
-        //cell1.innerText = "id"; cell2.innerText = props.id;
-        //row = table.insertRow(-1);
-        //cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+
         cell1.innerText = "source"; cell2.innerText = props.source;
         cell1.classList.add("cell1"); cell2.classList.add("cell2");
+        
         addSourcesDropdownMenu(cell2);
         cell2.addEventListener("input", function (e) {
             //var inp = cell2.innerText;
@@ -279,6 +304,21 @@ function setPropsTableEditable(button) {
                 elems_2[i].setAttribute("contenteditable", "true");
                 elems_2[i].onkeydown = function () { return numericKeyPressed(event) };
                 break;
+            case "profile":
+                //Não precisa de ficar editable devido ao botao 'edit profile'
+                /*if (profile_list == []) break;
+                var select, opt;
+                select = document.createElement("select");
+                for (var j in profile_list) {
+                    opt = document.createElement("option");
+                    opt.textContent = profile_list[j];
+                    opt.value = profile_list[j];
+                    select.appendChild(opt);
+                }
+                select.setAttribute("class", "table_dropdown");
+                elems_2[i].innerText = "";
+                elems_2[i].appendChild(select);*/
+                break;
         }
     };
 }
@@ -297,9 +337,14 @@ function extractTableContents() {
                 case "length": case "polution": case "range":
                     props[table.rows[i].cells[0].innerHTML] = parseFloat(table.rows[i].cells[1].innerText);
                     break;
-                case "one_way": case "underground":
+                case "one_way": case "underground": 
                     var val = (table.rows[i].cells[0].innerText === "true");
                     props[table.rows[i].cells[0].innerHTML] = val;
+                    break;
+                case "profile":
+                    //Não interessa pois os profiles são guardados na janela selector
+                    /*var prof = table.rows[i].cells[1].childNodes[0].value;
+                    props["profile"] = prof;*/
                     break;
                 default:
                     props[table.rows[i].cells[0].innerHTML] = table.rows[i].cells[1].innerText;
@@ -433,6 +478,8 @@ function addSourcesDropdownMenu(cell_spot) {
     cell_spot.innerHTML = html_dropdown;
 }
 
+
+//RETIRAR
 function setPieGraph(type_stats) {
     if (pieChart != "") {
         pieChart.destroy();
@@ -515,7 +562,7 @@ function importHistoryEntries() {
     try {
         files = fs.readdirSync("./Saves/");
     } catch (err) {
-        log.info("Could NOT read the folder");
+        console.log("Could NOT read the folder");
     }
 
     if (files.length > 0)
@@ -554,7 +601,10 @@ function sortTableByNumber(table, column) {
 }
 
 function showViewOptions() {
-    document.getElementById("dropdown_content").classList.toggle("show");
+    if (document.getElementById("dropdown_content").style.display == "block")
+        document.getElementById("dropdown_content").style.display = "none";
+    else
+        document.getElementById("dropdown_content").style.display = "block";
 }
 
 function addFocus() {
@@ -562,7 +612,73 @@ function addFocus() {
     drawing_focus = true;
 }
 
-function toggleCntrlPress(e) {
+function editProfile() {
+    const BrowserWindow = remote.BrowserWindow;
+    const win = new BrowserWindow({
+        width: 200,
+        height: 300,
+        resizable: false,
+
+        webPreferences: {
+            nodeIntegration: true
+        }
+    });
+    var profile_stuff = [];
+    for (var i in profile_list) {
+        var stuff_obj = {};
+        stuff_obj.name = profile_list[i];
+        stuff_obj.selected = false;
+        for (var j in selected_objs) {
+            for (var k in selected_objs[j].profile) {
+                if (selected_objs[j].profile[k] == profile_list[i]) {
+                    stuff_obj.selected = true;
+                    break; break;
+                }
+            }
+        }
+        profile_stuff.push(stuff_obj);
+    }
+
+    localStorage.setItem('profile_stuff', JSON.stringify(profile_stuff));
+    win.loadFile(path.join('renderer', 'profiles.html'));
+
+    win.once('close', () => {
+        var selected = JSON.parse(localStorage.getItem("selected_profiles"));
+        for (var i in selected_objs) {
+            selected_objs[i].profile = selected;
+        }
+        var table = document.getElementById("propsTable");
+        var cell0, cell1;
+        for (var i in table.rows) {
+            cell0 = table.rows[i].cells[0];
+            if (cell0.innerText == "profile") {
+                cell1 = table.rows[i].cells[1];
+                cell1.innerText = "";
+                for (var j in selected) {
+                    cell1.innerText += selected[j] + ", ";
+                }
+                break;
+            }
+        }
+    });
+}
+
+//Selection related functions
+
+var start, currentt, box, canvas, map;
+function mouseDown(e, _map, _canvas) {
+    canvas = _canvas;
+    map = _map;
+
+    if (e.shiftKey)
+        rectMouseDown(e);
+    else if (e.ctrlKey) {
+        //cenas ctrl
+    }
+
+}
+
+function toggleCntrlPress(e, canvas) {
     if (e.keyCode == 17 && !e.repeat) {
         if (cntrl_pressed)
             cntrl_pressed = false;
@@ -571,3 +687,132 @@ function toggleCntrlPress(e) {
     }
 }
 
+
+function mousePos(e) {
+    var rect = canvas.getBoundingClientRect();
+    return new mapboxgl.Point(
+        e.clientX - rect.left - canvas.clientLeft,
+        e.clientY - rect.top - canvas.clientTop
+    );
+}
+
+function finish(bbox) {
+    document.removeEventListener('mousemove', rectMouseMove);
+    document.removeEventListener('keydown', rectKeyDown);
+    document.removeEventListener('mouseup', rectMouseUp);
+
+    if (box) {
+        box.parentNode.removeChild(box);
+        box = null;
+    }
+
+    // If bbox exists. use this value as the argument for `queryRenderedFeatures`
+    if (bbox) {
+        var search_features = map.queryRenderedFeatures(bbox, {
+            layers: ['buildings_layer', 'landuse_layer', 'roads_layer']
+        });
+
+        clearSelections();
+        var id, color, selection_props;
+        var area_counter = 0, length_counter = 0, isRoad = false;
+        object_selection_count = 0;
+        road_selection_count = 0;
+        
+        for (var i in search_features) {
+            id = findObjId(search_features[i]);
+
+            if (!id || id == -1) {
+                console.log("object ID not found!");
+                return;
+            }
+            selected_objs.push(all_list[id]);
+            switch (all_list[id].source) {
+                case "building":
+                    isRoad = false;
+                    //selection_props = { source: "-", type: "-" };
+                    area_counter += all_list[id].area;
+                    color = "rgba(66, 100, 251, 0.8)";
+                    break;
+                case "landuse":
+                    isRoad = false;
+                    //selection_props = { source: "-", type: "-" };
+                    area_counter += all_list[id].area;
+                    color = "rgba(57, 241, 35, 0.8)";
+                    break;
+                case "road":
+                    isRoad = true;
+                    //selection_props = { source: "-", type: "-", name: "-"};
+                    length_counter += all_list[id].length;
+                    color = "rgba(255,100,251, 0.8)";
+                    break;
+            }
+            addSelectionsColors(color, all_list[id].source, i, isRoad);
+        }
+
+        map.getSource("selection_road_source").setData(selection_road_features);
+        map.getSource("selection_object_source").setData(selection_object_features);
+
+        if (area_counter > 0)
+            selection_obj.area = area_counter;
+        if (length_counter > 0)
+            selection_obj.length = length_counter;
+
+        selection_obj.polution = getAveragePolution(selected_objs);
+        selection_obj.range = getAverageRange(selected_objs);
+        selection_obj.profile = ["any"];
+
+        document.getElementById("editButton").style.visibility = "visible";
+        createPropertiesTable("propsTable", selection_obj, false);
+    }
+
+    map.dragPan.enable();
+}
+
+function rectMouseDown(e, _map, _canvas) {
+    //canvas = _canvas;
+    //map = _map;
+
+    if (!e.shiftKey) return;
+
+    map.dragPan.disable();
+
+    document.addEventListener('mousemove', rectMouseMove);
+    document.addEventListener('mouseup', rectMouseUp);
+    document.addEventListener('keydown', rectKeyDown);
+
+    start = mousePos(e);
+}
+
+function rectMouseMove(e) {
+    currentt = mousePos(e, canvas);
+
+    if (!box) {
+        box = document.createElement('div');
+        box.classList.add('boxdraw');
+        canvas.appendChild(box);
+    }
+
+    var minX = Math.min(start.x, currentt.x),
+        maxX = Math.max(start.x, currentt.x),
+        minY = Math.min(start.y, currentt.y),
+        maxY = Math.max(start.y, currentt.y);
+
+    // Adjust css width and xy position of the box element ongoing
+    var pos = 'translate(' + minX + 'px,' + minY + 'px)';
+    box.style.transform = pos;
+    box.style.WebkitTransform = pos; //Potential error here
+    box.style.width = maxX - minX + 'px';
+    box.style.height = maxY - minY + 'px';
+}
+
+function rectMouseUp(e) {
+    finish([start, mousePos(e)]);
+}
+
+function rectKeyDown(e) {
+    if(e.keyCode === 27) finish();
+}
+
+function mouseDescriptionBox(coords) {
+    var div = document.createElement("div");
+}

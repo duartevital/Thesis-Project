@@ -7,6 +7,7 @@
     <link href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css' rel='stylesheet' />
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.8.0/mapbox-gl.css' rel='stylesheet' />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.css">
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="autocomplete.css" />
     <link rel="stylesheet" href="history.css" />
@@ -15,14 +16,32 @@
 
 </head>
 <body onkeydown="toggleCntrlPress(event)" onkeyup="toggleCntrlPress(event)">
+    <div id="desc_box">polution: </div>
+    <!--MAP SECTION-->
     <div id='map_div'>
         <div id='map'></div>
-        <div class='dropdown_div'>
-            <button onclick="showViewOptions()" class="dropdown_btn">view</button>
+        <div id="layer_dropdown_btn" class='dropdown_div'>
+            <button onclick="showViewOptions()" class="standart_buttons"><i class="fas fa-layer-group"></i></button>
             <div id="dropdown_content" class="dropdown_content" onclick="dropdownClick()">
                 <a>Normal</a>
                 <a>Heatmap</a>
-                <!--<a>Hillshade</a>-->
+            </div>
+        </div>
+        <div class="selections_div">
+            <form oninput="checkSelect()">
+                <p>Filter</p>
+                <input type="checkbox" id="buildings_check" name="check_btns" value="buildings" />
+                <label for="buildings_check">buildings</label><br>
+                <input type="checkbox" id="roads_check" name="check_btns" value="roads" />
+                <label for="roads_check">roads</label><br>
+                <input type="checkbox" id="landuse_check" name="check_btns" value="landuse" />
+                <label for="landuse_check">landuse</label><br><br>
+            </form>
+            <p class="hover_btns" onmouseover="document.getElementById('instruction_box').style.visibility = 'visible';"
+               onmouseout="document.getElementById('instruction_box').style.visibility = 'hidden';">shortcuts</p>
+            <div class="hover_boxes" id="instruction_box">
+                <p>hold <b>ctrl</b> and click <b>mouse1</b> to select multiple objects</p>
+                <p>hold <b>shift</b> and drag <b>mouse1</b> to draw a selection rectangle</p>
             </div>
         </div>
     </div>
@@ -30,12 +49,13 @@
     <button id="actionButton" onclick="startAll()">Start</button>
 
     <div class="tab">
-        <button class="tabLinks" onclick="openTab(event, 'features_tab')">Labels</button>
-        <button class="tabLinks" onclick="openTab(event, 'curves_tab')">Curves</button>
+        <button class="tabLinks" onclick="openTab('features_tab')">Labels</button>
+        <button class="tabLinks" onclick="openTab('curves_tab')">Curves</button>
         <!--<button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>-->
-        <button class="tabLinks" onclick="openTab(event, 'history_tab')">History</button>
+        <button class="tabLinks" onclick="openTab('history_tab')">History</button>
     </div>
 
+    <!--FEATURES TAB-->
     <div id="features_tab" class="tabContent">
         <section id="left_side_section">
             <div id='features'>
@@ -64,27 +84,31 @@
 
     <button onclick="dumbFunction()" id="dumb_btn">dumb btn</button>
     <!--<button onclick="loadAllInfo()" id="loadAll_btn">LOAD</button>-->
-    <button onclick="saveAllInfo()" id="saveAll_btn" title="Saves everything in a JSON file">SAVE</button>
-    <button onclick="sendInfo()" id="send_btn" title="Send to server">SEND</button>
+    <button onclick="generateRandomPoints(1000)" id="generate_csv_btn" class="standart_buttons">Genererate</button>
+    <button onclick="saveAllInfo()" id="saveAll_btn" class="standart_buttons" title="Saves everything in a JSON file">SAVE</button>
+    <button onclick="sendInfo()" id="send_btn" class="standart_buttons" title="Send to server">SEND</button>
 
     <aside id='buttonContainer' class="tabContent">
         <button type="button" id="countButtons" onclick="countFeatures()">Count Features</button>
         <button type="button" id="countButtons" onclick="getAllObjects()">Extract Features</button>
     </aside>
 
+    <!--HISTORY TAB-->
     <div id="history_tab" class="tabContent">
         <div class="entries_section">
             <h4 id="empty_history">Your history is empty</h4>
         </div>
     </div>
 
+    <!--CURVES TAB-->
     <div id="curves_tab" class="tabContent">
+        <div id="disabler"></div>
         <div id="curves_top">
-            <select id="graph_dropdown">
+            <select id="graph_dropdown" onchange="changeGraph(this)">
                 <option selected value="weekday">Weekday</option>
             </select>
             <button class="small_button" value="new_graph" onclick="openGraphCreationWindow()">new graph</button>
-            <button class="small_button" value="edit_graph">edit</button>
+            <button class="small_button" value="edit_graph" onclick="editGraph()">edit</button>
             <button class="small_button" value="clear">clear</button>
             <select id="item_dropdown" onchange="changeDay(this)">
                 <option selected value="STANDART">Standart</option>
@@ -96,16 +120,35 @@
                 <option value="SATURDAY">Saturday</option>
                 <option value="SUNDAY">Sunday</option>
             </select>
+            <!--<select id="profile_dropdown" onchange="changeProfile(this)">
+                <option selected value="any">any</option>
+            </select>-->
         </div>
         <div id="curves_graph">
             <canvas id="line_graph"></canvas>
         </div>
-        <div id="curves_weights">
+        <div id="weights_div">
             <p><b>Weights</b></p>
-            <div id="weight_sliders_container">
+            <div id="weight_table_div">
                 <!--adicionar aqui os ranges (sliders)-->
-                
+                <table id="weight_table">
+                    <tr onmousedown="getSelectedGraph(this)">
+                        <td>weekday</td>
+                        <td><input type="range" min="1" max="10" value="10" class="slider" oninput="updateSum(this)" /></td>
+                        <td>10</td>
+                    </tr>
+                </table>
             </div>
+        </div>
+        <div id="profile_info_div">
+            <div>
+                <p style="float: left; padding-right:10px;"><b>Profiles</b></p>
+                <button class="small_button" onclick="profile_handler()">edit</button>
+            </div>
+            <div id="profile_info" onmousemove=""></div>
+                <!--<p>Weight Sum</p>
+                <h3 id="weight_sum">10</h3>
+                <p id="error_holder" style="visibility:hidden; color:red">weight sum must be 10!</p>-->
         </div>
 
     </div>
@@ -151,18 +194,11 @@
         </div>
     </template>
 
-    <!--Weight Slider Template-->
-    <template id="weight_slider_template">
-        <div class="weight_slider">
-            <p id="name"></p>
-            <input type="range" min="1" max="10" value="5" class="slider" />          
-        </div>
-    </template>
 
     <!--Import scripts-->
     <script src="./../TagsHandler.js"></script>
     <script src="./../Mapbox_gl.js"></script>
-    <script src="./../jsonHandler.js"></script>
+    <script src="./../dataHandler.js"></script>
     <script src="./../Interface.js"></script>
     <script src="./../Calculations.js"></script>
     <script src="./../Heatmap.js"></script>

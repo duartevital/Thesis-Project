@@ -1,4 +1,6 @@
 const cvs = document.getElementById("creator_graph");
+const remote = require('electron').remote;
+const path = require('path');
 let ctx = cvs.getContext("2d"); 
 const Chart = require('chart.js');
 
@@ -28,22 +30,45 @@ var creator_graph = new Chart(ctx, {
     }
 });
 
+var graph_details = {
+    title: "",
+    profile: ["any"],
+    weight: 0,
+    labels: []
+};
 var data = creator_graph.data.datasets[0].data;
 
 document.querySelectorAll('#creator_table input').forEach(e => e.addEventListener('input', function () { inputHandler(this) }));
-
 var table = document.getElementById("creator_table");
 var title = document.getElementById("graph_name");
+var profile = document.getElementById("profile_input");
 title.addEventListener('input', function () { titleInputHandler(this) })
 
-function addWeightSlider(elem) {
-    var template_elem = document.getElementById("weight_slider_template");
-    var slider_div = template_elem.content.querySelector(".weight_slider");
-    var parent_node = document.importNode(slider_div, true);
+function profile_handler() {
+    const BrowserWindow = remote.BrowserWindow;
+    const win = new BrowserWindow({
+        width: 200,
+        height: 300,
+        resizable: false,
 
-    parent_node.querySelector("#name").textContent = "Weight";
+        webPreferences: {
+            nodeIntegration: true
+        }
+    });
+    win.loadFile(path.join('renderer', 'profiles.html'));
 
-    elem.appendChild(parent_node);
+    win.once('close', () => {
+        graph_details.profile = JSON.parse(localStorage.getItem('selected_profiles'));
+        var profile_info_div = document.getElementById("profile_input");
+        for (var i in graph_details.profile) {
+            profile_info_div.innerText += graph_details.profile[i] + ", ";
+        }
+    });
+}
+
+function updateSliderValue(elem) {
+    var val = document.getElementById("slider_value");
+    val.innerText = elem.value;
 }
 
 function addRow() {
@@ -90,6 +115,7 @@ function titleInputHandler(e) {
 
 function erase_creator() {
     title.value = "";
+    profile.innerText = "";
     table.innerHTML = "<table id='creator_table' width='100%' contenteditable='true'>" +
         "<tr>" +
         "<td><input type='text' value='item0' id='0'/></td>" +
@@ -100,6 +126,8 @@ function erase_creator() {
         "<td><input type='number' value=0 id='1'/></td>" +
         "</tr>" +
         "</table>";
+
+    document.querySelectorAll('#creator_table input').forEach(e => e.addEventListener('input', function () { inputHandler(this) }));
 
     for (var i = labels.length; i > 2; i--) {
         labels.pop();
@@ -112,11 +140,16 @@ function erase_creator() {
 }
 
 function save_creator() {
-    console.log("before getItem");
-    var test_stuff_2 = localStorage.getItem("test_stuff");
-    console.log(test_stuff_2);
-    test_stuff_2 = "SOMETHIN MARVELOUYS HAPPENSDEDEDDEDED!!!!";
-    localStorage.setItem("test_stuff", test_stuff_2);
-    console.log("after setItem");
+    graph_details.title = creator_graph.data.datasets[0].label;
+    graph_details.weight = parseInt(document.getElementById("slider_value").innerText);
 
+    graph_details.labels = [];
+    var tmp_labels = creator_graph.data.labels;
+    var tmp_value = 0;
+    for (var i in tmp_labels) {
+        tmp_value = creator_graph.data.datasets[0].data[i];
+        graph_details.labels.push({ name: tmp_labels[i], value: tmp_value });
+    }
+    localStorage.setItem('creator_graph', JSON.stringify(graph_details));
+    window.close();
 }

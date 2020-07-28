@@ -1,0 +1,78 @@
+﻿<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Profile Selector</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link rel="stylesheet" href="creator.css" />
+
+    <style>
+        #profile_div {
+            position: absolute;
+            top: 0;
+            width: 95%;
+            height: 80%;
+            overflow: auto;
+        }
+
+        #btns_div {
+            position: absolute;
+            width: 98%;
+            height: 10%;
+            bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="profile_div">
+        <form id="profile_form">
+        </form>
+    </div>
+
+    <div id="btns_div">
+        <button onclick="reset_selections()">reset</button>
+        <button onclick="save_selections()">save and close</button>
+    </div>
+
+    <script>
+        var profile_stuff = JSON.parse(localStorage.getItem('profile_stuff'));
+
+        var form = document.getElementById("profile_form");
+        var tmp_input, tmp_label;
+        for (var i in profile_stuff) {
+            tmp_input = document.createElement('input');
+            tmp_input.type = 'checkbox'; tmp_input.id = profile_stuff[i].name + "_check";
+            tmp_input.className = 'check_btns'; tmp_input.value = profile_stuff[i].name;
+            if (profile_stuff[i].selected)
+                tmp_input.checked = true;
+
+            tmp_label = document.createElement('label');
+            tmp_label.htmlFor = tmp_input.id; tmp_label.innerText = tmp_input.value;
+
+            form.appendChild(tmp_input); form.appendChild(tmp_label)
+            form.appendChild(document.createElement("br"));
+        }
+
+
+        function reset_selections() {
+            console.log(profile_stuff);
+        }
+
+        function save_selections() {
+            var inputs = form.querySelectorAll("input");
+            var selected = [];
+            for (var i in inputs)
+                if (inputs[i].checked)
+                    selected.push(inputs[i].value);
+
+            localStorage.setItem("selected_profiles", JSON.stringify(selected));
+            window.close();
+        }
+
+    </script>
+
+</body>
+
+</html>
