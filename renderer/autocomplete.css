@@ -3,7 +3,6 @@
 .autocomplete {
     /*the container must be positioned relative:*/
     position: relative;
-    /*display: inline-block;*/
 }
 
 input {
@@ -19,9 +18,9 @@ input {
     border-bottom: none;
     border-top: none;
     z-index: 99;
-    /*position the autocomplete items to be the same width as the container:*/
-    left: 41%;
-    right: 0;
+    left: 235px;
+    top: 80px;
+    width: 130px;
 }
 
     .autocomplete-items div {

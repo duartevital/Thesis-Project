@@ -1,5 +1,6 @@
 const path = require('path');
-const { app } = require('electron');
+const { app, Menu } = require('electron');
+//const { app } = require('electron');
 const Window = require('./Window');
 
 function main() {
@@ -8,7 +9,24 @@ function main() {
     })
 }
 
-app.on('ready', main);
+const template = [
+    {
+        label: "File"
+    },
+    /*{
+        label: "Edit"
+    },*/
+    {
+        label: "View"
+    }
+];
+
+app.on('ready', () => {
+    main();
+    const menu = Menu.buildFromTemplate(template);
+    //Menu.setApplicationMenu(menu);
+});
+//app.on('ready', main);
 app.on('window-all-ready', function () {
     app.quit()
 });

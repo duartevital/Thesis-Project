@@ -16,77 +16,120 @@
 
 </head>
 <body onkeydown="toggleCntrlPress(event)" onkeyup="toggleCntrlPress(event)">
-    <div id="desc_box">polution: </div>
+    <!--onclick="bodyClick(event)"-->
+    <div id="desc_box">polution magnitude: </div>
     <!--MAP SECTION-->
     <div id='map_div'>
         <div id='map'></div>
-        <div id="layer_dropdown_btn" class='dropdown_div'>
-            <button onclick="showViewOptions()" class="standart_buttons"><i class="fas fa-layer-group"></i></button>
-            <div id="dropdown_content" class="dropdown_content" onclick="dropdownClick()">
-                <a>Normal</a>
-                <a>Heatmap</a>
+        <div id='map_info' class="info_container">
+            <div class="map_info_bg info_container" onclick="toggleMapInfo(this)"></div>
+            <span id="zoom" class="info_container"><b>zoom:</b> </span>
+            <button class="info_container" title="view usecase items" onclick="toggleMapInfo(this)"><i class="fas fa-caret-down"></i></button>
+            <div id="map_info_content" class="info_container">
+                <div class="map_info_bg info_container"></div>
+                <table class="info_container"></table>
             </div>
         </div>
-        <div class="selections_div">
-            <form oninput="checkSelect()">
-                <p>Filter</p>
+        <span id="universal_warning"></span>
+        <div id="layer_dropdown_btn" class='dropdown_div' onmousemove="layerAction(true, this)" onmouseout="layerAction(false, this)">
+            <button class="standard_buttons"><i class="fas fa-layer-group"></i></button>
+            <div id="layer_dropdown" class="dropdown_content" oninput="layerCheckInput(this)">
+                <div id="entities_sel">
+                    <input type="checkbox" id="entities_check" value="Entities" checked="checked" />
+                    <label for="entities_check">Entities</label><br />
+                    <input type="range" id="entities_slider" min="0" max="100" value="100" oninput="layerSliderInput(this)" />
+                </div>
+                <div id="heatmap_sel">
+                    <input type="checkbox" id="heatmap_check" value="Heatmap" />
+                    <label for="heatmap_check">Heatmap</label><br />
+                    <input type="range" id="heatmap_slider" min="0" max="100" value="0" oninput="layerSliderInput(this)" />
+                </div>
+            </div>
+        </div>
+        <div id="filter_div" class="selections_div" onmousemove="filterAction(true, this)" onmouseout="filterAction(false, this)">
+            <button class="standard_buttons">Filter</button>
+            <div id="filter_bg"></div>
+            <form id="filter_form" oninput="checkSelect()" style="display:none">
                 <input type="checkbox" id="buildings_check" name="check_btns" value="buildings" />
-                <label for="buildings_check">buildings</label><br>
+                <label for="buildings_check">Buildings</label><br>
                 <input type="checkbox" id="roads_check" name="check_btns" value="roads" />
-                <label for="roads_check">roads</label><br>
+                <label for="roads_check">Roads</label><br>
                 <input type="checkbox" id="landuse_check" name="check_btns" value="landuse" />
-                <label for="landuse_check">landuse</label><br><br>
+                <label for="landuse_check">Landuse</label><br><br>
             </form>
-            <p class="hover_btns" onmouseover="document.getElementById('instruction_box').style.visibility = 'visible';"
-               onmouseout="document.getElementById('instruction_box').style.visibility = 'hidden';">shortcuts</p>
+        </div>
+        <div id="instructions_div">
             <div class="hover_boxes" id="instruction_box">
-                <p>hold <b>ctrl</b> and click <b>mouse1</b> to select multiple objects</p>
+                <p>hold <b>ctrl</b> and click <b>mouse1</b> to select multiple entities</p>
                 <p>hold <b>shift</b> and drag <b>mouse1</b> to draw a selection rectangle</p>
             </div>
+            <p class="hover_btns" onmouseover="document.getElementById('instruction_box').style.display = 'block';"
+               onmouseout="document.getElementById('instruction_box').style.display = 'none';">Selection Tips</p>
+        </div>
+        <div id="map_style_div" onclick="toggleMapStyle()" title="Toggle bewtween Street-Satellite view">
+            <img src="../Media/street.png" alt="satellite image" width="52" height="52" />
         </div>
     </div>
 
-    <button id="actionButton" onclick="startAll()">Start</button>
+    <!--<button id="actionButton" onclick="startAll()">Start</button>-->
 
     <div class="tab">
-        <button class="tabLinks" onclick="openTab('features_tab')">Labels</button>
-        <button class="tabLinks" onclick="openTab('curves_tab')">Curves</button>
-        <!--<button class="tabLinks" onclick="openTab(event, 'buttonContainer')">Rules</button>-->
-        <button class="tabLinks" onclick="openTab('history_tab')">History</button>
+        <div></div>
+        <div id="fake_btn" class="tabLinks"></div>
+        <button class="tabLinks not_selected_tabs" onclick="openTab('features_tab')">Polution Sources</button>
+        <button class="tabLinks not_selected_tabs" onclick="openTab('curves_tab')">Polution Dynamics</button>
+        <button class="tabLinks not_selected_tabs" onclick="openTab('history_tab')">History</button>
+        <!--<button id="features_tab" class="tabLinks" onclick="openTab('menu_tab')">Menu</button>-->
     </div>
 
     <!--FEATURES TAB-->
     <div id="features_tab" class="tabContent">
-        <section id="left_side_section">
-            <div id='features'>
-                <button id="newButton" onclick="addDrawTools(this)" title="Enable drawing tools">new</button>
-                <button id="editButton" onclick="setPropsTableEditable(this)" style="visibility:hidden">edit</button>
-                <button id="saveButton" onclick="savePropsChanges(this)" style="visibility:hidden">save</button>
-                <table id="propsTable" style="width:100%"></table>
+        <section id="top_section">
+            <div>
+                <span id="props_title">Entity Information</span>
+                <div id='features'>
+                    <table id="propsTable"></table>
+                </div>
+                <div id="type_placeholder"></div>
             </div>
-            <div id='objDiv'>
-                <table id="objTable" style="width:100%" title="List of all building/landuse objects"></table>
+            <div id="props_details_div">
+                <h4>Please select a map Entity</h4>
+                <div style="width:100%; margin-top: 5%; float: left">
+                    <div id="polution_placeholder"></div>
+                    <div id="range_placeholder"></div>
+                </div>
+                <div style="width:100%; margin-top: 5%; float: left">
+                    <div id="profile_placeholder"></div>
+                    <div id="focus_placeholder"></div>
+                </div>
+                <div id="editor_btns_div">
+                    <button id="accept_btn" onclick="savePropsChanges()">accept changes</button>
+                    <button id="cancel_btn" onclick="cancelPropsChanges()">reset</button>
+                </div>
             </div>
+
         </section>
 
-        <section id="top_right_section">
-            <h5 class="title_text">Object areas (%)</h5>
-            <canvas id="pieChart" width="100" height="80"></canvas>
-        </section>
-
-        <section id="bottom_right_section">
-            <div id="roadsDiv">
-                <table id="roadsTable" style="width:100%" title="List of all roads"></table>
+        <section id="bottom_section">
+            <h5 class="title_text">Entity areas (%)</h5>
+            <div id="list_pie_switch">
+                <span style="float:left; padding-right:6px;">entity list</span>
+                <label class="switch" style="float:left">
+                    <input type="checkbox" checked onchange="listPieHandler(this)">
+                    <span class="slider round"></span>
+                </label>
+                <span style="float:left; padding-left:6px;">pie-chart</span>
             </div>
-            <!-- Inserir coisas relacionads com o AQI nesta secção -->
+            <canvas id="pieChart" width="90" height="50"></canvas>
+            <table id="objTable" title="List of all roads"></table>
         </section>
     </div>
 
-    <button onclick="dumbFunction()" id="dumb_btn">dumb btn</button>
-    <!--<button onclick="loadAllInfo()" id="loadAll_btn">LOAD</button>-->
-    <button onclick="generateRandomPoints(1000)" id="generate_csv_btn" class="standart_buttons">Genererate</button>
-    <button onclick="saveAllInfo()" id="saveAll_btn" class="standart_buttons" title="Saves everything in a JSON file">SAVE</button>
-    <button onclick="sendInfo()" id="send_btn" class="standart_buttons" title="Send to server">SEND</button>
+    <!--<button onclick="dumbFunction()" id="dumb_btn">dumb btn</button>
+    <button onclick="loadAllInfo()" id="loadAll_btn">LOAD</button>
+    <button onclick="generateRandomPoints(1000)" id="generate_csv_btn" class="standard_buttons">Genererate</button>
+    <button onclick="saveAllInfo()" id="saveAll_btn" class="standard_buttons" title="Saves everything in a JSON file">SAVE</button>
+    <button onclick="sendInfo()" id="send_btn" class="standard_buttons" title="Send to server">SEND</button>-->
 
     <aside id='buttonContainer' class="tabContent">
         <button type="button" id="countButtons" onclick="countFeatures()">Count Features</button>
@@ -102,59 +145,78 @@
 
     <!--CURVES TAB-->
     <div id="curves_tab" class="tabContent">
-        <div id="disabler"></div>
         <div id="curves_top">
-            <select id="graph_dropdown" onchange="changeGraph(this)">
-                <option selected value="weekday">Weekday</option>
-            </select>
-            <button class="small_button" value="new_graph" onclick="openGraphCreationWindow()">new graph</button>
-            <button class="small_button" value="edit_graph" onclick="editGraph()">edit</button>
-            <button class="small_button" value="clear">clear</button>
-            <select id="item_dropdown" onchange="changeDay(this)">
-                <option selected value="STANDART">Standart</option>
-                <option value="MONDAY">Monday</option>
-                <option value="TUESDAY">Tuesday</option>
-                <option value="WEDNESDAY">Wednesday</option>
-                <option value="THURSDAY">Thursday</option>
-                <option value="FRIDAY">Friday</option>
-                <option value="SATURDAY">Saturday</option>
-                <option value="SUNDAY">Sunday</option>
-            </select>
-            <!--<select id="profile_dropdown" onchange="changeProfile(this)">
-                <option selected value="any">any</option>
-            </select>-->
+            <div>
+                <select id="graph_dropdown" onchange="changeGraph(this)">
+                    <option selected value="weekday">weekday</option>
+                </select>
+            </div>
+            <div>
+                <button value="new_graph" onclick="openGraphCreationWindow(false)">Create new plot</button>
+                <button id="graph_edit_btn" value="edit_graph" onclick="openGraphCreationWindow(true)">Edit current plot</button>
+            </div>
+            <button class="standard_buttons" id="profile_manager_btn" onclick="editProfile()">Profile Manager</button>
         </div>
         <div id="curves_graph">
+            <button id="reset_graph" onclick="reset_graph_values()">reset graph</button>
             <canvas id="line_graph"></canvas>
+            <h4 style="visibility:hidden">No graphs found!</h4>
         </div>
         <div id="weights_div">
-            <p><b>Weights</b></p>
+            <p><b>Relevance</b></p>
             <div id="weight_table_div">
                 <!--adicionar aqui os ranges (sliders)-->
                 <table id="weight_table">
                     <tr onmousedown="getSelectedGraph(this)">
                         <td>weekday</td>
-                        <td><input type="range" min="1" max="10" value="10" class="slider" oninput="updateSum(this)" /></td>
+                        <td><input type="range" min="0" max="10" value="10" class="weight_slider" oninput="updateSum(this)" /></td>
                         <td>10</td>
                     </tr>
                 </table>
             </div>
         </div>
         <div id="profile_info_div">
-            <div>
-                <p style="float: left; padding-right:10px;"><b>Profiles</b></p>
-                <button class="small_button" onclick="profile_handler()">edit</button>
+            <div class="editor_div">
+                <div id="editor_span">
+                    <span id="key">Dynamic Profiles</span>
+                </div>
+                <div id="editor_input">
+                    <input id="input" type="text" />
+                    <button onclick="editProfile()"><i class="far fa-edit"></i></button>
+                </div>
             </div>
-            <div id="profile_info" onmousemove=""></div>
-                <!--<p>Weight Sum</p>
-                <h3 id="weight_sum">10</h3>
-                <p id="error_holder" style="visibility:hidden; color:red">weight sum must be 10!</p>-->
         </div>
 
     </div>
+
+    <!--MENU TAB-->
+
+    <div id="menu_tab" class="tabContent">
+        <div id="menu_center_div">
+            <div>
+                <button onclick="generateRandomPoints(1000)" id="generate_csv_btn" class="standard_buttons">Export</button>
+                <button onclick="saveAllInfo()" id="saveAll_btn" class="standard_buttons" title="Saves everything in a JSON file">SAVE</button>
+                <button onclick="sendInfo()" id="send_btn" class="standard_buttons" title="Send to server">SEND</button>
+            </div>
+        </div>
+    </div>
+
     <!--      TEMPLATES       -->
+    <!--props editor template-->
+    <template id="editor_template">
+        <div class="editor_div">
+            <div id="editor_span">
+                <span id="key"></span>
+            </div>
+            <div id="editor_input">
+                <input id="input" type="text" onfocus="inputFocus(this)" onchange="inputChange(this)" />
+                <button style="visibility:hidden"><i class="far fa-edit"></i></button>
+            </div>
+        </div>
+    </template>
+
     <!--Entry template to be instanciated in history tab-->
-    <template>
+    <template id="entry_template">
         <div class="entry">
             <h5 id="timestamp"></h5>
             <div onclick="loadSelectedEntry(this)" class="sub_entry">
@@ -174,9 +236,9 @@
                         <dd id="road_length"></dd>
                     </dl>
                 </div>
-                <div class="aqi_holder">
-                    <p>AQI</p>
-                    <p id="aqi" class="aqi"><b>136</b></p>
+                <div class="avg_polution_holder">
+                    <p>Avg. Polution Magnitude</p>
+                    <p id="avg_polution" class="avg_polution"><b></b></p>
                 </div>
             </div>
         </div>
@@ -184,7 +246,7 @@
 
     <!--Popups templates-->
     <template id="type_popup_template">
-        <span class="popuptext" id="type_popup">Object must have a type</span>
+        <span class="popuptext"></span>
     </template>
 
     <!--Hints template-->
@@ -203,7 +265,6 @@
     <script src="./../Calculations.js"></script>
     <script src="./../Heatmap.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@latest/dist/chartjs-plugin-dragdata.min.js"></script>
-
     <script src="./../Curves.js"></script>
 </body>
 </html>

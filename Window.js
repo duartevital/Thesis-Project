@@ -1,4 +1,4 @@
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, Menu } = require('electron');
 
 
 const defaultProps = {
@@ -20,11 +20,11 @@ class Window extends BrowserWindow {
         this.webContents.openDevTools();
 
         this.once('ready-to-show', () => {
-            this.show()
+            this.show();            
         });
 
         
     }
 }
 
-module.exports = Window;
+module.exports = Window

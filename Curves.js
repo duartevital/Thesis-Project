@@ -1,27 +1,30 @@
 const path = require('path');
 //const Window = require('./Window');
 
+var graph_dropdown = document.getElementById("graph_dropdown");
+var weight_table = document.getElementById("weight_table");
+var curves_graph = document.getElementById("curves_graph");
 const cvs = document.getElementById("line_graph");
 let ctx = cvs.getContext("2d");
-var avg_polution = 0.0001;
+var avg_polution = 0;
 var avg_1 = avg_2 = avg_3 = avg_4 = avg_5 = avg_6 = avg_7 = avg_polution;
 var weight_sum = 10;
-var error_active = false;
 
 var graph_list = [];
 var graph = {
-    title: "weekday",
+    id: 0,
+    name: "weekday",
     weight: 10,
     profile: ["any"],
     labels: [
-        { name: 'standart', value: avg_polution },
-        { name: 'monday', value: avg_1 },
-        { name: 'tuesday', value: avg_2 },
-        { name: 'wednesday', value: avg_3 },
-        { name: 'thursday', value: avg_4 },
-        { name: 'friday', value: avg_5 },
-        { name: 'saturday', value: avg_6 },
-        { name: 'sunday', value: avg_7 }
+        { name: 'standard', value: avg_polution, selected: true },
+        { name: 'monday', value: 0 },
+        { name: 'tuesday', value: 0 },
+        { name: 'wednesday', value: 0 },
+        { name: 'thursday', value: 0 },
+        { name: 'friday', value: 0 },
+        { name: 'saturday', value: 0 },
+        { name: 'sunday', value: 0 }
     ]
 }
 graph_list.push(graph);
@@ -29,19 +32,25 @@ var selected_row = 0;
 var labels_array = graph.labels;
 var labels_names, labels_values;
 setNames_Values();
-
+setProfilesInput();
+setItemsInfo();
 
 //Inner graph stuff
 let current = labels_array[0]; 
-var valueBeforeDrag = 0.0001;
-var ondrag_value = 0.0001;
+var valueBeforeDrag = 0;
+
+var saved_graph_state = [];
+for (var i in graph.labels) 
+    saved_graph_state.push({ name: graph.labels[i].name, value: graph.labels[i].value });
+
+var saved_current = saved_graph_state[0];
 
 var line_chart = new Chart(ctx, {
     type: 'line',
     data: {
         labels: labels_names,
         datasets: [{
-            label: "polution level",
+            label: "polution magnitude",
             borderColor: "rgb(255, 0, 0)",
             data: labels_values
         }]
@@ -51,7 +60,7 @@ var line_chart = new Chart(ctx, {
             yAxes: [{
                 ticks: {
                     beginAtZero: true,
-                    min: 0.0001,
+                    min: 0,
                     max: 10
                     
                 }
@@ -63,24 +72,36 @@ var line_chart = new Chart(ctx, {
             showTooltip: true
         },
         onDragStart: function (e, element) { storeValueBeforeDrag(element) },
-        //////onDrag: function (e, datasetIndex, index, value) { enableListUpdate(index, value) },
-        onDragEnd: function (e, datasetIndex, index, value) { updateList(index, value) }
+        onDragEnd: function (e, datasetIndex, index, value) { updateList(index, value) },
+        hover: {
+            onHover: function (e) {
+                const point = this.getElementAtEvent(e)
+                if (point.length) e.target.style.cursor = 'grab'
+                else e.target.style.cursor = 'default'
+            }
+        }
     }
 });
 
-//addWeightSlider(document.getElementById("weight_sliders_container"));
+function setProfilesInput() {
+    var val = "";
+    for (var i in graph.profile)
+        val += graph.profile[i] + ", ";
+
+    document.getElementById("profile_info_div").querySelector("input").value = val;
+}
 
 function updateChart() {
     var avg = getAveragePolution(all_list);
-    var new_avg = 0.0001;
-    if (avg > 0) 
-        new_avg = (avg / 100) * 2;
-    
+    var new_avg = (avg / 100) * 2;
+
     var data = line_chart.data.datasets[0].data;
     current.value = new_avg;
+    //saved_current.value = new_avg;
     for (var i in labels_array) {
         if (current.name == labels_array[i].name) {
             data[i] = new_avg;
+            saved_graph_state[i].value = new_avg;
             break;
         }
     }
@@ -89,9 +110,7 @@ function updateChart() {
 }
 
 function updateList(index, value) {
-    var after_value = 0.0001;
-    if (value > 0.0001)
-        after_value = (value / 2) * 100;
+    var after_value = (value / 2) * 100;
     var before_value = (valueBeforeDrag / 2) * 100;
     var new_value = Math.abs(after_value - before_value);
     if (line_chart.data.labels[index] == current.name) {
@@ -102,31 +121,36 @@ function updateList(index, value) {
 
 function storeValueBeforeDrag(element) {
     valueBeforeDrag = line_chart.data.datasets[0].data[element._index];
-    ondrag_value = valueBeforeDrag;
 }
 
 function changePolutionValues(before_value, after_value, new_value) {
+    if (graph.weight == 0)
+        return;
     var same_profile;
     for (var i in all_list) {
         same_profile = false;
+        heat_break:
         for (var j in all_list[i].profile) {
             for (var k in graph.profile) {
                 if (all_list[i].profile[j] == graph.profile[k]) {
                     same_profile = true;
-                    break; break;
+                    break heat_break; 
                 }
             }
         }
-
-        if (all_list[i].altered && same_profile) {
-            if (after_value > before_value) {
-                //let tmp = all_list[i].polution + (new_value * (graph.weight / 10));
-                let tmp = all_list[i].polution + (new_value * (graph.weight / weight_sum));
+        console.log({ all_list_i: all_list[i], same_profile: same_profile });
+        if (all_list[i].altered == true && same_profile == true && all_list[i].heat_index > -1) {
+            log.info("in heat IF>");
+            /*if (after_value == 0) {
+                all_list[i].polution = 0;
+            } else */if (after_value > before_value) {
+                let tmp = all_list[i].polution + (new_value * (graph.weight / 10));
+                //let tmp = all_list[i].polution + (new_value * (graph.weight / weight_sum));
                 if (tmp > 500) all_list[i].polution = 500;
                 else all_list[i].polution = tmp;
             } else if (after_value < before_value) {
-                let tmp = all_list[i].polution - (new_value * (graph.weight / weight_sum));
-                //let tmp = all_list[i].polution - (new_value * (graph.weight / 10));
+                //let tmp = all_list[i].polution - (new_value * (graph.weight / weight_sum));
+                let tmp = all_list[i].polution - (new_value * (graph.weight / 10));
                 if (tmp < 0) all_list[i].polution = 0;
                 else all_list[i].polution = tmp;
             }
@@ -135,40 +159,60 @@ function changePolutionValues(before_value, after_value, new_value) {
     }
 }
 
-function enableListUpdate(index, value) {
-    if (value != ondrag_value)
-        updateList(index, value);
-    ondrag_value = value;
-}
-
 function changeGraph(elem) {
     graph = graph_list[elem.selectedIndex];
     updateParams();
-    setLabelsDropdown();
-
-    console.log(graph);
-    //line_chart.update();
+    //setLabelsDropdown();
+    setProfilesInput();
+    
+    var selected_item;
+    for (var i in graph.labels)
+        if (graph.labels[i].selected) {
+            selected_item = graph.labels[i];
+            changeDay({ value: graph.labels[i].name, selectedIndex: i });
+            break;
+        }
+    if (selected_item)
+        document.getElementsByClassName("item_dropdown")[graph.id].value = selected_item.name;
 }
 
 //change function name
 function changeDay(elem) {
-    var before_value = current.value;
+    var before_value = (current.value / 2) * 100;
     current = labels_array[elem.selectedIndex];
-    var after_value = current.value;
+    var after_value = (current.value / 2) * 100;
     if (before_value != after_value) {
         var new_value = Math.abs(after_value - before_value);
         changePolutionValues(before_value, after_value, new_value);
     }
-
+    for (var i in graph.labels) {
+        if (graph.labels[i].selected) 
+            graph.labels[i].selected = false;
+        if (graph.labels[i].name == elem.value)
+            graph.labels[i].selected = true;
+    }
 }
 
-/*function changeProfile(elem) {
-    graph.profile = elem.value;
-}*/
+function reset_graph_values() {
+    var before_value = (current.value / 2) * 100;
+
+    //graph.labels = saved_graph_state;
+    for (var i in graph.labels) {
+        graph.labels[i].value = saved_graph_state[i].value;
+    }
+    updateParams();
+
+    var after_value = (saved_current.value / 2) * 100;
+    if (before_value != after_value) {
+        var new_value = Math.abs(after_value - before_value);
+        changePolutionValues(before_value, after_value, new_value);
+    }
+}
 
 function setLabelsDropdown() {
-    var elem = document.getElementById("item_dropdown");
-    elem.innerHTML = "<select id='item_dropdown' onchange='changeDay(this)'></select>";
+    //var elem = document.getElementsByClassName("item_dropdown")[graph.id];
+    var elem = document.createElement("select");
+    elem.innerHTML = "<select class='item_dropdown' onchange='changeDay(this)'></select>";
     var tmp_option;
     
     for (var i in labels_names) {
@@ -193,8 +237,7 @@ function updateParams() {
     setNames_Values();
 
     current = labels_array[0];
-    valueBeforeDrag = 0.0001;
-    ondrag_value = 0.0001;
+    valueBeforeDrag = 0;
 
     line_chart.data.labels = labels_names;
     line_chart.data.datasets[0].data = labels_values;
@@ -206,37 +249,45 @@ function getSelectedGraph(elem) {
     selected_row = elem.rowIndex;
 }
 
-function addWeightSum(val) {
-    /*weight_sum += val;
-    document.getElementById("weight_sum").innerText = weight_sum;
-    if ((weight_sum > 10 || weight_sum < 10) && !error_active) {
-        toggleInteractions(false);
-        document.getElementById("error_holder").style.visibility = "visible";
-        return;
-    }// else {
-        toggleInteractions(true);
-        document.getElementById("error_holder").style.visibility = "hidden";
-    //}*/
+function loadGraphInfo() {
+    graph_dropdown.innerHTML = ""; weight_table.innerHTML = "";
+    var row, cell1, cell2, cell3;
+    graph = graph_list[0];
+    let new_option = document.createElement("option");
+    new_option.text = graph.name; new_option.value = graph.name;
+    graph_dropdown.add(new_option); new_option.selected = true;
+
+    row = weight_table.insertRow(-1);
+    row.addEventListener("mousedown", function () { getSelectedGraph(this) });
+    cell1 = row.insertCell(0); cell1.textContent = graph.name;
+    cell2 = row.insertCell(1);
+    cell2.innerHTML = '<td><input type="range" min="0" max="10" value="' + graph.weight + '" class="weight_slider" oninput="updateSum(this)"/></td>';
+    cell3 = row.insertCell(2); cell3.textContent = cell2.querySelector("input").value;
+    for (var i = 1; i < graph_list.length; i++) {
+        new_option = document.createElement("option");
+        new_option.text = graph_list[i].name; new_option.value = graph_list[i].name;
+        graph_dropdown.add(new_option);
+
+        row = weight_table.insertRow(-1);
+        row.addEventListener("mousedown", function () { getSelectedGraph(this) });
+        cell1 = row.insertCell(0); cell1.textContent = graph_list[i].name;
+        cell2 = row.insertCell(1);
+        cell2.innerHTML = '<td><input type="range" min="0" max="10" value="' + graph_list[i].weight + '" class="weight_slider" oninput="updateSum(this)"/></td>';
+        cell3 = row.insertCell(2); cell3.textContent = cell2.querySelector("input").value;
+    }
+    updateParams()
 }
 
 function updateSum(elem) {
-    //console.log(elem.parentElement.parentElement.querySelectorAll("td")[2]);
-    //elem.parentElement.parentElement.querySelectorAll("td")[2].innerText = elem.value;
     graph_list[selected_row].weight = parseInt(elem.value);
+    graph.weight = parseInt(elem.value);
     weight_sum = 0;
     for (var i in graph_list) {
         weight_sum += graph_list[i].weight;
     }
-    //document.getElementById("weight_sum").innerText = weight_sum;
+
     var row = document.getElementById("weight_table").rows[selected_row];
     row.cells[2].innerText = row.cells[1].querySelector("input").value;
-    /*if ((weight_sum > 10 || weight_sum < 10) && !error_active) {
-        toggleInteractions(false);
-        document.getElementById("error_holder").style.visibility = "visible";
-    } else {
-        toggleInteractions(true);
-        document.getElementById("error_holder").style.visibility = "hidden";
-    }*/
 }
 
 function toggleInteractions(enable) {
@@ -256,57 +307,25 @@ function toggleInteractions(enable) {
         nodes2[i].style.opacity = 0.3;*/
 }
 
-function updateProfileInfo(name) { //atualiza info. de profiles no 'profile_info'
-    //dropdown
-    /*var profile = document.getElementById("profile_dropdown");
-    for (var i = 0; i < profile.length; i++) {
-        if (profile[i].innerText == name)
-            return;
+function toggleElemsVisibility(visible) {
+    var att = "", att2 = "";
+    if (visible) {
+        att = "visible";
+        att2 = "hidden";
+    } else {
+        att = "hidden";
+        att2 = "visible";
     }
-    var new_opt = document.createElement("option");
-    new_opt.textContent = name;
-    new_opt.value = name;
-    profile.appendChild(new_opt);
-    profile.value = new_opt.text;
-    
-    //local var
-    graph.profile = name;
-    //profile_list -> Mapbox_gl.js
-    profile_list.push(graph.profile);*/
+
+    curves_graph.querySelector("#line_graph").style.visibility = att;
+    curves_graph.querySelector("h4").style.visibility = att2;
+    document.getElementById("weights_div").style.visibility = att;
+    document.getElementById("profile_info_div").style.visibility = att;
+    document.getElementById("graph_edit_btn").style.visibility = att;
+
 }
 
-function editGraph() {
-    
-}
-
-function profile_handler() {
-    var tmp_stuff = [];
-    for (var i in profile_list)
-        tmp_stuff.push({ name: profile_list[i], selected: false });
-    localStorage.setItem('profile_stuff', JSON.stringify(tmp_stuff));
-
-    const BrowserWindow = remote.BrowserWindow;
-    const win = new BrowserWindow({
-        width: 200,
-        height: 300,
-        resizable: false,
-
-        webPreferences: {
-            nodeIntegration: true
-        }
-    });
-    win.loadFile(path.join('renderer', 'profiles.html'));
-
-    win.once('close', () => {
-        graph.profile = JSON.parse(localStorage.getItem('selected_profiles'));
-        var profile_info_div = document.getElementById("profile_info");
-        for (var i in graph.profile) {
-            profile_info_div.innerText += graph.profile[i] + ", ";
-        }
-    });
-}
-
-function openGraphCreationWindow() {
+function openGraphCreationWindow(edit) {
     //const remote = require('electron').remote;
     const BrowserWindow = remote.BrowserWindow;
     const win = new BrowserWindow({
@@ -319,39 +338,107 @@ function openGraphCreationWindow() {
             nodeIntegration: true
         }
     });
-    var tmp_stuff = [];
-    for (var i in profile_list)
-        tmp_stuff.push({ name: profile_list[i], selected: false });
-
-    localStorage.setItem('profile_stuff', JSON.stringify(tmp_stuff));
+    var tmp_graph;
+    if (edit)
+        tmp_graph = graph;
+    else {
+        tmp_graph = {
+            id: graph_list.length,
+            name: "unsaved graph",
+            weight: 5,
+            profile: ["any"],
+            labels: [
+                { name: 'item0', value: 0 },
+                { name: 'item1', value: 0 }
+            ]
+        }
+    }
+    localStorage.setItem("graph_info", JSON.stringify({ edit: edit, info: tmp_graph }));
+    setProfileStuff();
+    localStorage.setItem('profile_stuff', JSON.stringify(profile_stuff));
 
     win.loadFile(path.join('renderer', 'creator.html'));
 
     //get saved created graph
     win.once('close', () => {
-        graph = JSON.parse(localStorage.getItem('creator_graph'));
-        console.log(graph);
-        graph_list.push(graph);
-        //addWeightSum(graph.weight);
-        //Update graph list dropdown
-        let select = document.getElementById("graph_dropdown");
-        let new_option = document.createElement("option"); new_option.text = graph.title;
-        select.add(new_option); select.value = new_option.text;
-        //Update profile dropdown
-        updateProfileInfo(graph.profile);
+        //If cancel or close
+        var cancel = JSON.parse(localStorage.getItem("cancel_check"));
+        if (typeof cancel != "undefined" && cancel.cancel) {
+            return;
+        }
+        var tmp_name = graph.name;
+        graph = JSON.parse(localStorage.getItem('graph_info'));
+        graph.labels[0].selected = true;
+        //saved_graph_state.labels = graph.labels;
+        /*if (typeof graph.cancel == 'undefined' || graph.cancel == true)
+            return;*/
+        
+        //If delete button pressed
+        if (graph.delete && graph.delete == true) {
+            graph_list.splice(graph.id, 1);
+            updateProfilesInfo();
+            var options = graph_dropdown.querySelectorAll("option");
+            for (var i in options) {
+                if (options[i].innerText == tmp_name) {
+                    options[i].remove();
+                    break;
+                }
+            }
+            
+            options = graph_dropdown.querySelectorAll("option");
+            var item_dropdown = document.getElementsByClassName("item_dropdown")[graph.id]
+            if (options.length == 0) {
+                var item_options = item_dropdown.querySelectorAll("option");
+                for (var i = item_options.length - 1; i >= 0; i--)
+                    item_options[i].remove();
+
+                toggleElemsVisibility(false);
+            } else if (options.length > 0) {
+                options[0].selected = true;
+                changeGraph(graph_dropdown);
+            }
+            return;
+        }
+
+        //Edit or create usecases
+        toggleElemsVisibility(true);
+        if (!edit) { //if create
+            graph.id = graph_list.length;
+            graph_list.push(graph);
+
+            //Update graph list dropdown
+            let new_option = document.createElement("option");
+            new_option.text = graph.name; new_option.value = graph.name;
+            graph_dropdown.add(new_option); new_option.selected = true;
+        } else { //if edit
+            graph_list[graph.id] = graph;
+            if (tmp_name != graph.name) {
+                var options = graph_dropdown.querySelectorAll("option");
+                for (var i in options) {
+                    if (options[i].innerText == tmp_name) {
+                        options[i].innerText = graph.name;
+                        break;
+                    }
+                }
+            }
+        }
+
+        //Update profile info
+        updateProfilesInfo();
+        setProfilesInput();
+        
         //Update graph weight table
-        let table = document.getElementById("weight_table");
-        var row = table.insertRow(-1);
+        var row = weight_table.insertRow(-1);
         row.addEventListener("mousedown", function () { getSelectedGraph(this) });
-        row.style = 'background-color: #ffffff';
         var cell1, cell2, cell3;
-        cell1 = row.insertCell(0); cell1.textContent = graph.title;
+        cell1 = row.insertCell(0); cell1.textContent = graph.name;
         cell2 = row.insertCell(1);
-        cell2.innerHTML = '<td><input type="range" min="1" max="10" value="' + graph.weight +'" class="slider" oninput="updateSum(this)"/></td>';
+        cell2.innerHTML = '<td><input type="range" min="0" max="10" value="' + graph.weight +'" class="weight_slider" oninput="updateSum(this)"/></td>';
         cell3 = row.insertCell(2); cell3.textContent = cell2.querySelector("input").value;
 
         updateParams();
-        setLabelsDropdown();
+        addToItemsInfo(graph.labels);
+        //setLabelsDropdown();
     });
 
 }

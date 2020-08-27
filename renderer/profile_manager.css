@@ -1,0 +1,138 @@
+body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+#action_div {
+    position: relative;
+    top: 7px;
+    width: 100%;
+    height: 10%;
+}
+    #action_div button {
+        margin-left: 18px;
+    }
+
+#content_div {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+}
+
+/*everything in profile div*/
+.profile_div {
+    position: relative;
+    width: 100%;
+    height: 111px;
+    border: 1px solid #000000;
+}
+
+.profile_div #delete_btn {
+    position: absolute;
+    top: 7px;
+    right: 9px;
+    
+}
+
+#profile_name {
+    margin-top: 3%;
+    margin-left: 30%;
+    height: 25px;
+}
+
+.editor_div {
+    position: relative;
+    margin-left: 6px;
+    width: 180px;
+    height: 50px;
+    float: left;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+#editor_span {
+    width: 100%;
+    height: 45%;
+    float: left;
+    background-color: #9e9e9e;
+}
+
+    #editor_span span {
+        padding-top: 2px;
+        padding-left: 8px;
+        font-size: 18px;
+    }
+
+#editor_input {
+    width: 100%;
+    height: 55%;
+}
+
+    #editor_input input {
+        width: 100%;
+        height: 100%;
+        float: left;
+        font-size: 15px;
+        padding-left: 5px;
+        border: none;
+    }
+
+    #editor_input button {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        height: 54%;
+        border: none;
+    }
+
+.standard_buttons {
+    background-color: #4caf50;
+    color: white;
+    font-size: medium;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+/*SELECTOR STYLES*/
+
+#selector_div {
+    position: absolute;
+    top: 5px;
+    left: 0;
+    width: 100%;
+}
+
+#selector_action_div {
+    position: fixed;
+    bottom: 5px;
+    right: 5px;
+    width: 44%;
+}
+    #selector_action_div button {
+        float: left;
+        height: 30px;
+        margin-left: 2px;
+        margin-bottom: 3px;
+    }
+
+table {
+    position: absolute;
+    width: 100%;
+    font-family: Arial, sans-serif;
+    border-collapse: collapse;
+    margin-bottom: 50px;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 4px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}

@@ -1,0 +1,277 @@
+﻿<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Selector</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link rel="stylesheet" href="profile_manager.css" />
+</head>
+
+<body>
+    
+    <div id="selector_div">
+        <table></table>
+        
+        <div id="selector_action_div">
+            <button class="standard_buttons" onclick="save()" style="width: 131px;">save and close</button>
+            <button class="standard_buttons" onclick="cancel()">cancel</button>
+        </div>
+    </div>
+
+
+    <!--SCRIPTS-->
+    <script>
+        var selector_stuff = JSON.parse(localStorage.getItem("selector_stuff"));
+        var profile_stuff = JSON.parse(localStorage.getItem("profile_stuff"));
+        var profile_list, all_list, graph_list, selected_objs, selected_profile;
+        profile_list = profile_stuff.profile_list;
+        all_list = profile_stuff.all_list;
+        graph_list = profile_stuff.graph_list;
+        selected_objs = profile_stuff.selected_objs;
+        selected_profile = selector_stuff.selected_profile;
+        console.log({ selected_profile: selected_profile, selected_objs: selected_objs });
+        if (selected_objs.length > 0)
+            for (var i in all_list)
+                for (var j in selected_objs)
+                    if (all_list[i].id == selected_objs[j].id) {
+                        all_list[i].selected = true;
+                        break;
+                    }
+
+        var table = document.querySelector("table");
+        table.innerHTML = "";
+
+        var header = table.createTHead();
+        var header_row = header.insertRow(0);
+        header_row.insertCell(0).innerHTML = "<input type='checkbox' onclick='toggleAllSelection(this)'>";
+        if (selector_stuff.type == "object") {
+            header_row.insertCell(1).innerHTML = "<b>Id<b>";
+            header_row.insertCell(2).innerHTML = "<b>Source<b>";
+            header_row.insertCell(3).innerHTML = "<b>Type<b>";
+            header_row.insertCell(4).innerHTML = "<b>Area/Length<b>";
+
+            header_row.cells[0].addEventListener("click", function () { sortTable(0, false) });
+            header_row.cells[1].addEventListener("click", function () { sortTable(1, true) });
+            header_row.cells[2].addEventListener("click", function () { sortTable(2, false) });
+            header_row.cells[3].addEventListener("click", function () { sortTable(3, false) });
+            header_row.cells[4].addEventListener("click", function () { sortTable(4, true) });
+
+            var row, cell1, cell2;
+            for (var i in selected_objs) {
+                row = table.insertRow(-1);
+                row.style.backgroundColor = "#80e27e";
+                cell1 = row.insertCell(0);
+                cell2 = row.insertCell(1);
+                cell3 = row.insertCell(2);
+                cell4 = row.insertCell(3);
+                cell1.innerHTML = "<input type='checkbox' onclick='checkSelect(event)'>";
+                cell2.innerText = selected_objs[i].id;
+                cell3.innerText = selected_objs[i].source;
+                cell4.innerText = selected_objs[i].type;
+                cell5 = row.insertCell(4);
+                if(all_list[i].area)
+                    cell5.innerText = selected_objs[i].area;
+                else
+                    cell5.innerText = selected_objs[i].length;
+
+                for (var j in selected_profile.objs) {
+                    if (selected_profile.objs[j].id == selected_objs[i].id) {
+                        cell1.innerHTML = "<input type='checkbox' onclick='checkSelect(event)' checked='checked'>";
+                        break;
+                    }
+                }
+            }
+            for (var i in all_list) {
+                if (all_list[i].selected)
+                    continue;
+                row = table.insertRow(-1);
+                cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+                cell3 = row.insertCell(2); cell4 = row.insertCell(3); cell5 = row.insertCell(4);
+                cell1.innerHTML = "<input type='checkbox' onclick='checkSelect(event)'>";
+                cell2.innerText = all_list[i].id;
+                cell3.innerText = all_list[i].source;
+                cell4.innerText = all_list[i].type;
+                if(all_list[i].area)
+                    cell5.innerText = all_list[i].area;
+                else
+                    cell5.innerText = all_list[i].length;
+
+                for (var j in selected_profile.objs) {
+                    if (selected_profile.objs[j].id == all_list[i].id) {
+                        cell1.innerHTML = "<input type='checkbox' onclick='checkSelect(event)' checked='checked'>";
+                        break;
+                    }
+                }
+
+            }
+        } else if (selector_stuff.type == "graph") {
+            header_row.insertCell(1).innerHTML = "<b>Id<b>";
+            header_row.insertCell(2).innerHTML = "<b>Name<b>";
+            header_row.insertCell(3).innerHTML = "<b>Relevance<b>";
+
+            header_row.cells[0].addEventListener("click", function () { sortTable(0, false) });
+            header_row.cells[1].addEventListener("click", function () { sortTable(0, true) });
+            header_row.cells[2].addEventListener("click", function () { sortTable(1, false) });
+            header_row.cells[3].addEventListener("click", function () { sortTable(1, true) });
+
+            var row, cell1, cell2;
+            for (var i in graph_list) {
+                row = table.insertRow(-1);
+                cell1 = row.insertCell(0); cell2 = row.insertCell(1);
+                cell3 = row.insertCell(2); cell4 = row.insertCell(3);
+                cell1.innerHTML = "<input type='checkbox' onclick='checkSelect(event)'>";
+                cell2.innerText = graph_list[i].id;
+                cell3.innerText = graph_list[i].name;
+                cell4.innerText = graph_list[i].weight;
+
+                for (var j in selected_profile.graphs) {
+                    if (selected_profile.graphs[j].name == graph_list[i].name) {
+                        cell1.innerHTML = "<input type='checkbox' onclick='checkSelect(event)' checked='checked'>";
+                        break;
+                    }
+                }
+
+            }
+        }
+
+        function sortTable(n, isNumber) {
+            var rows, switching, i, x, y, dir, shouldSwitch, switchcount = 0;
+            switching = true;
+            dir = "asc";
+            /*Make a loop that will continue until
+            no switching has been done:*/
+            while (switching) {
+                //start by saying: no switching is done:
+                switching = false;
+                rows = table.rows;
+                /*Loop through all table rows (except the
+                first, which contains table headers):*/
+                for (i = 1; i < (rows.length - 1); i++) {
+                    //start by saying there should be no switching:
+                    shouldSwitch = false;
+                    /*Get the two elements you want to compare,
+                    one from current row and one from the next:*/
+                    x = rows[i].querySelectorAll("td")[n];
+                    y = rows[i + 1].querySelectorAll("td")[n];
+                    //check if the two rows should switch place:
+                    if (dir == "asc") {
+                        if (isNumber) {
+                            if (parseInt(x.innerHTML) > parseInt(y.innerHTML)) {
+                                //if so, mark as a switch and break the loop:
+                                shouldSwitch = true;
+                                break;
+                            }
+                        } else {
+                            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                                //if so, mark as a switch and break the loop:
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                    } else if (dir == "desc") {
+                        if (isNumber) {
+                            if (parseInt(x.innerHTML) < parseInt(y.innerHTML)) {
+                                //if so, mark as a switch and break the loop:
+                                shouldSwitch = true;
+                                break;
+                            }
+                        } else {
+                            if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                                //if so, mark as a switch and break the loop:
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    /*If a switch has been marked, make the switch
+                    and mark that a switch has been done:*/
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    /*If no switching has been done AND the direction is "asc",
+                    set the direction to "desc" and run the while loop again.*/
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+
+        function toggleAllSelection(elem) {
+            var rows = table.rows;
+            if (elem.checked) {
+                for (var i = 1; i < rows.length; i++) {
+                    rows[i].cells[0].querySelector("input").checked = true;
+                }
+            } else {
+                for (var i = 1; i < rows.length; i++) {
+                    rows[i].cells[0].querySelector("input").checked = false;
+                }
+            }
+        }
+
+        var lastChecked = -1;
+        function checkSelect(e) {
+            var index = e.target.parentNode.parentNode.rowIndex;
+            if (index == 0)
+                return;
+            if (lastChecked == -1) {
+                lastChecked = index;
+                return;
+            }
+            let checked;
+            if (e.shiftKey) {
+                checked = e.target.checked;
+                if (lastChecked < index) {
+                    for (var i = lastChecked + 1; i < index + 1; i++) {
+                        table.rows[i].cells[0].querySelector("input").checked = checked;
+                    }
+                } else if (lastChecked > index) {
+                    for (var i = index + 1; i < lastChecked + 1; i++) {
+                        table.rows[i].cells[0].querySelector("input").checked = checked;
+                    }
+                }
+            }
+            lastChecked = index;
+        }
+
+        function save() {
+            localStorage.setItem('cancel_check', JSON.stringify({ cancel: false }));
+            var rows, cell, id;
+            rows = table.rows;
+            if (selector_stuff.type == "object") {
+                selected_profile.objs = [];
+                for (var i = 1; i < rows.length; i++) {
+                    cell = rows[i].cells[0];
+                    if (cell.querySelector("input").checked) {
+                        id = parseInt(rows[i].cells[1].innerText);
+                        selected_profile.objs.push(all_list[id]);
+                    }
+                }
+            } else if (selector_stuff.type == "graph") {
+                selected_profile.graphs = [];
+                for (var i = 1; i < rows.length; i++) {
+                    cell = rows[i].cells[0];
+                    if (cell.querySelector("input").checked) {
+                        id = parseInt(rows[i].cells[1].innerText);
+                        selected_profile.graphs.push(graph_list[id]);
+                    }
+                }
+            }
+            console.log(selector_stuff);
+            localStorage.setItem("selector_stuff", JSON.stringify(selector_stuff));
+            window.close();
+        }
+        function cancel() {
+            localStorage.setItem('cancel_check', JSON.stringify({ cancel: true }));
+            window.close();
+        }
+
+    </script>
+</body>
+
+</html>

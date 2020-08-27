@@ -5,26 +5,32 @@
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
     <link rel="stylesheet" href="creator.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.css">
+
 </head>
 
 <body>
 
     <header id="creator_header">
         <input type="text" id="graph_name" name="graph_name" />
+        <button id="delete_btn" value="delete graph" onclick="deleteGraph()">DELETE GRAPH</button>
     </header>
 
     <section id="mid_section">
         <section id="params_section">
             <div id="profile_section">
-                <div>
-                    <p><b>Profile(s)</b></p>
-                    <button class="small_button" onclick="profile_handler()">edit</button>
-                    <!--<input type="text" id="profile_input" width="20" />-->
+                <div class="editor_div">
+                    <div id="editor_span">
+                        <span id="key">Dynamic Profiles</span>
+                    </div>
+                    <div id="editor_input">
+                        <input id="input" type="text" value="any" />
+                        <button onclick="editProfile()"><i class="far fa-edit"></i></button>
+                    </div>
                 </div>
-                <div id="profile_input"></div>
             </div>
             <div id="creator_slider_div">
-                <h4 id="name">Weight</h4>
+                <h4 id="name">Relevance</h4>
                 <input type="range" min="1" max="10" value="5" class="slider" oninput="updateSliderValue(this)" />
                 <p id="slider_value">5</p>
             </div>
@@ -46,8 +52,10 @@
         <section id="graph_section">
             <canvas id="creator_graph"></canvas>
             <div id="creator_btn_container">
-                <button class="graph_btns" onclick="erase_creator()">cancel</button>
-                <button class="graph_btns" onclick="save_creator()">save and close</button>
+                <button class="graph_btns" onclick="save_creator()">Save and close</button>
+                <button class="graph_btns" onclick="erase_creator()">Erase changes</button>
+                <button class="graph_btns" onclick="cancel_creator()">Cancel and close</button>
+                
             </div>
         </section>
     </section>

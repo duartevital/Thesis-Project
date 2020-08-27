@@ -39,6 +39,21 @@ function dropdownClick() {
 }
 
 function addHeatFeature(info) {
+    if (info.polution == 0) {
+        for (var i in heatmap_features.features) {
+            if (heatmap_features.features[i].properties.id == info.heat_index) {
+                heatmap_features.features.splice(i, 1);
+                map.getSource("polution").setData(heatmap_features);                
+            }
+        }
+        return;
+    }
+    
+    /*if (info.heat_index) 
+        for (var i in heatmap_features.features) 
+            if (heatmap_features.features[i].properties.id == info.heat_index) 
+                return;*/
+    
     //Creation of heatmap points
     var feature = {
         type: "Feature",
@@ -52,9 +67,9 @@ function addHeatFeature(info) {
     var properties = feature.properties;
     var geometry = feature.geometry;
 
-    properties.id = info.id;
+    //properties.id = info.id;
+    properties.id = info.heat_index;
     properties.level = info.polution;
-    //properties.intensity_level = info.polution / 10;
     properties.range_1 = info.range * 0.1;
     properties.range_2 = info.range * 0.4;
     //properties.range_2 = properties.range_3 * 0.85;
@@ -71,7 +86,9 @@ function addHeatFeature(info) {
         }
     };
     //geometry.type = "Point";
-    var center_coord = center.default(tmp_feat).geometry.coordinates;
+    var center_coord;
+    if (info.shape != "Point")
+        center_coord = center.default(tmp_feat).geometry.coordinates;
 
     //insert heat over the entirity of the polygon
     //geometry.type = "MultiPoint";
@@ -87,28 +104,34 @@ function addHeatFeature(info) {
             geometry.coordinates = center_coord;
             geometry.type = "Point";
         }
+    } else if (info.shape == "Point") {
+        geometry.coordinates = info.coords;
+        geometry.type = "Point";
     }
 
-    var feature_exists = false;
+    //var feature_exists = false;
+    var exists = { a: false, b: false };
     for (var i in heatmap_features.features) {
         if (heatmap_features.features[i].properties.id == properties.id) {
             heatmap_features.features[i] = feature;
-            feature_exists = true;
+            //feature_exists = true;
+            exists.a = true;
             break;
         }
     }
-    if (!feature_exists)
+    if (!exists.a)
         heatmap_features.features.push(feature);
     map.getSource("polution").setData(heatmap_features);
 
     //Painting "poluted" polygons
-    /*var fill_feature = {
+    if (info.shape == "Point") return;
+    var fill_feature = {
         type: "Feature",
         properties: {},
         geometry: {}
     }
 
-    fill_feature.properties.id = info.id;
+    fill_feature.properties.id = info.heat_index;
 
     if (info.polution <= 50) 
         fill_feature.properties.color = 'rgba(0, 228, 0, 0.9)';
@@ -126,19 +149,40 @@ function addHeatFeature(info) {
     fill_feature.geometry.type = info.shape;
     fill_feature.geometry.coordinates = info.coords;
 
-    heatmap_fill_features.features.push(fill_feature);
-    map.getSource("polution_fill").setData(heatmap_fill_features);*/
-}
-
-function removeHeatFeature(info) {
-    var feats = heatmap_features.features
-    for (var i in feats) {
-        if (feats[i].properties.id == info.id) {
-            feats.splice(i, 1);
-            map.getSource("polution").setData(heatmap_features);
+    for (var i in heatmap_fill_features.features) {
+        if (heatmap_fill_features.features[i].properties.id == fill_feature.properties.id) {
+            heatmap_fill_features.features[i] = fill_feature;
+            exists.b = true;
             break;
         }
     }
+    if (!exists.b) {
+        heatmap_fill_features.features.push(fill_feature);
+    }
+    map.getSource("polution_fill").setData(heatmap_fill_features);
+}
+
+function removeHeatFeature(info) {
+    var t = heatmap_fill_features.features.length;
+    var tmp = { a: false, b: false };
+    for (var i in heatmap_features.features) 
+        if (heatmap_features.features[i].properties.id == info.heat_index) {
+            tmp.a = true;
+            heatmap_features.features.splice(i, 1);
+            map.getSource("polution").setData(heatmap_features);
+            break;
+        }
+    
+    for (var i in heatmap_fill_features.features) 
+        if (heatmap_fill_features.features[i].properties.id == info.heat_index) {
+            tmp.b = true;
+            heatmap_fill_features.features.splice(i, 1);
+            map.getSource("polution_fill").setData(heatmap_fill_features);
+            break;
+        }
+    if (tmp.a && tmp.b)
+        info.heat_index = -1;
+    
 }
 
 function getEdgesFeatureCoordinates(coords, space) {

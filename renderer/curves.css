@@ -5,8 +5,13 @@ figure.quadratic {
 }
 
 .weight_slider {
-    width: 125px;
+    width: 80% !important;
+    height: 22px;
 }
+    .weight_slider::-webkit-slider-thumb {
+        width: 22px;
+        height: 22px;
+    }
 
 #disabler {
     position: absolute;
@@ -20,24 +25,73 @@ figure.quadratic {
 
 #curves_top {
     position: absolute;
-    top: 6%;
-    left: 20%;
-    width: 88%;
+    top: 3%;
+    width: 100%;
+    height: 17%;
 }
+    #curves_top div:first-child {
+        position: absolute;
+        top: 85%;
+        left: 5%;
+        width: 110px;
+        height: 75px;
+    }
+    #curves_top select {
+        width: 100%;
+        padding: 5px;
+        background-color: #80e27e;
+        font-size: 16px;
+        outline: none;
+    }
+    #curves_top div:nth-child(2) {
+        float: left;
+        margin-left: 2%;
+        margin-top: 2%;
+        width: auto;
+        height: 55px;
+    }
+        #curves_top div:nth-child(2) button {
+            float: left;
+            background-color: #81c784;
+            margin-top: 13px;
+            outline: none;
+            border: none;
+            padding: 5px;
+            padding-left: 10px;
+            padding-right: 10px;
+            font-size: 16px;
+        }
+            #curves_top div:nth-child(2) button:nth-child(1) {
+                border-top-left-radius: 7px;
+                border-bottom-left-radius: 7px;
+                border-right: none;
+            }
+            #curves_top div:nth-child(2) button:nth-child(2) {
+                border-top-right-radius: 7px;
+                border-bottom-right-radius: 7px;
+                border-left: 1px solid #000000;
+            }
+    #curves_top #profile_manager_btn {
+        margin-top: 4%;
+        margin-right: 5%;
+        float: right;
+    }
 
-#curves_graph {
-    position: absolute;
-    top: 16%;
-    width: 95%;
-    height: 55%;
-}
-
-#weights_div {
-    position: relative;
-    top: 70%;
-    left: 2%;
-    width: 90%;
-}
+    #curves_graph {
+        position: absolute;
+        top: 20%;
+        width: 95%;
+        height: 55%;
+    }
+    #curves_graph #reset_graph{
+        position: absolute;
+        right: 6px;
+        top: 1px;
+        padding: 1px;
+        padding-left: 5px;
+        padding-right: 5px;
+        font-size: 14px;
+    }
 
 #line_graph {
     position: center;
@@ -45,27 +99,44 @@ figure.quadratic {
     height: 100%;
 }
 
-#weight_table {
-    background-color: #ffffff;
+#weights_div {
+    position: absolute;
+    top: 70%;
+    left: 5%;
+    width: 60%;
 }
 
 #weight_table_div {
     float: left;
-    width: 42%;
+    width: 100%;
     max-height: 140px;
-    overflow: auto;
+    overflow-y: auto;
 }
 
+#weight_table {
+    width: 100%;
+}
+    #weight_table td {
+        text-align: center;
+    }
+    #weight_table tr td:nth-child(1){
+        width: 40%;
+    }
+    #weight_table tr td:nth-child(2) {
+        width: 56%;
+        align-content: center;
+    }
+    #weight_table tr td:nth-child(3) {
+        width: 16%;
+    }
+
 #profile_info_div {
-    position:relative;
-    top: 70%;
-    left: 10%;
+    position: absolute;
+    top: 60%;
+    left: 5%;
     float: left;
     width: 42%;
 }
-    #profile_info_div > div {
-        padding: 8px;
-    }
 
 #profile_info {
     border: 1px solid black;

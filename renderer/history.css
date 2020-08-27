@@ -9,6 +9,9 @@ dt, dd {
 }
 
 .entry {
+    border-top: 2px outset #ccc;
+    margin: auto;
+    margin-top: 15px;
 }
 
 .sub_entry {
@@ -17,7 +20,7 @@ dt, dd {
     border: 1px solid #ccc;
 }
     .sub_entry:hover {
-        background-color: aqua;
+        background-color: #80e27e;
     }
 
 .info_holder {
@@ -25,7 +28,7 @@ dt, dd {
     width: 80%;
 }
 
-.aqi_holder {
+.avg_polution_holder {
     text-align: center;
     float: right;
     right: 10px;
@@ -36,7 +39,7 @@ dt, dd {
     border: none;
 }
 
-.aqi {
+.avg_polution {
     top: 1px;
     font-size: 30px;
     font: bold;
