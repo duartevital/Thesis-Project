@@ -1,0 +1,37 @@
+﻿<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Quick Starting Guide</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link rel="stylesheet" href="tutorial.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.css">
+
+</head>
+
+<body>
+
+    <div id="image_div">
+        <video controls autoplay loop></video>
+    </div>
+    <div id="right_div">
+        <div id="slide_title"><p></p></div>
+        <div id="info_div">
+            <p></p>
+        </div>
+    </div>
+    <div id="bottom_div">
+        <input type="checkbox" id="option_check" onchange="setShowTutorial(this)" />
+        <label for="option_check" id="option_label">Don't show this again</label>
+        <div id="buttons_div">
+            <button id="previous_btn" onclick="goToPrevious()"><i class="fas fa-caret-left"></i></button>
+            <label></label>
+            <button id="next_btn" onclick="goToNext()"><i class="fas fa-caret-right"></i></button>
+        </div>
+    </div>
+
+
+
+    <script src="./../Tutorial.js"></script>
+</body>
+</html>

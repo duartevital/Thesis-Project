@@ -12,51 +12,53 @@
     <link rel="stylesheet" href="autocomplete.css" />
     <link rel="stylesheet" href="history.css" />
     <link rel="stylesheet" href="curves.css" />
-    <link rel="stylesheet" href="popup.css" />
+    <link rel="stylesheet" href="popups.css" />
 
 </head>
-<body onkeydown="toggleCntrlPress(event)" onkeyup="toggleCntrlPress(event)">
+<body onkeydown="toggleCntrlPress(event)" onkeyup="toggleCntrlPress(event)" onmousedown="bodyMouseDown(event)">
     <!--onclick="bodyClick(event)"-->
     <div id="desc_box">polution magnitude: </div>
     <!--MAP SECTION-->
     <div id='map_div'>
         <div id='map'></div>
+        <span id="zoom" class="info_container"><b>zoom:</b> 12</span>
         <div id='map_info' class="info_container">
+            <span onclick="toggleMapInfo(this.parentNode)"><b>Simulation Itens</b></span>
             <div class="map_info_bg info_container" onclick="toggleMapInfo(this)"></div>
-            <span id="zoom" class="info_container"><b>zoom:</b> </span>
-            <button class="info_container" title="view usecase items" onclick="toggleMapInfo(this)"><i class="fas fa-caret-down"></i></button>
-            <div id="map_info_content" class="info_container">
+            <button class="info_container" title="view usecase items" onclick="toggleMapInfo(this.parentNode)"><i class="fas fa-caret-down"></i></button>
+            <div id="map_info_content" class="info_container dropdown">
                 <div class="map_info_bg info_container"></div>
                 <table class="info_container"></table>
             </div>
         </div>
         <span id="universal_warning"></span>
-        <div id="layer_dropdown_btn" class='dropdown_div' onmousemove="layerAction(true, this)" onmouseout="layerAction(false, this)">
-            <button class="standard_buttons"><i class="fas fa-layer-group"></i></button>
-            <div id="layer_dropdown" class="dropdown_content" oninput="layerCheckInput(this)">
-                <div id="entities_sel">
-                    <input type="checkbox" id="entities_check" value="Entities" checked="checked" />
-                    <label for="entities_check">Entities</label><br />
-                    <input type="range" id="entities_slider" min="0" max="100" value="100" oninput="layerSliderInput(this)" />
-                </div>
-                <div id="heatmap_sel">
-                    <input type="checkbox" id="heatmap_check" value="Heatmap" />
-                    <label for="heatmap_check">Heatmap</label><br />
-                    <input type="range" id="heatmap_slider" min="0" max="100" value="0" oninput="layerSliderInput(this)" />
+        <div id="map_layer_filter_div">
+            <div id="layer_dropdown_btn" onmousemove="layerAction(true, this, event)" onmouseout="layerAction(false, this, event)">
+                <button id="layer_btn" class="standard_buttons"><i class="fas fa-layer-group" style="margin: -2px;"></i></button>
+                <div id="layer_dropdown" class="dropdown_content" oninput="layerCheckInput(this)">
+                    <div id="entities_sel">
+                        <input type="checkbox" id="entities_check" value="Entities" checked="checked" />
+                        <label for="entities_check">Entities</label><br />
+                        <input type="range" id="entities_slider" min="0" max="100" value="100" oninput="layerSliderInput(this)" />
+                    </div>
+                    <div id="heatmap_sel">
+                        <input type="checkbox" id="heatmap_check" value="Heatmap" checked/>
+                        <label for="heatmap_check">Heatmap</label><br />
+                        <input type="range" id="heatmap_slider" min="0" max="100" value="50" oninput="layerSliderInput(this)" />
+                    </div>
                 </div>
             </div>
-        </div>
-        <div id="filter_div" class="selections_div" onmousemove="filterAction(true, this)" onmouseout="filterAction(false, this)">
-            <button class="standard_buttons">Filter</button>
-            <div id="filter_bg"></div>
-            <form id="filter_form" oninput="checkSelect()" style="display:none">
-                <input type="checkbox" id="buildings_check" name="check_btns" value="buildings" />
-                <label for="buildings_check">Buildings</label><br>
-                <input type="checkbox" id="roads_check" name="check_btns" value="roads" />
-                <label for="roads_check">Roads</label><br>
-                <input type="checkbox" id="landuse_check" name="check_btns" value="landuse" />
-                <label for="landuse_check">Landuse</label><br><br>
-            </form>
+            <div id="filter_div" class="selections_div" onmousemove="filterAction(true, this)" onmouseout="filterAction(false, this)">
+                <button id="filter_btn" class="standard_buttons"><i class="fas fa-filter" style="margin: -2px;"></i></button>
+                <form id="filter_form" oninput="checkSelect()" style="display:none">
+                    <input type="checkbox" id="buildings_check" name="check_btns" value="buildings" />
+                    <label for="buildings_check">Buildings</label><br>
+                    <input type="checkbox" id="roads_check" name="check_btns" value="roads" />
+                    <label for="roads_check">Roads</label><br>
+                    <input type="checkbox" id="landuse_check" name="check_btns" value="landuse" />
+                    <label for="landuse_check">Landuse</label><br><br>
+                </form>
+            </div>
         </div>
         <div id="instructions_div">
             <div class="hover_boxes" id="instruction_box">
@@ -74,7 +76,7 @@
     <!--<button id="actionButton" onclick="startAll()">Start</button>-->
 
     <div class="tab">
-        <div></div>
+        <div id="tab_fill"></div>
         <div id="fake_btn" class="tabLinks"></div>
         <button class="tabLinks not_selected_tabs" onclick="openTab('features_tab')">Polution Sources</button>
         <button class="tabLinks not_selected_tabs" onclick="openTab('curves_tab')">Polution Dynamics</button>
@@ -85,22 +87,27 @@
     <!--FEATURES TAB-->
     <div id="features_tab" class="tabContent">
         <section id="top_section">
-            <div>
-                <span id="props_title">Entity Information</span>
-                <div id='features'>
-                    <table id="propsTable"></table>
-                </div>
-                <div id="type_placeholder"></div>
+            <div id="props_title">
+                <h3>Entity Information</h3>
+                <div id="rect"></div>
+            </div>
+            <div id="props_info_div">
+                <div id="source_placeholder" class="placeholders"></div>
+                <div id="area_length_placeholder" class="placeholders"></div>
+                <div id="id_placeholder" class="placeholders"></div>
+                <div id="type_placeholder" class="placeholders"></div>
+                <div id="name_placeholder" class="placeholders"></div>
+                <div id="one_way_placeholder" class="placeholders"></div>
             </div>
             <div id="props_details_div">
                 <h4>Please select a map Entity</h4>
                 <div style="width:100%; margin-top: 5%; float: left">
-                    <div id="polution_placeholder"></div>
-                    <div id="range_placeholder"></div>
+                    <div id="polution_placeholder" class="placeholders"></div>
+                    <div id="range_placeholder" class="placeholders"></div>
                 </div>
                 <div style="width:100%; margin-top: 5%; float: left">
-                    <div id="profile_placeholder"></div>
-                    <div id="focus_placeholder"></div>
+                    <div id="profile_placeholder" class="placeholders"></div>
+                    <div id="focus_placeholder" class="placeholders"></div>
                 </div>
                 <div id="editor_btns_div">
                     <button id="accept_btn" onclick="savePropsChanges()">accept changes</button>
@@ -111,22 +118,21 @@
         </section>
 
         <section id="bottom_section">
-            <h5 class="title_text">Entity areas (%)</h5>
             <div id="list_pie_switch">
-                <span style="float:left; padding-right:6px;">entity list</span>
+                <span style="float:left; padding-right:8px; font-size: 17px;">Entity List</span>
                 <label class="switch" style="float:left">
                     <input type="checkbox" checked onchange="listPieHandler(this)">
                     <span class="slider round"></span>
                 </label>
-                <span style="float:left; padding-left:6px;">pie-chart</span>
+                <span style="float:left; padding-left:8px; font-size: 17px;">Entity Areas(%)</span>
             </div>
             <canvas id="pieChart" width="90" height="50"></canvas>
             <table id="objTable" title="List of all roads"></table>
         </section>
     </div>
 
-    <!--<button onclick="dumbFunction()" id="dumb_btn">dumb btn</button>
-    <button onclick="loadAllInfo()" id="loadAll_btn">LOAD</button>
+    <button onclick="dumbFunction()" id="dumb_btn">dumb btn</button>
+    <!--<button onclick="loadAllInfo()" id="loadAll_btn">LOAD</button>
     <button onclick="generateRandomPoints(1000)" id="generate_csv_btn" class="standard_buttons">Genererate</button>
     <button onclick="saveAllInfo()" id="saveAll_btn" class="standard_buttons" title="Saves everything in a JSON file">SAVE</button>
     <button onclick="sendInfo()" id="send_btn" class="standard_buttons" title="Send to server">SEND</button>-->
@@ -149,6 +155,7 @@
             <div>
                 <select id="graph_dropdown" onchange="changeGraph(this)">
                     <option selected value="weekday">weekday</option>
+                    <option value="traffic">traffic</option>
                 </select>
             </div>
             <div>
@@ -158,17 +165,28 @@
             <button class="standard_buttons" id="profile_manager_btn" onclick="editProfile()">Profile Manager</button>
         </div>
         <div id="curves_graph">
-            <button id="reset_graph" onclick="reset_graph_values()">reset graph</button>
+            <!--<button id="reset_graph" onclick="reset_graph_values()">reset graph</button>-->
             <canvas id="line_graph"></canvas>
             <h4 style="visibility:hidden">No graphs found!</h4>
         </div>
         <div id="weights_div">
             <p><b>Relevance</b></p>
+            <div class="hint_div" style="float: left; margin-top: 2px">
+                <button onclick="addHint(this)"><i class="fas fa-info-circle"></i></button>
+                <div class="hint dropdown">
+                    <p>Adjust each graphs' relative relevance of influence over associated Entities</p>
+                </div>
+            </div>
             <div id="weight_table_div">
                 <!--adicionar aqui os ranges (sliders)-->
                 <table id="weight_table">
                     <tr onmousedown="getSelectedGraph(this)">
                         <td>weekday</td>
+                        <td><input type="range" min="0" max="10" value="10" class="weight_slider" oninput="updateSum(this)" /></td>
+                        <td>10</td>
+                    </tr>
+                    <tr onmousedown="getSelectedGraph(this)">
+                        <td>traffic</td>
                         <td><input type="range" min="0" max="10" value="10" class="weight_slider" oninput="updateSum(this)" /></td>
                         <td>10</td>
                     </tr>
@@ -182,7 +200,7 @@
                 </div>
                 <div id="editor_input">
                     <input id="input" type="text" />
-                    <button onclick="editProfile()"><i class="far fa-edit"></i></button>
+                    <button onclick="editProfile()" title="Open Profile Manager"><i class="far fa-edit"></i></button>
                 </div>
             </div>
         </div>
@@ -207,10 +225,16 @@
         <div class="editor_div">
             <div id="editor_span">
                 <span id="key"></span>
+                <div class="hint_div">
+                    <button onclick="addHint(this)"><i class="fas fa-info-circle"></i></button>
+                    <div class="hint dropdown">
+                        <p></p>
+                    </div>
+                </div>
             </div>
             <div id="editor_input">
                 <input id="input" type="text" onfocus="inputFocus(this)" onchange="inputChange(this)" />
-                <button style="visibility:hidden"><i class="far fa-edit"></i></button>
+                <!--<button style="visibility:hidden"><i class="far fa-edit"></i></button>-->
             </div>
         </div>
     </template>
@@ -226,14 +250,13 @@
                         <dt>Location: </dt>
                         <dd id="location_coords"></dd>
                     </dl>
-                    <hr class="dl_separator" />
                     <dl>
-                        <dt>Building: </dt>
-                        <dd id="building_area"></dd>
-                        <dt>Landuse: </dt>
-                        <dd id="landuse_area"></dd>
-                        <dt>Road: </dt>
-                        <dd id="road_length"></dd>
+                        <dt id="n_altered"></dt>
+                        <dd style="float: none"> altered entities</dd>
+                        <dt id="n_graphs"></dt>
+                        <dd style="float: none"> graphs</dd>
+                        <dt id="n_profiles"></dt>
+                        <dd style="float: none"> profiles</dd>
                     </dl>
                 </div>
                 <div class="avg_polution_holder">
@@ -252,12 +275,16 @@
     <!--Hints template-->
     <template id="hint_template">
         <div>
-            <img src="../Media/hint_icon.png" alt="hint icon" width="5" height="5" />
+            <button onclick="addHint(this)"><i class="fas fa-info-circle"></i></button>
+            <div class="hint">
+                <p></p>
+            </div>
         </div>
     </template>
 
 
     <!--Import scripts-->
+    <script src="./../Popups.js"></script>
     <script src="./../TagsHandler.js"></script>
     <script src="./../Mapbox_gl.js"></script>
     <script src="./../dataHandler.js"></script>

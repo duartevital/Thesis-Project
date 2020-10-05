@@ -2,21 +2,26 @@ dt, dd {
     float: left;
 }
 
+dd {
+    margin-left: 15px;
+}
+
 .entries_section {
-    height: 85%;
+    height: 95%;
+    width: 100%;
     display: block;
     overflow: auto;
 }
 
 .entry {
-    border-top: 2px outset #ccc;
+    border-top: 2px outset #8e8e8e;
     margin: auto;
     margin-top: 15px;
 }
 
 .sub_entry {
-    height: 70px;
-    padding: 6px 12px;
+    height: 90px;
+    padding: 5px 12px;
     border: 1px solid #ccc;
 }
     .sub_entry:hover {
@@ -29,10 +34,11 @@ dt, dd {
 }
 
 .avg_polution_holder {
+    position: absolute;
     text-align: center;
     float: right;
-    right: 10px;
-    width: 20%;
+    right: 20px;
+    width: 25%;
 }
 
 .dl_separator {

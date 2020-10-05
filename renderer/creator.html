@@ -4,6 +4,7 @@
     <title>Dinamic Graph Creator</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
+    <link rel="stylesheet" href="popups.css" />
     <link rel="stylesheet" href="creator.css" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.css">
 
@@ -12,8 +13,10 @@
 <body>
 
     <header id="creator_header">
-        <input type="text" id="graph_name" name="graph_name" />
-        <button id="delete_btn" value="delete graph" onclick="deleteGraph()">DELETE GRAPH</button>
+        <div id="graph_name_holder">
+            <input type="text" id="graph_name" name="graph_name" />
+        </div>
+        <button id="delete_btn" value="delete graph" onclick="deleteGraph()" disabled>DELETE GRAPH</button>
     </header>
 
     <section id="mid_section">
@@ -24,7 +27,7 @@
                         <span id="key">Dynamic Profiles</span>
                     </div>
                     <div id="editor_input">
-                        <input id="input" type="text" value="any" />
+                        <input id="input" type="text" value="No profile selected" readonly />
                         <button onclick="editProfile()"><i class="far fa-edit"></i></button>
                     </div>
                 </div>
@@ -36,20 +39,22 @@
             </div>
             <div id="creator_table_div">
                 <button class="small_table_btns" onclick="addRow()">+</button>
+                <button class="small_table_btns" onclick="removeRow()">-</button>
                 <table id="creator_table" width="100%" contenteditable="true">
                     <tr>
                         <td><input type="text" value="item0" id="0"/></td>
-                        <td><input type="number" value=0 id="0" /></td>
+                        <td><input type="number" value=5 id="0" /></td>
                     </tr>
                     <tr>
                         <td><input type="text" value="item1" id="1"/></td>
-                        <td><input type="number" value=0 id="1"/></td>
+                        <td><input type="number" value=5 id="1"/></td>
                     </tr>
                 </table>
             </div>
         </section>
 
         <section id="graph_section">
+            <div id="graph_popup_container"></div>
             <canvas id="creator_graph"></canvas>
             <div id="creator_btn_container">
                 <button class="graph_btns" onclick="save_creator()">Save and close</button>
@@ -61,6 +66,7 @@
     </section>
 
 
+    <script src="./../Popups.js"></script>
     <script src="./../Creator.js"></script>
 </body>
 </html>

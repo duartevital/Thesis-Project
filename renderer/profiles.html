@@ -5,6 +5,7 @@
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
     <link rel="stylesheet" href="profile_manager.css" />
+    <link rel="stylesheet" href="popups.css" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.css">
 </head>
 
@@ -21,13 +22,13 @@
         <div class="profile_div" onmousedown="setSelectedProfile(this)">
             <input type="text" id="profile_name" name="dynamic profile name" onfocus="save_before_value(this)" onchange="save_profile_input(this)"><br><br>
             <button id="delete_btn" onclick="deleteProfile(this)"><i class="fas fa-trash-alt"></i></button>
-            
+
             <div class="editor_div">
                 <div id="editor_span">
                     <span id="key">Entities</span>
                 </div>
                 <div id="editor_input">
-                    <input id="objs_input" type="text" contenteditable="false"/>
+                    <input id="objs_input" type="text" contenteditable="false" />
                     <button onclick="openObjSelector()"><i class="fas fa-list"></i></button>
                 </div>
             </div>
@@ -37,12 +38,19 @@
                     <span id="key">Graphs</span>
                 </div>
                 <div id="editor_input">
-                    <input id="graphs_input" type="text" contenteditable="false"/>
+                    <input id="graphs_input" type="text" contenteditable="false" />
                     <button onclick="openGraphSelector()"><i class="fas fa-list"></i></button>
                 </div>
             </div>
         </div>
     </template>
+    <!--Hints template-->
+    <template id="hint_template">
+        <div>
+            <p></p>
+        </div>
+    </template>
+
     <!--Import scripts-->
     <script src="./../ProfileManager.js"></script>
 </body>

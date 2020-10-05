@@ -105,6 +105,9 @@ figure.quadratic {
     left: 5%;
     width: 60%;
 }
+    #weights_div p {
+        float: left;
+    }
 
 #weight_table_div {
     float: left;
@@ -136,6 +139,7 @@ figure.quadratic {
     left: 5%;
     float: left;
     width: 42%;
+    height: 3vw;
 }
 
 #profile_info {

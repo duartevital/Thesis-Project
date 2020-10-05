@@ -1,6 +1,7 @@
 const path = require('path');
 //const Window = require('./Window');
 
+var map_info_bg = map_info.querySelector(".map_info_bg");
 var graph_dropdown = document.getElementById("graph_dropdown");
 var weight_table = document.getElementById("weight_table");
 var curves_graph = document.getElementById("curves_graph");
@@ -17,17 +18,16 @@ var graph = {
     weight: 10,
     profile: ["any"],
     labels: [
-        { name: 'standard', value: avg_polution, selected: true },
-        { name: 'monday', value: 0 },
-        { name: 'tuesday', value: 0 },
-        { name: 'wednesday', value: 0 },
-        { name: 'thursday', value: 0 },
-        { name: 'friday', value: 0 },
-        { name: 'saturday', value: 0 },
-        { name: 'sunday', value: 0 }
+        { name: 'monday', value: 5, selected: true },
+        { name: 'tuesday', value: 5 },
+        { name: 'wednesday', value: 5 },
+        { name: 'thursday', value: 5 },
+        { name: 'friday', value: 5 },
+        { name: 'saturday', value: 5 },
+        { name: 'sunday', value: 5 }
     ]
 }
-graph_list.push(graph);
+addGraphs();
 var selected_row = 0;
 var labels_array = graph.labels;
 var labels_names, labels_values;
@@ -83,11 +83,27 @@ var line_chart = new Chart(ctx, {
     }
 });
 
+function addGraphs() {
+    graph_list.push(graph);
+    graph_list.push({
+        id: 1,
+        name: "traffic",
+        weight: 10,
+        profile: ["any"],
+        labels: [
+            { name: 'low', value: 5, selected: true },
+            { name: 'medium', value: 5 },
+            { name: 'high', value: 5 }
+        ]
+    });
+}
+
 function setProfilesInput() {
     var val = "";
     for (var i in graph.profile)
         val += graph.profile[i] + ", ";
 
+    if (val == "") val = "No profile selected";
     document.getElementById("profile_info_div").querySelector("input").value = val;
 }
 
@@ -110,6 +126,7 @@ function updateChart() {
 }
 
 function updateList(index, value) {
+    map_info_bg.classList.toggle("pulse_animation", true);
     var after_value = (value / 2) * 100;
     var before_value = (valueBeforeDrag / 2) * 100;
     var new_value = Math.abs(after_value - before_value);
@@ -120,6 +137,8 @@ function updateList(index, value) {
 }
 
 function storeValueBeforeDrag(element) {
+    if (map_info_bg.classList.contains("pulse_animation"))
+        map_info_bg.classList.toggle("pulse_animation", false);
     valueBeforeDrag = line_chart.data.datasets[0].data[element._index];
 }
 
@@ -127,34 +146,63 @@ function changePolutionValues(before_value, after_value, new_value) {
     if (graph.weight == 0)
         return;
     var same_profile;
-    for (var i in all_list) {
+    for (var i in altered_list) {
         same_profile = false;
         heat_break:
-        for (var j in all_list[i].profile) {
+        for (var j in altered_list[i].profile) {
             for (var k in graph.profile) {
-                if (all_list[i].profile[j] == graph.profile[k]) {
+                if (altered_list[i].profile[j] == graph.profile[k]) {
                     same_profile = true;
                     break heat_break; 
                 }
             }
         }
-        console.log({ all_list_i: all_list[i], same_profile: same_profile });
-        if (all_list[i].altered == true && same_profile == true && all_list[i].heat_index > -1) {
-            log.info("in heat IF>");
+        //if (altered_list[i].altered == true && same_profile == true && altered_list[i].heat_index > -1) {
+        if (same_profile == true && altered_list[i].heat_index > -1) {
             /*if (after_value == 0) {
-                all_list[i].polution = 0;
+                altered_list[i].polution = 0;
             } else */if (after_value > before_value) {
-                let tmp = all_list[i].polution + (new_value * (graph.weight / 10));
-                //let tmp = all_list[i].polution + (new_value * (graph.weight / weight_sum));
-                if (tmp > 500) all_list[i].polution = 500;
-                else all_list[i].polution = tmp;
+                let tmp = altered_list[i].polution + (new_value * (graph.weight / 10));
+                //let tmp = altered_list[i].polution + (new_value * (graph.weight / weight_sum));
+                if (tmp > 500) altered_list[i].polution = 500;
+                else altered_list[i].polution = tmp;
             } else if (after_value < before_value) {
-                //let tmp = all_list[i].polution - (new_value * (graph.weight / weight_sum));
-                let tmp = all_list[i].polution - (new_value * (graph.weight / 10));
-                if (tmp < 0) all_list[i].polution = 0;
-                else all_list[i].polution = tmp;
+                //let tmp = altered_list[i].polution - (new_value * (graph.weight / weight_sum));
+                let tmp = altered_list[i].polution - (new_value * (graph.weight / 10));
+                if (tmp < 0) altered_list[i].polution = 0;
+                else altered_list[i].polution = tmp;
             }
-            addHeatFeature(all_list[i]);
+            addHeatFeature(altered_list[i]);
+        }
+    }
+}
+function changePolutionValues_(before_value, after_value, new_value, graph_found) {
+    if (graph_found.weight == 0)
+        return;
+    var same_profile;
+    for (var i in altered_list) {
+        same_profile = false;
+        heat_break:
+        for (var j in altered_list[i].profile) {
+            for (var k in graph_found.profile) {
+                if (altered_list[i].profile[j] == graph_found.profile[k]) {
+                    same_profile = true;
+                    break heat_break;
+                }
+            }
+        }
+        //if (altered_list[i].altered == true && same_profile == true && altered_list[i].heat_index > -1) {
+        if (same_profile == true && altered_list[i].heat_index > -1) {
+            if (after_value > before_value) {
+                let tmp = altered_list[i].polution + (new_value * (graph_found.weight / 10));
+                if (tmp > 500) altered_list[i].polution = 500;
+                else altered_list[i].polution = tmp;
+            } else if (after_value < before_value) {
+                let tmp = altered_list[i].polution - (new_value * (graph_found.weight / 10));
+                if (tmp < 0) altered_list[i].polution = 0;
+                else altered_list[i].polution = tmp;
+            }
+            addHeatFeature(altered_list[i]);
         }
     }
 }
@@ -190,6 +238,34 @@ function changeDay(elem) {
             graph.labels[i].selected = false;
         if (graph.labels[i].name == elem.value)
             graph.labels[i].selected = true;
+    }
+}
+function changeDay_(elem) {
+    var graph_found, previous_label, new_label;
+
+    for (var i in graph_list)
+        if (graph_list[i].name == elem.id) {
+            graph_found = graph_list[i];
+            for (var j in graph_list[i].labels) {
+                if (graph_list[i].labels[j].selected)
+                    previous_label = graph_list[i].labels[j];
+
+            }
+            new_label = graph_list[i].labels[elem.selectedIndex];
+            break;
+        }
+
+    var before_value = (previous_label.value / 2) * 100;
+    var after_value = (new_label.value / 2) * 100;
+    if (before_value != after_value) {
+        var new_value = Math.abs(after_value - before_value);
+        changePolutionValues_(before_value, after_value, new_value, graph_found);
+    }
+    for (var i in graph_found.labels) {
+        if (graph_found.labels[i].selected)
+            graph_found.labels[i].selected = false;
+        if (graph_found.labels[i].name == elem.value)
+            graph_found.labels[i].selected = true;
     }
 }
 
@@ -329,6 +405,10 @@ function openGraphCreationWindow(edit) {
     //const remote = require('electron').remote;
     const BrowserWindow = remote.BrowserWindow;
     const win = new BrowserWindow({
+        parent: remote.getCurrentWindow(),
+        modal: true,
+        minimizable: false,
+        maximizable: false,
         width: 770,
         height: 600,
         resizable: false,
@@ -348,12 +428,13 @@ function openGraphCreationWindow(edit) {
             weight: 5,
             profile: ["any"],
             labels: [
-                { name: 'item0', value: 0 },
-                { name: 'item1', value: 0 }
+                { name: 'item0', value: 5 },
+                { name: 'item1', value: 5 }
             ]
         }
     }
-    localStorage.setItem("graph_info", JSON.stringify({ edit: edit, info: tmp_graph }));
+    localStorage.setItem("graph_info", JSON.stringify(tmp_graph));
+    localStorage.graph_edit = edit;
     setProfileStuff();
     localStorage.setItem('profile_stuff', JSON.stringify(profile_stuff));
 
@@ -363,45 +444,52 @@ function openGraphCreationWindow(edit) {
     win.once('close', () => {
         //If cancel or close
         var cancel = JSON.parse(localStorage.getItem("cancel_check"));
-        if (typeof cancel != "undefined" && cancel.cancel) {
+        if (typeof cancel != "undefined" && cancel.cancel) 
             return;
-        }
+        
         var tmp_name = graph.name;
         graph = JSON.parse(localStorage.getItem('graph_info'));
         graph.labels[0].selected = true;
-        //saved_graph_state.labels = graph.labels;
-        /*if (typeof graph.cancel == 'undefined' || graph.cancel == true)
-            return;*/
-        
+
+        console.log({ graph: graph });
         //If delete button pressed
         if (graph.delete && graph.delete == true) {
             graph_list.splice(graph.id, 1);
             updateProfilesInfo();
+            updateProfilesGraphs();
             var options = graph_dropdown.querySelectorAll("option");
-            for (var i in options) {
+            for (var i in options) 
                 if (options[i].innerText == tmp_name) {
                     options[i].remove();
                     break;
                 }
-            }
             
             options = graph_dropdown.querySelectorAll("option");
-            var item_dropdown = document.getElementsByClassName("item_dropdown")[graph.id]
             if (options.length == 0) {
-                var item_options = item_dropdown.querySelectorAll("option");
-                for (var i = item_options.length - 1; i >= 0; i--)
-                    item_options[i].remove();
-
                 toggleElemsVisibility(false);
             } else if (options.length > 0) {
                 options[0].selected = true;
                 changeGraph(graph_dropdown);
             }
+            //Update weight table
+            for (var i = 0; i < weight_table.rows.length; i++)
+                if (weight_table.rows[i].cells[0].textContent == tmp_name) {
+                    weight_table.deleteRow(i);
+                    break;
+                }
+            //delete row from map info table
+            var tmp_table = map_info.querySelector("table");
+            for (var i = 0; i < tmp_table.rows.length; i++)
+                if (tmp_table.rows[i].cells[0].textContent == tmp_name) {
+                    tmp_table.deleteRow(i);
+                    break;
+                }
             return;
         }
 
         //Edit or create usecases
         toggleElemsVisibility(true);
+        var row, cell1, cell2, cell3;
         if (!edit) { //if create
             graph.id = graph_list.length;
             graph_list.push(graph);
@@ -410,8 +498,18 @@ function openGraphCreationWindow(edit) {
             let new_option = document.createElement("option");
             new_option.text = graph.name; new_option.value = graph.name;
             graph_dropdown.add(new_option); new_option.selected = true;
+
+            //Add row to weight table
+            row = weight_table.insertRow(-1);
+            row.addEventListener("mousedown", function () { getSelectedGraph(this) });
+            cell1 = row.insertCell(0); cell1.textContent = graph.name;
+            cell2 = row.insertCell(1);
+            cell2.innerHTML = '<td><input type="range" min="0" max="10" value="' + graph.weight + '" class="weight_slider" oninput="updateSum(this)"/></td>';
+            cell3 = row.insertCell(2); cell3.textContent = cell2.querySelector("input").value;
+            
         } else { //if edit
             graph_list[graph.id] = graph;
+            updateProfilesGraphs();
             if (tmp_name != graph.name) {
                 var options = graph_dropdown.querySelectorAll("option");
                 for (var i in options) {
@@ -421,23 +519,31 @@ function openGraphCreationWindow(edit) {
                     }
                 }
             }
+            //Update weight table
+            for (var i = 0; i < weight_table.rows.length; i++)
+                if (weight_table.rows[i].cells[0].textContent == tmp_name) {
+                    row = weight_table.rows[i];
+                    break;
+                }
+            row.cells[0].textContent = graph.name;
+            row.cells[1].innerHTML = '<td><input type="range" min="0" max="10" value="' + graph.weight + '" class="weight_slider" oninput="updateSum(this)"/></td>';
+            row.cells[2].textContent = row.cells[1].querySelector("input").value;
+            //delete row from map info table
+            var tmp_table = map_info.querySelector("table");
+            for (var i = 0; i < tmp_table.rows.length; i++) 
+                if (tmp_table.rows[i].cells[0].textContent == tmp_name) {
+                    tmp_table.deleteRow(i);
+                    break;
+                }
         }
 
         //Update profile info
         updateProfilesInfo();
         setProfilesInput();
-        
-        //Update graph weight table
-        var row = weight_table.insertRow(-1);
-        row.addEventListener("mousedown", function () { getSelectedGraph(this) });
-        var cell1, cell2, cell3;
-        cell1 = row.insertCell(0); cell1.textContent = graph.name;
-        cell2 = row.insertCell(1);
-        cell2.innerHTML = '<td><input type="range" min="0" max="10" value="' + graph.weight +'" class="weight_slider" oninput="updateSum(this)"/></td>';
-        cell3 = row.insertCell(2); cell3.textContent = cell2.querySelector("input").value;
+        //add graph (and labels) to map_info
+        addToItemsInfo(graph);
 
         updateParams();
-        addToItemsInfo(graph.labels);
         //setLabelsDropdown();
     });
 

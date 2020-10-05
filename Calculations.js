@@ -32,7 +32,8 @@ function getTypeStats(source_stats, type_stats) {
     }
 
     for (var i in type_stats) {
-        type_stats[i].percentage = (type_stats[i].area * 100) / total_area;
+        var percentage = (type_stats[i].area * 100) / total_area
+        type_stats[i].percentage = Math.round(percentage * 100) / 100;;
     }
 }
 
@@ -269,9 +270,17 @@ function getAveragePolution(list) {
             sum += list[i].polution;
             count++;
         }
+        if (list[i].focus.length > 0)
+            for (var j in list[i].focus) {
+                sum += (list[i].focus[j].polution);
+                count++;
+            }
     }
     if (sum == 0) return 0;
-    else return sum / count;
+    else {
+        var avg = sum / count
+        return Math.round(avg * 100) / 100;
+    }
 }
 
 function getAverageRange(list) {
@@ -281,9 +290,17 @@ function getAverageRange(list) {
             sum += list[i].range;
             count++;
         }
+        if (list[i].focus.length > 0)
+            for (var j in list[i].focus) {
+                sum += (list[i].focus[j].range);
+                count++;
+            }
     }
     if (sum == 0) return 0;
-    else return sum / count;
+    else {
+        var avg = sum / count
+        return Math.round(avg * 100) / 100;
+    }
 }
 
 //color-geometry calculations

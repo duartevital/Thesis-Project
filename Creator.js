@@ -1,5 +1,6 @@
 const cvs = document.getElementById("creator_graph");
 const remote = require('electron').remote;
+const { dialog, Tray } = require('electron').remote
 const path = require('path');
 let ctx = cvs.getContext("2d"); 
 const Chart = require('chart.js');
@@ -11,25 +12,22 @@ var graph_name = document.getElementById("graph_name");
 var profile_section = document.getElementById("profile_section");
 var creator_slider_div = document.getElementById("creator_slider_div");
 var creator_header = document.getElementById("creator_header");
+var delete_btn = document.getElementById("delete_btn");
 graph_name.addEventListener('input', function () { nameInputHandler(this) });
 
 
 /**********/
+localStorage.setItem('cancel_check', JSON.stringify({ cancel: true }));
 var graph_info = JSON.parse(localStorage.getItem('graph_info'));
 var profile_stuff = JSON.parse(localStorage.getItem('profile_stuff'));
 var profile_list = profile_stuff.profile_list;
 var graph_list = profile_stuff.graph_list;
 //graph stuff
-var current_graph = graph_info.info;
+var current_graph = graph_info;
 
 var labels_array = current_graph.labels;
 var labels_names = [], labels_values = [];
 setNames_Values();
-if (!graph_info.edit) {
-    graph_list.push(current_graph);
-    profile_list[0].graphs.push(current_graph);
-    document.getElementById("delete_btn").disabled = true;
-} 
 
 var default_graph_list_length = graph_list.length;
 
@@ -60,11 +58,15 @@ var creator_chart = new Chart(ctx, {
 
 //if edit == true
 setEditInfo()
-
 function setEditInfo() {
-    if (!graph_info.edit)
+    if (localStorage.graph_edit == "false") {
+        graph_list.push(current_graph);
         return;
-    
+    }
+
+    delete_btn.disabled = false;
+    delete_btn.style.cursor = "pointer";
+
     graph_name.value = current_graph.name;
     var val = "";
     for (var i in current_graph.profile)
@@ -114,7 +116,6 @@ function editProfile() {
             nodeIntegration: true
         }
     });
-    
     profile_stuff.graph_list = graph_list;
     for (var i in profile_list) {
         for (var j in profile_list[i].graphs) {
@@ -135,9 +136,7 @@ function editProfile() {
         }
         profile_stuff = JSON.parse(localStorage.getItem("profile_stuff"));
         profile_list = profile_stuff.profile_list;
-        console.log(profile_stuff);
-        console.log(graph_list);
-        console.log(current_graph);
+
         //handle graphs' profiles
         for (var i in graph_list) {
             graph_list[i].profile = [];
@@ -157,6 +156,7 @@ function editProfile() {
         for (var i in current_graph.profile)
             val += current_graph.profile[i] + ", ";
 
+        if (val == "") val = "No profile selected";
         document.getElementById("profile_section").querySelector("input").value = val;
         
     });
@@ -179,7 +179,7 @@ function addRow() {
     var input1 = document.createElement('input');
     var input2 = document.createElement('input'); 
     input1.type = "text"; input1.value = "item" + row_index; input1.id = row_index;
-    input2.type = "number"; input2.value = 0; input2.id = row_index;
+    input2.type = "number"; input2.value = 5; input2.id = row_index;
     input1.addEventListener('input', function () { inputHandler(this) });
     input2.addEventListener('input', function () { inputHandler(this) });
 
@@ -188,8 +188,15 @@ function addRow() {
     //current_graph.labels.push(input1.value);
     //data.push(0);
     labels_names.push(input1.value);
-    labels_values.push(0);
+    labels_values.push(5);
 
+    creator_chart.update();
+}
+function removeRow() {
+    table.deleteRow(-1);
+
+    labels_names.pop();
+    labels_values.pop();
     creator_chart.update();
 }
 
@@ -199,10 +206,6 @@ function inputHandler(e) {
     if (type == "text") {
         labels_names[index] = e.value;
     } else if (type = "number") {
-        /*if (isNaN(parseInt(e.value))) {
-            alert("input must be a number");
-            return;
-        }*/
         labels_values[index] = parseInt(e.value);
     }
     creator_chart.update();
@@ -219,12 +222,13 @@ function nameInputHandler(e) {
 }
 
 function deleteGraph() {
+    localStorage.setItem('cancel_check', JSON.stringify({ cancel: false }));
+    //dialog.showMessageBox(null, { type: "warning", message: "This Entity is not attached to a profile.\nChanges to any graphs won't affect this Entity." });
     var box = confirm("You're about to delete this graph and close this window");
     if (!box)
         return;
 
-    //falta fazer o close e o campo delete no localstorage( graph_info );
-    //current_graph.cancel = false;
+    //localStorage.graph_delete = true;
     current_graph.delete = true;
     localStorage.setItem('graph_info', JSON.stringify(current_graph));
     window.close();
@@ -241,9 +245,19 @@ function erase_creator() {
 }
 
 function save_creator() {
+    if (graph_name.value == "") {
+        setPopup("Graph must have a name", document.getElementById("graph_name_holder"));
+        return;
+    }
+    if (table.rows.length == 0) {
+        setPopup("Graph must have at least 1 item", document.getElementById("graph_popup_container"));
+        return;
+    }
+    if (document.getElementById("profile_section").querySelector("input").value == "No profile selected")
+        alert("This Entity is not attached to a profile.\nChanges to any graphs won't affect this Entity.");
+        //dialog.showMessageBox(null, { type: "warning", message: "This Entity is not attached to a profile.\nChanges to any graphs won't affect this Entity." });
+
     localStorage.setItem('cancel_check', JSON.stringify({ cancel: false }));
-    if(!graph_info.edit)
-        graph_list.pop();
     profile_stuff.graph_list = graph_list;
     localStorage.setItem('profile_stuff', JSON.stringify(profile_stuff));
 

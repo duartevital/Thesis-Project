@@ -13,20 +13,31 @@ input {
     background-color: rgba(0, 0, 0, 0);
 }
 
+span {
+    font-family: sans-serif;
+}
+
+h1, h2, h3, h4, h4 {
+    font-family: sans-serif;
+}
+
 .graph_btns {
     float: left;
-    width: 50%;
+    width: 33%;
 }
 
 .small_table_btns {
     float: left;
 }
 
-#graph_name {
+#graph_name_holder {
     position: absolute;
     top: 3%;
     left: 35%;
     width: 30%;
+}
+#graph_name {
+    width: 100%;
 }
 
 #delete_btn {
@@ -35,10 +46,8 @@ input {
     top: 15px;
     background-color: #ff6700;
     padding: 5px;
+    cursor: not-allowed;
 }
-    #delete_btn:hover {
-        cursor: not-allowed;
-    }
 
 #mid_section {
     position: relative;
@@ -59,6 +68,14 @@ input {
     float: left;
     width: 60%;
     height: 90%;
+}
+
+#graph_popup_container {
+    position: absolute;
+    top: 10%;
+    left: 25%;
+    width: 230px;
+    height: 35px;
 }
 
 #creator_slider_div {
@@ -104,14 +121,16 @@ input {
 }
 
 #editor_span {
+    position: relative;
     width: 100%;
     height: 45%;
-    float: left;
+    /*float: left;*/
     background-color: #9e9e9e;
 }
 
     #editor_span span {
-        padding-top: 2px;
+        float: left;
+        /*padding-top: 2px;*/
         padding-left: 8px;
         font-size: 18px;
     }
@@ -122,18 +141,22 @@ input {
 }
 
     #editor_input input {
-        width: 87%;
+        width: 100%;
         height: 100%;
-        float: left;
         font-size: 15px;
         padding-left: 5px;
         border: none;
-        background-color: white;
+        float: left;
     }
 
     #editor_input button {
         right: 0;
-        height: 100%;
-        border: none;
+        position: absolute;
+        height: 55%;
+        background-color: #80e27e;
+        border: 1px inset;
     }
+        #editor_input button:hover {
+            background-color: #73cb71;
+        }
 

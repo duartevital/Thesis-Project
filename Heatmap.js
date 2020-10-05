@@ -46,14 +46,15 @@ function addHeatFeature(info) {
                 map.getSource("polution").setData(heatmap_features);                
             }
         }
+        for (var i in heatmap_fill_features.features) {
+            if (heatmap_fill_features.features[i].properties.id == info.heat_index) {
+                heatmap_fill_features.features.splice(i, 1);
+                map.getSource("polution_fill").setData(heatmap_fill_features);
+            }
+        }
         return;
     }
-    
-    /*if (info.heat_index) 
-        for (var i in heatmap_features.features) 
-            if (heatmap_features.features[i].properties.id == info.heat_index) 
-                return;*/
-    
+        
     //Creation of heatmap points
     var feature = {
         type: "Feature",
@@ -93,11 +94,19 @@ function addHeatFeature(info) {
     //insert heat over the entirity of the polygon
     //geometry.type = "MultiPoint";
     if (info.shape == "LineString")
-        geometry.coordinates = getEdgesFeatureCoordinates(info.coords, 2 * Math.log(info.range));
+        geometry.coordinates = getEdgesFeatureCoordinates(info.coords, 4 * Math.log(info.range));
     else if (info.shape == "MultiLineString")
-        geometry.coordinates = getEdgesFeatureCoordinates(getMuliLineStringCoords(info.coords), 2 * Math.log(info.range));
+        geometry.coordinates = getEdgesFeatureCoordinates(getMuliLineStringCoords(info.coords), 4 * Math.log(info.range));
     else if (info.shape == "Polygon") {
-        var new_coords = getEdgesFeatureCoordinates(info.coords[0], 4 * Math.log(info.range));
+        var new_coords = getEdgesFeatureCoordinates(info.coords[0], 6 * Math.log(info.range));
+        if (new_coords.length > 3)
+            geometry.coordinates = new_coords;
+        else {
+            geometry.coordinates = center_coord;
+            geometry.type = "Point";
+        }
+    } else if (info.shape == "MultiPolygon") {
+        var new_coords = getEdgesFeatureCoordinates(info.coords.flat(2), 6 * Math.log(info.range));
         if (new_coords.length > 3)
             geometry.coordinates = new_coords;
         else {
@@ -124,7 +133,7 @@ function addHeatFeature(info) {
     map.getSource("polution").setData(heatmap_features);
 
     //Painting "poluted" polygons
-    if (info.shape == "Point") return;
+    if (info.shape == "Point" || info.shape == "LineString" || info.shape == "MultiLineString") return;
     var fill_feature = {
         type: "Feature",
         properties: {},

@@ -1,12 +1,9 @@
 const remote = require('electron').remote;
+const { dialog } = require('electron').remote;
 const path = require('path');
 
 var profile_stuff = JSON.parse(localStorage.getItem('profile_stuff'));
-var profile_list, all_list, graph_list, selected_objs;
-profile_list = profile_stuff.profile_list;
-all_list = profile_stuff.all_list;
-graph_list = profile_stuff.graph_list;
-selected_objs = profile_stuff.selected_objs;
+var profile_list = profile_stuff.profile_list;
 
 var content_div = document.getElementById("content_div");
 var profile_template = document.getElementById("profile_template");
@@ -60,7 +57,6 @@ function setSelectedProfile(elem) {
         for (var i in profile_list)
             if (profile_list[i].name == name) {
                 selected_profile = profile_list[i];
-                console.log(selected_profile);
                 break;
             }
     }
@@ -75,16 +71,10 @@ function save_profile_input(elem) {
         return;
 
     var parent_node = elem.parentNode;
-    if (before_value == "") {
-        selected_profile = { name: elem.value };
-        profile_list.push(selected_profile);
-        parent_node.id = elem.value + "_div";
-        btn_pressed = false;
-        return;
-    }
     for (var i in profile_list) {
         if (profile_list[i].name == elem.value) {
-            alert("This name already exists");
+            console.log("inside if");
+            dialog.showMessageBox(null, { type: "error", message: "This name already exists" });
             elem.focus();
             return;
         }
@@ -94,6 +84,13 @@ function save_profile_input(elem) {
             parent_node.id = elem.value + "_div";
             btn_pressed = false;
         }
+    }
+    if (before_value == "") {
+        selected_profile = { name: elem.value };
+        profile_list.push(selected_profile);
+        parent_node.id = elem.value + "_div";
+        btn_pressed = false;
+        return;
     }
 }
 
@@ -105,6 +102,10 @@ function openObjSelector() {
 
     const BrowserWindow = remote.BrowserWindow;
     const win = new BrowserWindow({
+        parent: remote.getCurrentWindow(),
+        modal: true,
+        minimizable: false,
+        maximizable: false,
         width: 500,
         height: 400,
         resizable: false,
@@ -120,7 +121,6 @@ function openObjSelector() {
     win.once('close', () => {
         var cancel = JSON.parse(localStorage.getItem("cancel_check"));
         if (typeof cancel != "undefined" && cancel.cancel) {
-            log.info("in cancel");
             return;
         }
         var tmp_selector_stuff = JSON.parse(localStorage.getItem("selector_stuff"));
@@ -147,6 +147,10 @@ function openGraphSelector() {
 
     const BrowserWindow = remote.BrowserWindow;
     const win = new BrowserWindow({
+        parent: remote.getCurrentWindow(),
+        modal: true,
+        minimizable: false,
+        maximizable: false,
         width: 500,
         height: 400,
         resizable: false,
@@ -214,4 +218,15 @@ function save() {
 function cancel() {
     localStorage.setItem('cancel_check', JSON.stringify({ cancel: true }));
     window.close();
+}
+
+
+function addHint(btn) {
+    var parent_node = btn.parentNode;
+    var hint = parent_node.querySelector(".hint")
+    if (hint.style.display == "block")
+        hint.style.display = "none"
+    else
+        hint.style.display = "block"
+        
 }

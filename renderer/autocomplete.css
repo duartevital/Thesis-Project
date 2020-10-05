@@ -18,9 +18,9 @@ input {
     border-bottom: none;
     border-top: none;
     z-index: 99;
-    left: 235px;
-    top: 80px;
-    width: 130px;
+    left: 4%;
+    top: 82%;
+    width: 25%;
 }
 
     .autocomplete-items div {

@@ -1,0 +1,46 @@
+
+.popup {
+    
+}
+    .popup span {
+        font-family: sans-serif;
+        font-size: 14px;
+    }
+    .popup .popuptext {
+        position: relative;
+        visibility: hidden;
+        opacity: 0.9;
+        width: 160px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px 9px;
+        z-index: 1;
+    }
+
+    .popup .show {
+        visibility: visible;
+    }
+    
+/* Hints styles */
+.hint_div button {
+    height: 100%;
+    background: none;
+    border: none;
+}
+.hint {
+    display: none;
+    position: fixed;
+    max-width: 11%;
+    padding-left: 5px;
+    padding-right: 5px;
+    z-index: 2;
+    border: 1px groove;
+    background-color: #e0e0e0;
+}
+    .hint p {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    
