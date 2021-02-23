@@ -303,7 +303,7 @@ function getAverageRange(list) {
     }
 }
 
-//color-geometry calculations
+//color-geometry calculations  --  Euclidean Distance
 function pointToPointSquared(p1, p2) {
     var r_sub, g_sub, b_sub;
     r_sub = Math.pow((p1.r - p2.r), 2);

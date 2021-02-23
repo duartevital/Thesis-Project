@@ -313,7 +313,7 @@ function updateParams() {
     setNames_Values();
 
     current = labels_array[0];
-    valueBeforeDrag = 0;
+    valueBeforeDrag = 5;
 
     line_chart.data.labels = labels_names;
     line_chart.data.datasets[0].data = labels_values;
@@ -425,7 +425,7 @@ function openGraphCreationWindow(edit) {
         tmp_graph = {
             id: graph_list.length,
             name: "unsaved graph",
-            weight: 5,
+            weight: 10,
             profile: ["any"],
             labels: [
                 { name: 'item0', value: 5 },

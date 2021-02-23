@@ -3,6 +3,7 @@ const MapboxDraw = require('@mapbox/mapbox-gl-draw');
 const log = require('electron-log');
 //const { Tray } = require('electron');
 const remote = require('electron').remote;
+const shell = require('electron').shell;
 const { dialog, Tray } = require('electron').remote
 const area = require('@turf/area');
 const flatten = require('@turf/flatten');
@@ -123,22 +124,6 @@ map.on('styledata', function () {
 
 function addMapLayers() {
     //Objects layers
-    /*if (!map.getLayer("water_layer")) {
-        map.addLayer({
-            "id": "water_layer",
-            "type": "fill",
-            "minzoom": 15,
-            "source": {
-                type: 'vector',
-                url: 'mapbox://mapbox.mapbox-streets-v8',
-            },
-            "source-layer": "water",
-            "paint": {
-                "fill-color": "rgba(25, 22, 234, 0.4)",
-                "fill-outline-color": "rgba(25, 22, 234, 0.5)"
-            }
-        });
-    }*/
     if (!map.getLayer("landuse_layer")) {
         map.addLayer({
             "id": "landuse_layer",
@@ -225,6 +210,7 @@ function addMapLayers() {
             }
         });
     }
+
     //Heatmap sources and layers
     if (!map.getLayer("csv_tmp_layer")) {
         map.addLayer({
@@ -281,7 +267,7 @@ function addMapLayers() {
                 //'heatmap-intensity': 1,
                 'heatmap-intensity': [
                     'interpolate', ['exponential', 1], ['zoom'],
-                    12, 0.5,
+                    12, 0.1,
                     19, 2
                     /*12, 0.2,
                     13, 0.4,
@@ -333,7 +319,7 @@ map.on('click', function (e) {
             setPopup("Save changes made to Entity first", document.getElementById("accept_btn").parentNode);
         return;
     }
-
+    var tmp = map.queryRenderedFeatures(e.point); console.log(tmp);
     features = map.queryRenderedFeatures(e.point, {
         layers: [
             'buildings_layer',
@@ -592,7 +578,7 @@ map.on('zoomend', function () {
             for (var j in altered_list[i].focus)
                 addHeatFeature(altered_list[i].focus[j]);
     }
-    updateChart();
+    //updateChart();
     zoom_end = true;
     load_info = false;
 });
@@ -1091,6 +1077,10 @@ function toggleMapButtons(toggle) {
     else 
         filter_div.onmousemove = function () { return };
 
+    var streetview_div = document.getElementById("streetview_div");
+    streetview_div.querySelector("button").disabled = !toggle;
+    streetview_div.querySelector("button").classList.toggle("disabled", !toggle);
+
     toggleFirst2Tabs(false);
 }
 
@@ -1111,7 +1101,7 @@ function toggleMapStyle() {
     heatmap_opacity = map.getPaintProperty("polution_heat", "heatmap-opacity");
     var style = document.getElementById("map_style_div");
     if (current_style == "satellite") {
-        map.setStyle('mapbox://styles/mapbox/streets-v11', { diff: false });
+        map.setStyle('mapbox://styles/mapbox/streets-v8', { diff: false });
         current_style = "street";
         style.querySelector("img").src = "../Media/satellite.png";
     } else if (current_style == "street") {
@@ -1751,6 +1741,18 @@ function flattenObjs() {
     });
 }
 
+function openStreetView() {
+    var conf = confirm("This will open the browser in Google Map's Street-View.\n\nDo you wish to continue?");
+    var center, link;
+
+    if (conf) {
+        center = map.getCenter();
+        link = "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" + center.lat + "," + center.lng;
+        shell.openExternal(link);
+    } else
+        return;
+}
+
 //resets and clears
 function resetEveryList() {
     for (var i in all_list) 
@@ -1950,10 +1952,9 @@ function loadAllInfo(id) {
     openTab('features_tab');
 
     if (zoom_end) return;
-
     toggleMapButtons(true);
     simplifiedStartAll();
-    loadGraphInfo()
+    loadGraphInfo();
     setItemsInfo();
     for (var i in altered_list) {
         addHeatFeature(altered_list[i]);
@@ -1961,7 +1962,7 @@ function loadAllInfo(id) {
             for (var j in altered_list[i].focus)
                 addHeatFeature(altered_list[i].focus[j]);
     }
-    updateChart();
+    //updateChart();
 }
 
 function sendInfo() {
@@ -2014,7 +2015,7 @@ function generateRandomPoints_helper(iters) {
                 index = j;
             }
         }
-        //interpolação de valores polution com weight t;
+        //interpolação de valores pollution com weight t;
         top = heatmap_color_vectors[index].pol1;
         bottom = heatmap_color_vectors[index].pol2;
         distance = bottom - top;

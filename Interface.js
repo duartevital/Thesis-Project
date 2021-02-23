@@ -182,7 +182,6 @@ function createPropertiesTable(props, drawn) {
                     parent_node.querySelector("#key").textContent = "Polution Range";
                     input.addEventListener("input", function () { selection_obj.range = this.value });
                     input.type = "number"; input.min = 0;
-                    input.value = 100;
                     placeholder.appendChild(parent_node);
                     break;
                 case "focus":

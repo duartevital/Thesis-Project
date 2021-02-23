@@ -644,6 +644,13 @@ input[type=range] {
     left: 49%;
 }
 
+#streetview_div {
+    display: block;
+    position: absolute;
+    bottom: 10px;
+    left: 20%;
+}
+
 #map_style_div {
     position: absolute;
     width: 60px;

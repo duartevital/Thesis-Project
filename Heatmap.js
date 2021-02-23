@@ -39,6 +39,7 @@ function dropdownClick() {
 }
 
 function addHeatFeature(info) {
+    if (info.range == 1) return;
     if (info.polution == 0) {
         for (var i in heatmap_features.features) {
             if (heatmap_features.features[i].properties.id == info.heat_index) {

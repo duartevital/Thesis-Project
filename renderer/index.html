@@ -68,6 +68,9 @@
             <p class="hover_btns" onmouseover="document.getElementById('instruction_box').style.display = 'block';"
                onmouseout="document.getElementById('instruction_box').style.display = 'none';">Selection Tips</p>
         </div>
+        <div id="streetview_div">
+            <button class="standard_buttons disabled" onclick="openStreetView()" style="background-color: #087f23; color: white">Open Street-View</button>
+        </div>
         <div id="map_style_div" onclick="toggleMapStyle()" title="Toggle bewtween Street-Satellite view">
             <img src="../Media/street.png" alt="satellite image" width="52" height="52" />
         </div>
@@ -131,7 +134,7 @@
         </section>
     </div>
 
-    <button onclick="dumbFunction()" id="dumb_btn">dumb btn</button>
+    <!--<button onclick="dumbFunction()" id="dumb_btn">dumb btn</button>
     <!--<button onclick="loadAllInfo()" id="loadAll_btn">LOAD</button>
     <button onclick="generateRandomPoints(1000)" id="generate_csv_btn" class="standard_buttons">Genererate</button>
     <button onclick="saveAllInfo()" id="saveAll_btn" class="standard_buttons" title="Saves everything in a JSON file">SAVE</button>
